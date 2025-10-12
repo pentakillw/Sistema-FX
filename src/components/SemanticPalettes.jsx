@@ -4,7 +4,6 @@ import { Layers } from 'lucide-react';
 
 // Componente interno para una sola fila de paleta
 const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
-    // ... (el contenido de este componente interno no cambia)
     const titleColor = themeOverride === 'light' ? 'var(--text-default)' : '#FFF';
     const textColor = themeOverride === 'light' ? 'var(--text-muted)' : '#D1D5DB';
 
@@ -27,9 +26,10 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
                         </div>
                     ))}
                 </div>
-                <div className={`flex text-xs px-1 relative pt-2 mt-1`} style={{ color: textColor }}>
+                {/* **FIX**: Añadir flex-wrap y un ancho mínimo a los elementos para un ajuste responsivo */}
+                <div className={`flex flex-wrap text-xs px-1 relative pt-2 mt-1`} style={{ color: textColor }}>
                     {(colors || []).map((item) => (
-                        <div key={item.name} className="flex-1 text-center text-wrap text-[10px]" title={item.name}>{item.name}</div>
+                        <div key={item.name} className="flex-1 min-w-[60px] text-center text-wrap text-[10px] py-1" title={item.name}>{item.name}</div>
                     ))}
                 </div>
             </div>
@@ -37,7 +37,6 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
     );
 };
 
-// **FIX**: Añadir lógica para el fondo dinámico
 const backgroundModeLabels = {
     'card': 'Fondo Tarjeta',
     'white': 'Fondo Blanco',
