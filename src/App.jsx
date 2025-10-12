@@ -50,7 +50,8 @@ function App() {
           <filter id="tritanopia"><feColorMatrix in="SourceGraphic" type="matrix" values="0.95, 0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0" /></filter>
         </defs>
       </svg>
-      <div className={`min-h-screen p-4 sm:p-8`} style={pageThemeStyle}>
+      {/* **FIX**: Ajustar padding para móviles */}
+      <div className={`min-h-screen p-4 md:p-8`} style={pageThemeStyle}>
         <Header onImport={hook.handleImport} onExport={hook.handleExport} onReset={hook.handleReset} themeData={themeData} />
         
         <main>

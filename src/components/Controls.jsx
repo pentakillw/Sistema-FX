@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { Undo2, Redo2, Eye, Image as ImageIcon } from 'lucide-react';
-import { availableFonts, generationMethods } from '../utils/colorUtils.js';
-import Switch from './ui/Switch.jsx';
-import { ImagePaletteModal } from './modals/index.jsx';
+import { availableFonts, generationMethods } from '../utils/colorUtils';
+import Switch from './ui/Switch';
+import { ImagePaletteModal } from './modals';
 
 // Componente de UI para un campo de formulario genérico
 const FormField = ({ label, children }) => (
@@ -34,10 +34,11 @@ const Controls = ({ hook }) => {
     return (
         <>
             <section className="p-4 sm:p-6 rounded-xl border shadow-lg" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
+                {/* **FIX**: Layout principal ahora es flex para apilarse en móvil */}
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
                     
                     {/* Columna Izquierda: Definición del Tema */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 flex-1">
                         <h3 className="text-sm font-bold tracking-wider uppercase text-center lg:text-left" style={{ color: 'var(--text-default)' }}>Definición del Tema</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
                             <FormField label="Fuente Principal">
@@ -76,11 +77,10 @@ const Controls = ({ hook }) => {
                     </div>
 
                     {/* Columna Derecha: Herramientas */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 flex-1">
                          <h3 className="text-sm font-bold tracking-wider uppercase text-center lg:text-left" style={{ color: 'var(--text-default)' }}>Herramientas</h3>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
                             
-                            {/* **FIX**: Reacomodar generadores para mayor visibilidad */}
                             <div className="sm:col-span-2">
                                 <FormField label="Generadores de Paleta">
                                     <div className="grid grid-cols-2 gap-2">
