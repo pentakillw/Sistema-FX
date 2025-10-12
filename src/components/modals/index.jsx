@@ -2,11 +2,13 @@ import HelpModal from './HelpModal.jsx';
 import VariationsModal from './VariationsModal.jsx';
 import PaletteContrastChecker from './PaletteContrastChecker.jsx';
 import PaletteAdjusterModal from './PaletteAdjusterModal.jsx';
+import ImagePaletteModal from './ImagePaletteModal.jsx'; // Añadir esta línea
 
-// Exporta todos los modales para que puedan ser importados desde la carpeta
 export {
-  HelpModal,
-  VariationsModal,
-  PaletteContrastChecker,
-  PaletteAdjusterModal,
+    HelpModal,
+    VariationsModal,
+    PaletteContrastChecker,
+    PaletteAdjusterModal,
+    ImagePaletteModal // Añadir esta línea
 };
+

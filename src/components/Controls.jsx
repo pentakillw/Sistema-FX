@@ -1,84 +1,125 @@
 import React, { useState } from 'react';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
-import { Undo2, Redo2 } from 'lucide-react';
-import { availableFonts, generationMethods } from '../utils/colorUtils';
-import Switch from './ui/Switch';
+import { Undo2, Redo2, Eye, Image as ImageIcon } from 'lucide-react'; // Importar el icono de imagen
+import { availableFonts, generationMethods } from '../utils/colorUtils.js';
+import Switch from './ui/Switch.jsx';
+import { ImagePaletteModal } from './modals/index.jsx'; // Importar el nuevo modal
+
+// Componente de UI para un campo de formulario genérico
+const FormField = ({ label, children }) => (
+    <div>
+        <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-default)' }}>
+            {label}
+        </label>
+        {children}
+    </div>
+);
 
 const Controls = ({ hook }) => {
     const [isBrandPickerVisible, setIsBrandPickerVisible] = useState(false);
     const [isGrayPickerVisible, setIsGrayPickerVisible] = useState(false);
+    const [isImageModalVisible, setIsImageModalVisible] = useState(false); // Estado para el nuevo modal
 
-    // Desestructuración segura de las propiedades del hook
     const {
         font, brandColor, grayColor, isGrayAuto, explorerMethod, simulationMode,
         historyIndex, colorHistory, setFont, updateBrandColor, setGrayColor,
         setIsGrayAuto, setExplorerMethod, setSimulationMode, handleUndo, handleRedo
     } = hook;
 
+    const selectStyles = "w-full bg-transparent font-semibold px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg-card)] focus:ring-[var(--action-primary-default)]";
+    const inputContainerStyles = "flex items-center rounded-md border bg-[var(--bg-muted)]";
+
     return (
-        <section className="p-4 rounded-xl border shadow-lg" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                {/* Columna Izquierda: Definición del Tema */}
-                <div className="space-y-4">
-                    <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: 'var(--text-default)' }}>Definición del Tema</h3>
-                    <div className="grid grid-cols-[1fr_2fr] items-center gap-4">
-                        <label className="text-sm font-medium" style={{ color: 'var(--text-default)' }}>Fuente Principal</label>
-                        <select value={font} onChange={(e) => setFont(e.target.value)} className="w-full font-semibold px-2 py-1 rounded-md border" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)', borderColor: 'var(--border-default)' }}>
-                            {Object.keys(availableFonts).map(fontName => (<option key={fontName} value={fontName}>{fontName}</option>))}
-                        </select>
-
-                        <label className="text-sm font-medium" style={{ color: 'var(--text-default)' }}>Color de Marca</label>
-                        <div className="relative">
-                             <div className="flex items-center rounded-md border" style={{ backgroundColor: 'var(--bg-muted)', borderColor: 'var(--border-default)' }}>
-                                <div className="w-7 h-7 rounded-l-md cursor-pointer border-r" style={{ backgroundColor: brandColor, borderColor: 'var(--border-default)' }} onClick={() => setIsBrandPickerVisible(v => !v)} />
-                                <HexColorInput prefixed color={brandColor} onChange={updateBrandColor} className="font-mono bg-transparent px-2 py-1 rounded-r-md w-24 focus:outline-none" style={{ color: 'var(--text-default)' }} />
-                            </div>
-                            {isBrandPickerVisible && (<div className="absolute z-10 top-full mt-2 left-0"><div className="fixed inset-0 -z-10" onClick={() => setIsBrandPickerVisible(false)} /><HexColorPicker color={brandColor} onChange={updateBrandColor} /></div>)}
-                        </div>
-
-                        <label className="text-sm font-medium" style={{ color: 'var(--text-default)' }}>Escala de Grises</label>
-                        <div className="flex items-center gap-4">
-                            <div className={`relative transition-opacity ${isGrayAuto ? 'opacity-50' : 'opacity-100'}`}>
-                                <div className="flex items-center rounded-md border" style={{ backgroundColor: 'var(--bg-muted)', borderColor: 'var(--border-default)' }}>
-                                    <div className={`w-7 h-7 rounded-l-md border-r ${isGrayAuto ? 'cursor-not-allowed' : 'cursor-pointer'}`} style={{ backgroundColor: grayColor, borderColor: 'var(--border-default)' }} onClick={() => !isGrayAuto && setIsGrayPickerVisible(v => !v)} />
-                                    <HexColorInput prefixed color={grayColor} onChange={setGrayColor} className="font-mono bg-transparent px-2 py-1 rounded-r-md w-24 focus:outline-none" style={{ color: 'var(--text-default)' }} disabled={isGrayAuto} />
+        <>
+            <section className="p-4 sm:p-6 rounded-xl border shadow-lg" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
+                    
+                    {/* Columna Izquierda: Definición del Tema */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-bold tracking-wider uppercase text-center lg:text-left" style={{ color: 'var(--text-default)' }}>Definición del Tema</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+                            <FormField label="Fuente Principal">
+                                <select value={font} onChange={(e) => setFont(e.target.value)} className={selectStyles} style={{ borderColor: 'var(--border-default)', color: 'var(--text-default)' }}>
+                                    {Object.keys(availableFonts).map(fontName => (<option key={fontName} value={fontName}>{fontName}</option>))}
+                                </select>
+                            </FormField>
+                            
+                            <FormField label="Color de Marca">
+                                <div className="relative">
+                                    <div className={inputContainerStyles} style={{ borderColor: 'var(--border-default)' }}>
+                                        <div className="w-8 h-8 rounded-l-md cursor-pointer border-r" style={{ backgroundColor: brandColor, borderColor: 'var(--border-default)' }} onClick={() => setIsBrandPickerVisible(v => !v)} />
+                                        <HexColorInput prefixed color={brandColor} onChange={updateBrandColor} className="font-mono bg-transparent px-2 py-1 w-full focus:outline-none" style={{ color: 'var(--text-default)' }} />
+                                    </div>
+                                    {isBrandPickerVisible && (<div className="absolute z-20 top-full mt-2 left-0"><div className="fixed inset-0 -z-10" onClick={() => setIsBrandPickerVisible(false)} /><HexColorPicker color={brandColor} onChange={updateBrandColor} /></div>)}
                                 </div>
-                                {isGrayPickerVisible && !isGrayAuto && (<div className="absolute z-10 top-full mt-2 left-0"><div className="fixed inset-0 -z-10" onClick={() => setIsGrayPickerVisible(false)} /><HexColorPicker color={grayColor} onChange={setGrayColor} /></div>)}
+                            </FormField>
+
+                            <div className="sm:col-span-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-xs font-semibold" style={{ color: 'var(--text-default)' }}>Escala de Grises</label>
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-xs font-medium" style={{ color: 'var(--text-default)' }}>Auto</label>
+                                        <Switch checked={isGrayAuto} onCheckedChange={setIsGrayAuto} />
+                                    </div>
+                                </div>
+                                <div className={`relative transition-opacity mt-2 ${isGrayAuto ? 'opacity-50' : 'opacity-100'}`}>
+                                    <div className={inputContainerStyles} style={{ borderColor: 'var(--border-default)' }}>
+                                        <div className={`w-8 h-8 rounded-l-md border-r ${isGrayAuto ? 'cursor-not-allowed' : 'cursor-pointer'}`} style={{ backgroundColor: grayColor, borderColor: 'var(--border-default)' }} onClick={() => !isGrayAuto && setIsGrayPickerVisible(v => !v)} />
+                                        <HexColorInput prefixed color={grayColor} onChange={setGrayColor} className="font-mono bg-transparent px-2 py-1 w-full focus:outline-none" style={{ color: 'var(--text-default)' }} disabled={isGrayAuto} />
+                                    </div>
+                                    {isGrayPickerVisible && !isGrayAuto && (<div className="absolute z-20 top-full mt-2 left-0"><div className="fixed inset-0 -z-10" onClick={() => setIsGrayPickerVisible(false)} /><HexColorPicker color={grayColor} onChange={setGrayColor} /></div>)}
+                                </div>
                             </div>
-                             <div className="flex items-center gap-2">
-                                <label className="text-xs font-medium" style={{ color: 'var(--text-default)' }}>Auto</label>
-                                <Switch checked={isGrayAuto} onCheckedChange={setIsGrayAuto} />
+                        </div>
+                    </div>
+
+                    {/* Columna Derecha: Herramientas */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-bold tracking-wider uppercase text-center lg:text-left" style={{ color: 'var(--text-default)' }}>Herramientas</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+                            <FormField label="Generador de Paleta">
+                                <div className='flex gap-2'>
+                                    <select value={explorerMethod} onChange={(e) => setExplorerMethod(e.target.value)} className={selectStyles} style={{ borderColor: 'var(--border-default)', color: 'var(--text-default)' }}>
+                                        {generationMethods.map(method => (<option key={method.id} value={method.id}>{method.name}</option>))}
+                                    </select>
+                                    <button onClick={() => setIsImageModalVisible(true)} className="p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}} title="Extraer de imagen">
+                                        <ImageIcon size={16} />
+                                    </button>
+                                </div>
+                            </FormField>
+                            
+                            <FormField label="Historial">
+                                <div className="flex items-center gap-2">
+                                    <button onClick={handleUndo} disabled={historyIndex === 0} className="w-full flex justify-center p-2 rounded-lg disabled:opacity-50" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}} title="Deshacer"><Undo2 size={16}/></button>
+                                    <button onClick={handleRedo} disabled={historyIndex >= colorHistory.length - 1} className="w-full flex justify-center p-2 rounded-lg disabled:opacity-50" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}} title="Rehacer"><Redo2 size={16}/></button>
+                                </div>
+                            </FormField>
+                            
+                            <div className="sm:col-span-2">
+                                <FormField label="Simulador Daltonismo">
+                                    <div className="relative">
+                                        <Eye size={16} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }}/>
+                                        <select value={simulationMode} onChange={(e) => setSimulationMode(e.target.value)} className={`${selectStyles} pl-10`} style={{ borderColor: 'var(--border-default)', color: 'var(--text-default)' }}>
+                                            <option value="none">Ninguno</option>
+                                            <option value="protanopia">Protanopia</option>
+                                            <option value="deuteranopia">Deuteranopia</option>
+                                            <option value="tritanopia">Tritanopia</option>
+                                        </select>
+                                    </div>
+                                </FormField>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Columna Derecha: Herramientas */}
-                <div className="space-y-4">
-                     <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: 'var(--text-default)' }}>Herramientas</h3>
-                     <div className="grid grid-cols-[1fr_2fr] items-center gap-4">
-                        <label className="text-sm font-medium" style={{ color: 'var(--text-default)' }}>Método Aleatorio</label>
-                        <select value={explorerMethod} onChange={(e) => setExplorerMethod(e.target.value)} className="w-full font-semibold px-2 py-1 rounded-md border" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)', borderColor: 'var(--border-default)' }}>
-                            {generationMethods.map(method => (<option key={method.id} value={method.id}>{method.name}</option>))}
-                        </select>
-
-                        <label className="text-sm font-medium" style={{ color: 'var(--text-default)' }}>Historial</label>
-                        <div className="flex items-center gap-2">
-                            <button onClick={handleUndo} disabled={historyIndex === 0} className="p-2 rounded-lg disabled:opacity-50" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}} title="Deshacer"><Undo2 size={16}/></button>
-                            <button onClick={handleRedo} disabled={historyIndex >= colorHistory.length - 1} className="p-2 rounded-lg disabled:opacity-50" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}} title="Rehacer"><Redo2 size={16}/></button>
-                        </div>
-                        
-                        <label className="text-sm font-medium" style={{ color: 'var(--text-default)' }}>Simulador Daltonismo</label>
-                        <select value={simulationMode} onChange={(e) => setSimulationMode(e.target.value)} className="w-full font-semibold px-2 py-1 rounded-md border" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)', borderColor: 'var(--border-default)' }}>
-                            <option value="none">Ninguno</option>
-                            <option value="protanopia">Protanopia</option>
-                            <option value="deuteranopia">Deuteranopia</option>
-                            <option value="tritanopia">Tritanopia</option>
-                        </select>
-                     </div>
-                </div>
-            </div>
-        </section>
+            </section>
+            
+            {isImageModalVisible && (
+                <ImagePaletteModal 
+                    onColorSelect={updateBrandColor}
+                    onClose={() => setIsImageModalVisible(false)}
+                />
+            )}
+        </>
     );
 };
 
