@@ -26,8 +26,8 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
                         </div>
                     ))}
                 </div>
-                {/* **FIX**: Añadir flex-wrap y un ancho mínimo a los elementos para un ajuste responsivo */}
-                <div className={`flex flex-wrap text-xs px-1 relative pt-2 mt-1`} style={{ color: textColor }}>
+                {/* **FIX**: Ocultar los títulos en móvil (hidden) y mostrarlos en pantallas pequeñas y más grandes (sm:flex) */}
+                <div className={`hidden sm:flex flex-wrap text-xs px-1 relative pt-2 mt-1`} style={{ color: textColor }}>
                     {(colors || []).map((item) => (
                         <div key={item.name} className="flex-1 min-w-[60px] text-center text-wrap text-[10px] py-1" title={item.name}>{item.name}</div>
                     ))}
