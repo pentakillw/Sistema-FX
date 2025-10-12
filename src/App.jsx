@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import { availableFonts } from './utils/colorUtils.js';
 import Header from './components/Header.jsx';
@@ -14,6 +14,15 @@ import SemanticPalettes from './components/SemanticPalettes.jsx';
 function App() {
   const hook = useThemeGenerator();
   const { themeData } = hook;
+
+  useEffect(() => {
+    if (themeData?.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [themeData?.theme]);
+
 
   if (!themeData || !themeData.stylePalette || !themeData.stylePalette.fullActionColors) {
     return (
@@ -49,7 +58,11 @@ function App() {
             <Controls hook={hook} />
           </div>
 
-          <AccessibilityCard accessibility={themeData.accessibility} colors={themeData.accessibilityColors} />
+          <AccessibilityCard 
+            accessibility={themeData.accessibility} 
+            colors={themeData.accessibilityColors} 
+            onCopy={hook.showNotification}
+          />
           
           <CodeExport 
             themeData={themeData}
@@ -99,7 +112,6 @@ function App() {
             />
           </div>
 
-          {/* **FIX**: Reordenado para que aparezca después de los modos claro/oscuro */}
           <SemanticPalettes
             stylePalette={themeData.stylePalette}
             onCopy={hook.showNotification}
