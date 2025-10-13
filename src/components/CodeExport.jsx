@@ -15,7 +15,7 @@ const CodeExport = ({ themeData, fxSeparator, setFxSeparator, useFxQuotes, setUs
 
     return (
         <section className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <h2 className="font-bold text-lg flex items-center gap-2" style={{ color: 'var(--text-default)' }}>
                     <FileCode size={20} /> Opciones de Exportación
                 </h2>
@@ -30,7 +30,8 @@ const CodeExport = ({ themeData, fxSeparator, setFxSeparator, useFxQuotes, setUs
 
             {isExportVisible && (
                 <div className="mt-4">
-                    <div className="flex border-b" style={{ borderColor: 'var(--border-default)' }}>
+                    {/* **FIX**: Hacer que las pestañas se envuelvan si no caben */}
+                    <div className="flex flex-wrap border-b" style={{ borderColor: 'var(--border-default)' }}>
                         <button onClick={() => setActiveExport('powerfx')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 ${activeExport === 'powerfx' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}>Power Fx</button>
                         <button onClick={() => setActiveExport('css')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 ${activeExport === 'css' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}>CSS</button>
                         <button onClick={() => setActiveExport('tailwind')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 ${activeExport === 'tailwind' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}>Tailwind</button>
@@ -39,7 +40,7 @@ const CodeExport = ({ themeData, fxSeparator, setFxSeparator, useFxQuotes, setUs
                     <div className="p-4 border-b" style={{ borderColor: 'var(--border-default)' }}>
                         <h4 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-default)' }}><Settings size={16} /> Configuración de Salida</h4>
                         {activeExport === 'powerfx' && (
-                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-y-2 gap-x-6">
                                 <div className="flex items-center gap-2">
                                     <label className="text-sm" style={{ color: 'var(--text-muted)' }} htmlFor="fxSeparator">Separador:</label>
                                     <select id="fxSeparator" value={fxSeparator} onChange={(e) => setFxSeparator(e.target.value)} className="font-semibold px-2 py-1 rounded-md border" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)', borderColor: 'var(--border-default)' }}>
@@ -60,7 +61,7 @@ const CodeExport = ({ themeData, fxSeparator, setFxSeparator, useFxQuotes, setUs
                     </div>
 
                     <div className="relative mt-4">
-                        <pre className="font-mono text-sm whitespace-pre-wrap break-all p-4 rounded-md max-h-96 overflow-auto" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-muted)' }}><code>{codeToDisplay}</code></pre>
+                        <pre className="font-mono text-xs sm:text-sm whitespace-pre-wrap break-all p-4 rounded-md max-h-96 overflow-auto" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-muted)' }}><code>{codeToDisplay}</code></pre>
                         <button onClick={() => onCopy(codeToDisplay, '¡Código copiado!')} className="absolute top-3 right-3 p-2 rounded-lg text-white" style={{ backgroundColor: 'var(--action-primary-default)' }}><Clipboard size={16} /></button>
                     </div>
                 </div>

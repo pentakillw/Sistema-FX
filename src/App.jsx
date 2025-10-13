@@ -1,19 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import { availableFonts } from './utils/colorUtils.js';
 import Header from './components/Header.jsx';
 import Controls from './components/Controls.jsx';
-import AccessibilityCard from './components/AccessibilityCard.jsx';
-import CodeExport from './components/CodeExport.jsx';
-import ComponentPreview from './components/ComponentPreview.jsx';
 import Explorer from './components/Explorer.jsx';
 import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
+import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals'; // **FIX**: Importar nuevos modales
+import { Eye } from 'lucide-react'; // **FIX**: Importar icono
 
 function App() {
   const hook = useThemeGenerator();
   const { themeData } = hook;
+  
+  const [isExportModalVisible, setIsExportModalVisible] = useState(false);
+  // **FIX**: Añadir estados para los nuevos modales
+  const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
+  const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
 
   useEffect(() => {
     if (themeData?.theme === 'dark') {
@@ -40,6 +44,8 @@ function App() {
     fontFamily: availableFonts[hook.font],
     filter: hook.simulationMode !== 'none' ? `url(#${hook.simulationMode})` : 'none'
   };
+  
+  const analysisButtonStyles = "flex items-center justify-center gap-2 w-full p-3 rounded-lg text-sm font-semibold transition-colors";
 
   return (
     <>
@@ -50,31 +56,31 @@ function App() {
           <filter id="tritanopia"><feColorMatrix in="SourceGraphic" type="matrix" values="0.95, 0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0" /></filter>
         </defs>
       </svg>
-      {/* **FIX**: Ajustar padding para móviles */}
       <div className={`min-h-screen p-4 md:p-8`} style={pageThemeStyle}>
-        <Header onImport={hook.handleImport} onExport={hook.handleExport} onReset={hook.handleReset} themeData={themeData} />
+        <Header 
+          onImport={hook.handleImport} 
+          onExport={hook.handleExport} 
+          onReset={hook.handleReset} 
+          onOpenExportModal={() => setIsExportModalVisible(true)}
+          themeData={themeData} 
+        />
         
         <main>
           <div className="md:sticky top-4 z-40 mb-8">
             <Controls hook={hook} />
           </div>
 
-          <AccessibilityCard 
-            accessibility={themeData.accessibility} 
-            colors={themeData.accessibilityColors} 
-            onCopy={hook.showNotification}
-          />
-          
-          <CodeExport 
-            themeData={themeData}
-            fxSeparator={hook.fxSeparator}
-            setFxSeparator={hook.setFxSeparator}
-            useFxQuotes={hook.useFxQuotes}
-            setUseFxQuotes={hook.setUseFxQuotes}
-            onCopy={hook.showNotification}
-          />
-          
-          <ComponentPreview primaryButtonTextColor={themeData.primaryButtonTextColor} />
+          {/* **FIX**: Nueva sección de "Análisis" con botones para los modales */}
+          <section className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button onClick={() => setIsAccessibilityModalVisible(true)} className={analysisButtonStyles} style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}}>
+                    <Eye size={16}/> Verificación de Accesibilidad
+                </button>
+                 <button onClick={() => setIsComponentPreviewModalVisible(true)} className={analysisButtonStyles} style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}}>
+                    <Eye size={16}/> Vista Previa de Componentes
+                </button>
+             </div>
+          </section>
 
           <Explorer
             explorerPalette={hook.explorerPalette}
@@ -130,6 +136,34 @@ function App() {
 
         {hook.notification.message && (<div className="fixed bottom-5 right-5 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-lg flex items-center gap-2" style={{ backgroundColor: hook.notification.type === 'error' ? '#EF4444' : '#10B981'}}>{hook.notification.message}</div>)}
         
+        {isExportModalVisible && (
+            <ExportModal 
+                onClose={() => setIsExportModalVisible(false)}
+                themeData={themeData}
+                fxSeparator={hook.fxSeparator}
+                setFxSeparator={hook.setFxSeparator}
+                useFxQuotes={hook.useFxQuotes}
+                setUseFxQuotes={hook.setUseFxQuotes}
+                onCopy={hook.showNotification}
+            />
+        )}
+        
+        {/* **FIX**: Renderizar los nuevos modales */}
+        {isAccessibilityModalVisible && (
+            <AccessibilityModal 
+                onClose={() => setIsAccessibilityModalVisible(false)}
+                accessibility={themeData.accessibility} 
+                colors={themeData.accessibilityColors} 
+                onCopy={hook.showNotification}
+            />
+        )}
+        {isComponentPreviewModalVisible && (
+            <ComponentPreviewModal 
+                onClose={() => setIsComponentPreviewModalVisible(false)}
+                primaryButtonTextColor={themeData.primaryButtonTextColor}
+            />
+        )}
+
         <FloatingActionButtons 
             onRandomClick={hook.handleRandomTheme}
             onThemeToggle={hook.handleThemeToggle}
