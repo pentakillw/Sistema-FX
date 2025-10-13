@@ -17,7 +17,7 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData }) =
                     <img src="https://raw.githubusercontent.com/pentakillw/sistema-de-diseno-react/main/Icono_FX.png" alt="Sistema FX Logo" className="h-16 w-16 md:h-20 md:w-20 rounded-2xl shadow-md"/>
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold" style={{ color: pageTextColor }}>BIENVENIDOS</h1>
-                        <p className="text-sm md:text-md" style={{ color: mutedTextColor }}>al sistema de diseño para Power Apps</p>
+                        <p className="text-sm md:text-md" style={{ color: mutedTextColor }}>al sistema de diseño FX</p>
                     </div>
                 </div>
                 {/* **FIX**: Reorganizar botones y añadir el nuevo */}
