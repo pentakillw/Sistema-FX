@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import useThemeGenerator from './hooks/useThemeGenerator.js';
-import { availableFonts } from './utils/colorUtils.js';
-import Header from './components/Header.jsx';
-import Controls from './components/Controls.jsx';
-import Explorer from './components/Explorer.jsx';
-import FloatingActionButtons from './components/FloatingActionButtons.jsx';
-import ColorPreviewer from './components/ColorPreviewer.jsx';
-import SemanticPalettes from './components/SemanticPalettes.jsx';
-// MODIFICACIÓN: Ya no se necesita el icono Eye aquí
+import useThemeGenerator from './hooks/useThemeGenerator';
+import { availableFonts } from './utils/colorUtils';
+import Header from './components/Header';
+import Controls from './components/Controls';
+import Explorer from './components/Explorer';
+import FloatingActionButtons from './components/FloatingActionButtons';
+import ColorPreviewer from './components/ColorPreviewer';
+import SemanticPalettes from './components/SemanticPalettes';
 import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals';
 
 function App() {
@@ -64,15 +63,12 @@ function App() {
         
         <main>
           <div className="md:sticky top-4 z-40 mb-8">
-            {/* MODIFICACIÓN: Se pasan las funciones para abrir los modales de análisis */}
             <Controls
               hook={hook}
               onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
               onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
             />
           </div>
-
-          {/* MODIFICACIÓN: La sección de "Análisis" se ha eliminado de aquí */}
 
           <Explorer
             explorerPalette={hook.explorerPalette}
@@ -155,10 +151,15 @@ function App() {
             />
         )}
 
+        {/* MODIFICACIÓN: Se pasan las props del historial a FloatingActionButtons */}
         <FloatingActionButtons 
             onRandomClick={hook.handleRandomTheme}
             onThemeToggle={hook.handleThemeToggle}
             currentTheme={themeData.theme}
+            onUndo={hook.handleUndo}
+            onRedo={hook.handleRedo}
+            canUndo={hook.historyIndex > 0}
+            canRedo={hook.historyIndex < hook.colorHistory.length - 1}
         />
       </div>
     </>
@@ -166,3 +167,4 @@ function App() {
 }
 
 export default App;
+

@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { 
-    Undo2, Redo2, Eye, Image as ImageIcon, SlidersHorizontal, ChevronDown, 
+    Eye, Image as ImageIcon, SlidersHorizontal, ChevronDown, 
     Paintbrush, Sparkles, TestTube2 
 } from 'lucide-react';
 import { availableFonts, generationMethods } from '../utils/colorUtils';
 import Switch from './ui/Switch';
 import { ImagePaletteModal } from './modals';
 
-// --- NUEVO ---
-// Componente reutilizable para los botones de las pestañas
 const TabButton = ({ label, icon, isActive, onClick }) => {
     return (
         <button
@@ -26,8 +24,6 @@ const TabButton = ({ label, icon, isActive, onClick }) => {
     );
 };
 
-// --- NUEVO ---
-// Componente de UI rediseñado para los campos del formulario
 const FormField = ({ label, children, className = '' }) => (
     <div className={className}>
         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
@@ -37,23 +33,21 @@ const FormField = ({ label, children, className = '' }) => (
     </div>
 );
 
-
 const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal }) => {
     const [isOpen, setIsOpen] = useState(false);
-    // --- NUEVO --- Estado para la pestaña activa
     const [activeTab, setActiveTab] = useState('essentials');
     
     const [isBrandPickerVisible, setIsBrandPickerVisible] = useState(false);
     const [isGrayPickerVisible, setIsGrayPickerVisible] = useState(false);
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
 
+    // MODIFICACIÓN: Se eliminan las props del historial ya que no se usan aquí
     const {
         font, brandColor, grayColor, isGrayAuto, explorerMethod, simulationMode,
-        historyIndex, colorHistory, setFont, updateBrandColor, setGrayColor,
-        setIsGrayAuto, setExplorerMethod, setSimulationMode, handleUndo, handleRedo
+        setFont, updateBrandColor, setGrayColor,
+        setIsGrayAuto, setExplorerMethod, setSimulationMode
     } = hook;
     
-    // --- NUEVO --- Estilos rediseñados y simplificados
     const selectStyles = "w-full bg-[var(--bg-muted)] font-semibold px-3 py-2.5 rounded-lg border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)] focus:border-[var(--action-primary-default)] transition-all";
     const buttonStyles = "flex items-center justify-center gap-2 w-full p-2.5 rounded-lg text-sm font-semibold bg-[var(--bg-muted)] hover:ring-2 hover:ring-[var(--action-primary-default)] transition-all";
     const analysisButtonStyles = "flex items-center justify-center gap-2 w-full p-3 rounded-lg text-sm font-semibold transition-colors bg-[var(--bg-muted)] hover:ring-2 hover:ring-[var(--action-primary-default)]";
@@ -84,14 +78,12 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                 >
                     <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t" style={{ borderColor: 'var(--border-default)' }}>
                         
-                        {/* --- NUEVO --- Navegación por Pestañas */}
                         <div className="flex justify-center items-center gap-2 sm:gap-4 p-2 my-4 rounded-full" style={{ backgroundColor: 'var(--bg-muted)'}}>
                             <TabButton label="Esenciales" icon={<Paintbrush size={16}/>} isActive={activeTab === 'essentials'} onClick={() => setActiveTab('essentials')} />
                             <TabButton label="Avanzado" icon={<Sparkles size={16}/>} isActive={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} />
                             <TabButton label="Análisis" icon={<TestTube2 size={16}/>} isActive={activeTab === 'analysis'} onClick={() => setActiveTab('analysis')} />
                         </div>
 
-                        {/* Contenido de la Pestaña "Esenciales" */}
                         {activeTab === 'essentials' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 animate-fade-in">
                                 <FormField label="Color de Marca" className="md:col-span-2">
@@ -128,7 +120,6 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                             </div>
                         )}
                         
-                        {/* Contenido de la Pestaña "Avanzado" */}
                         {activeTab === 'advanced' && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 animate-fade-in">
                                 <FormField label="Generador de Paleta" className="sm:col-span-2">
@@ -142,13 +133,10 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                                         </button>
                                     </div>
                                 </FormField>
-                                <FormField label="Historial">
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={handleUndo} disabled={historyIndex === 0} className="w-full flex justify-center p-2.5 rounded-lg disabled:opacity-50 bg-[var(--bg-muted)]" style={{ color: 'var(--text-default)'}} title="Deshacer"><Undo2 size={16}/></button>
-                                        <button onClick={handleRedo} disabled={historyIndex >= colorHistory.length - 1} className="w-full flex justify-center p-2.5 rounded-lg disabled:opacity-50 bg-[var(--bg-muted)]" style={{ color: 'var(--text-default)'}} title="Rehacer"><Redo2 size={16}/></button>
-                                    </div>
-                                </FormField>
-                                <FormField label="Simulador Daltonismo">
+                                
+                                {/* MODIFICACIÓN: Se elimina el FormField de "Historial" */}
+                                
+                                <FormField label="Simulador Daltonismo" className="sm:col-span-2">
                                     <div className="relative">
                                         <Eye size={16} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }}/>
                                         <select value={simulationMode} onChange={(e) => setSimulationMode(e.target.value)} className={`${selectStyles} pl-12`} style={{ color: 'var(--text-default)' }}>
@@ -162,7 +150,6 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                             </div>
                         )}
 
-                        {/* Contenido de la Pestaña "Análisis" */}
                         {activeTab === 'analysis' && (
                             <div className="pt-4 animate-fade-in space-y-4">
                                 <button onClick={onOpenAccessibilityModal} className={analysisButtonStyles} style={{color: 'var(--text-default)'}}>
