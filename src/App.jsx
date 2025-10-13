@@ -7,15 +7,14 @@ import Explorer from './components/Explorer.jsx';
 import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
-import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals'; // **FIX**: Importar nuevos modales
-import { Eye } from 'lucide-react'; // **FIX**: Importar icono
+// MODIFICACIÓN: Ya no se necesita el icono Eye aquí
+import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals';
 
 function App() {
   const hook = useThemeGenerator();
   const { themeData } = hook;
   
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
-  // **FIX**: Añadir estados para los nuevos modales
   const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
   const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
 
@@ -44,8 +43,6 @@ function App() {
     fontFamily: availableFonts[hook.font],
     filter: hook.simulationMode !== 'none' ? `url(#${hook.simulationMode})` : 'none'
   };
-  
-  const analysisButtonStyles = "flex items-center justify-center gap-2 w-full p-3 rounded-lg text-sm font-semibold transition-colors";
 
   return (
     <>
@@ -67,20 +64,15 @@ function App() {
         
         <main>
           <div className="md:sticky top-4 z-40 mb-8">
-            <Controls hook={hook} />
+            {/* MODIFICACIÓN: Se pasan las funciones para abrir los modales de análisis */}
+            <Controls
+              hook={hook}
+              onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
+              onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
+            />
           </div>
 
-          {/* **FIX**: Nueva sección de "Análisis" con botones para los modales */}
-          <section className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button onClick={() => setIsAccessibilityModalVisible(true)} className={analysisButtonStyles} style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}}>
-                    <Eye size={16}/> Verificación de Accesibilidad
-                </button>
-                 <button onClick={() => setIsComponentPreviewModalVisible(true)} className={analysisButtonStyles} style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}}>
-                    <Eye size={16}/> Vista Previa de Componentes
-                </button>
-             </div>
-          </section>
+          {/* MODIFICACIÓN: La sección de "Análisis" se ha eliminado de aquí */}
 
           <Explorer
             explorerPalette={hook.explorerPalette}
@@ -148,7 +140,6 @@ function App() {
             />
         )}
         
-        {/* **FIX**: Renderizar los nuevos modales */}
         {isAccessibilityModalVisible && (
             <AccessibilityModal 
                 onClose={() => setIsAccessibilityModalVisible(false)}
@@ -175,4 +166,3 @@ function App() {
 }
 
 export default App;
-
