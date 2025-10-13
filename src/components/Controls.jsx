@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
-// MODIFICACIÓN: Se mantiene el icono Eye para la nueva sección
 import { Undo2, Redo2, Eye, Image as ImageIcon, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { availableFonts, generationMethods } from '../utils/colorUtils';
 import Switch from './ui/Switch';
 import { ImagePaletteModal } from './modals';
 
-// Componente de UI para un campo de formulario genérico (sin cambios)
 const FormField = ({ label, children }) => (
     <div>
         <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-default)' }}>
@@ -16,12 +14,10 @@ const FormField = ({ label, children }) => (
     </div>
 );
 
-// MODIFICACIÓN: Se aceptan las nuevas props para los modales
 const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal }) => {
-    // Estado para controlar si el panel está abierto o cerrado (sin cambios)
-    const [isOpen, setIsOpen] = useState(true);
+    // MODIFICACIÓN: El panel ahora está cerrado por defecto
+    const [isOpen, setIsOpen] = useState(false);
     
-    // Estados existentes (sin cambios)
     const [isBrandPickerVisible, setIsBrandPickerVisible] = useState(false);
     const [isGrayPickerVisible, setIsGrayPickerVisible] = useState(false);
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
@@ -32,11 +28,9 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
         setIsGrayAuto, setExplorerMethod, setSimulationMode, handleUndo, handleRedo
     } = hook;
 
-    // Estilos existentes (sin cambios)
     const selectStyles = "w-full bg-transparent font-semibold px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg-card)] focus:ring-[var(--action-primary-default)]";
     const inputContainerStyles = "flex items-center rounded-md border bg-[var(--bg-muted)]";
     const buttonStyles = "flex items-center justify-center gap-2 w-full p-2 rounded-lg text-sm font-semibold";
-    // MODIFICACIÓN: Se añade el estilo para los botones de análisis
     const analysisButtonStyles = "flex items-center justify-center gap-2 w-full p-3 rounded-lg text-sm font-semibold transition-colors";
 
     return (
@@ -44,7 +38,7 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
             <section className="rounded-xl border shadow-lg overflow-hidden transition-all duration-300" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}>
                 {/* Cabecera Clicable para Abrir/Cerrar (sin cambios) */}
                 <div
-                    className="flex justify-between items-center p-4 sm:p-6 cursor-pointer group"
+                    className="flex justify-between items-center p-4 sm:p-5 cursor-pointer group"
                     onClick={() => setIsOpen(!isOpen)}
                 >
                     <div className="flex items-center gap-3">
@@ -65,10 +59,11 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                         isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
                 >
+                    {/* MODIFICACIÓN: Se ajusta el padding para móviles (px-4) y escritorio (sm:px-6) */}
                     <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t" style={{ borderColor: 'var(--border-default)' }}>
+                        {/* MODIFICACIÓN: Se cambia el layout a `flex-col` en móvil y `lg:flex-row` en pantallas grandes */}
                         <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 pt-4 sm:pt-6">
                             
-                            {/* Columna Izquierda: Definición del Tema (sin cambios) */}
                             <div className="space-y-4 flex-1">
                                 <h3 className="text-sm font-bold tracking-wider uppercase text-center lg:text-left" style={{ color: 'var(--text-default)' }}>Definición del Tema</h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
@@ -105,7 +100,6 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                                 </div>
                             </div>
 
-                            {/* Columna Derecha: Herramientas (sin cambios) */}
                             <div className="space-y-4 flex-1">
                                 <h3 className="text-sm font-bold tracking-wider uppercase text-center lg:text-left" style={{ color: 'var(--text-default)' }}>Herramientas</h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
@@ -143,10 +137,10 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                             </div>
                         </div>
 
-                        {/* --- NUEVA SECCIÓN DE ANÁLISIS --- */}
                         <div className="pt-6 mt-6 border-t" style={{ borderColor: 'var(--border-default)' }}>
                             <h3 className="text-sm font-bold tracking-wider uppercase text-center lg:text-left mb-4" style={{ color: 'var(--text-default)' }}>Análisis y Previsualización</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* MODIFICACIÓN: Se ajusta el layout a `flex-col` en móvil y `sm:flex-row` en pantallas pequeñas o más */}
+                            <div className="flex flex-col sm:flex-row gap-4">
                                 <button onClick={onOpenAccessibilityModal} className={analysisButtonStyles} style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}}>
                                     <Eye size={16}/> Verificación de Accesibilidad
                                 </button>
