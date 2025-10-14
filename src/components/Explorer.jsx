@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles } from 'lucide-react';
+// --- MODIFICACIÓN --- Añadimos TestTube y TestTube2 para los nuevos botones
+import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, TestTube, TestTube2 } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from './ColorPalette.jsx';
@@ -50,7 +51,10 @@ const Explorer = ({
     paletteHistoryIndex,
     simulationMode,
     setSimulationMode,
-    generatePaletteWithAI
+    generatePaletteWithAI,
+    // --- NUEVO --- Añadimos las funciones para abrir los modales de análisis
+    onOpenAccessibilityModal,
+    onOpenComponentPreviewModal
 }) => {
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
@@ -93,20 +97,37 @@ const Explorer = ({
                          <button onClick={() => setIsAIModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" title="Generar con IA">
                             <Sparkles size={14} /> <span className="hidden sm:inline">IA</span>
                         </button>
-                         <select value={explorerMethod} onChange={(e) => setExplorerMethod(e.target.value)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Generar por Método">
-                            {generationMethods.map(method => (<option key={method.id} value={method.id}>{method.name}</option>))}
-                        </select>
+                        <div className="relative group">
+                            <button className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                                <Palette size={14} />
+                                <span className="hidden sm:inline">{generationMethods.find(m => m.id === explorerMethod)?.name || 'Auto'}</span>
+                            </button>
+                            <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
+                                {generationMethods.map(method => (
+                                    <button
+                                      key={method.id}
+                                      onClick={() => setExplorerMethod(method.id)}
+                                      className={`w-full text-left px-4 py-2 text-sm ${explorerMethod === method.id ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}
+                                    >
+                                        {method.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                         <button onClick={() => setIsImageModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                             <ImageIcon size={14} /> <span className="hidden sm:inline">Imagen</span>
                         </button>
-                        <div className="relative">
-                            <Eye size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]"/>
-                            <select value={simulationMode} onChange={(e) => setSimulationMode(e.target.value)} className="text-sm font-medium py-2 pl-9 pr-3 rounded-lg appearance-none bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Simulador de Daltonismo">
-                                <option value="none">Normal</option>
-                                <option value="protanopia">Protanopia</option>
-                                <option value="deuteranopia">Deuteranopia</option>
-                                <option value="tritanopia">Tritanopia</option>
-                            </select>
+                        <div className="relative group">
+                            <button className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                                <Eye size={14} />
+                                <span className="hidden sm:inline">{simulationMode === 'none' ? 'Normal' : simulationMode.charAt(0).toUpperCase() + simulationMode.slice(1)}</span>
+                            </button>
+                            <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
+                                <button onClick={() => setSimulationMode('none')} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === 'none' ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>Normal</button>
+                                <button onClick={() => setSimulationMode('protanopia')} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === 'protanopia' ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>Protanopia</button>
+                                <button onClick={() => setSimulationMode('deuteranopia')} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === 'deuteranopia' ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>Deuteranopia</button>
+                                <button onClick={() => setSimulationMode('tritanopia')} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === 'tritanopia' ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>Tritanopia</button>
+                            </div>
                         </div>
                         <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
                         <button onClick={cyclePreviewMode} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
@@ -178,6 +199,15 @@ const Explorer = ({
                      <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-4">
                         <p className="text-sm font-semibold self-start sm:self-center" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Escala de Grises Sugerida</p>
                         <div className="flex items-center gap-2 self-start sm:self-center">
+                            {/* --- NUEVO --- Botones de análisis reubicados aquí */}
+                            <button onClick={onOpenAccessibilityModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                                <TestTube size={14} /> <span className="hidden sm:inline">Accesibilidad</span>
+                            </button>
+                            <button onClick={onOpenComponentPreviewModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                                <TestTube2 size={14} /> <span className="hidden sm:inline">Componentes</span>
+                            </button>
+                            <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
+                            {/* --- FIN NUEVO --- */}
                             <button onClick={() => setIsPaletteAdjusterVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <Settings size={14} /> <span className="hidden sm:inline">Ajustar</span>
                             </button>

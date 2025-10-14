@@ -1,19 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 import tinycolor from 'tinycolor2';
+import { HexColorPicker } from 'react-colorful';
 
-const ColorPalette = ({ title, color, hex, shades, onShadeCopy, themeOverride, isExplorer = false }) => {
+const ColorPalette = ({ 
+    title, 
+    color, 
+    hex, 
+    shades, 
+    onShadeCopy, 
+    themeOverride, 
+    isExplorer = false,
+    // --- NUEVO --- Props para hacer el control de color interactivo
+    onColorChange,
+    isDisabled = false
+}) => {
+  const [isPickerVisible, setIsPickerVisible] = useState(false);
+  const titleColorClass = themeOverride === 'light' ? 'text-gray-900' : 'text-gray-50';
+  const hexColorClass = themeOverride === 'light' ? 'text-gray-500' : 'text-gray-400';
+
+  const handleHeaderClick = () => {
+    // Solo abre el picker si no está deshabilitado y si tiene una función de cambio
+    if (!isDisabled && onColorChange) {
+      setIsPickerVisible(prev => !prev);
+    }
+  };
+
   return (
     <div className="mb-4">
       {!isExplorer && (
-        <div className="flex items-center mb-2">
-          <div className="w-10 h-10 rounded-md mr-3 border" style={{ backgroundColor: color, borderColor: themeOverride === 'light' ? '#E5E7EB' : '#4B5563' }}></div>
-          <div>
-            <p className={`text-sm font-medium ${themeOverride === 'light' ? 'text-gray-900' : 'text-gray-50'}`}>{title}</p>
-            <p className={`text-xs font-mono ${themeOverride === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>{hex.toUpperCase()}</p>
+        <div className="relative">
+          <div 
+            className={`flex items-center mb-2 ${onColorChange && !isDisabled ? 'cursor-pointer' : 'cursor-default'}`}
+            onClick={handleHeaderClick}
+          >
+            <div 
+              className="w-10 h-10 rounded-md mr-3 border" 
+              style={{ 
+                backgroundColor: color, 
+                borderColor: themeOverride === 'light' ? '#E5E7EB' : '#4B5563' 
+              }}
+            ></div>
+            <div>
+              <p className={`text-sm font-medium ${titleColorClass}`}>{title}</p>
+              <p className={`text-xs font-mono ${hexColorClass}`}>{hex.toUpperCase()}</p>
+            </div>
           </div>
+          {/* --- NUEVO --- Lógica para mostrar el selector de color */}
+          {isPickerVisible && onColorChange && !isDisabled && (
+            <div className="absolute z-20 top-full mt-2 left-0">
+                <div className="fixed inset-0 -z-10" onClick={() => setIsPickerVisible(false)} />
+                <HexColorPicker color={color} onChange={onColorChange} />
+            </div>
+          )}
         </div>
       )}
-      {/* --- MODIFICACIÓN --- Se añade un div contenedor para el scroll horizontal */}
       <div className="overflow-x-auto pb-2 -mb-2">
         <div className="flex rounded-md overflow-hidden h-10 relative group" style={{ minWidth: `${shades.length * 25}px` }}>
           {shades.map((shade, index) => (
@@ -44,4 +84,3 @@ const ColorPalette = ({ title, color, hex, shades, onShadeCopy, themeOverride, i
 }
 
 export default ColorPalette;
-

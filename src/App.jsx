@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
-import { availableFonts } from './utils/colorUtils.js';
 import Header from './components/Header.jsx';
-import Controls from './components/Controls.jsx';
+// --- MODIFICACIÓN --- El componente Controls se elimina
 import Explorer from './components/Explorer.jsx';
 import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
 import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals/index.jsx';
+import { availableFonts } from './utils/colorUtils.js';
 
 function App() {
   const hook = useThemeGenerator();
@@ -105,18 +105,14 @@ function App() {
           onExport={isNative ? handleNativeExport : handleWebExport} 
           onReset={hook.handleReset} 
           onOpenExportModal={() => setIsExportModalVisible(true)}
-          themeData={themeData} 
+          themeData={themeData}
+          // --- MODIFICACIÓN --- Pasamos la fuente y la función para cambiarla
+          font={hook.font}
+          onFontChange={hook.setFont}
         />
         
         <main>
-          <div className="md:sticky top-4 z-40 mb-8">
-            <Controls
-              hook={hook}
-              onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
-              onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
-            />
-          </div>
-
+          {/* --- MODIFICACIÓN --- Se ha eliminado el componente Controls */}
           <Explorer
             explorerPalette={hook.explorerPalette}
             reorderExplorerPalette={hook.reorderExplorerPalette}
@@ -140,6 +136,9 @@ function App() {
             simulationMode={hook.simulationMode}
             setSimulationMode={hook.setSimulationMode}
             generatePaletteWithAI={hook.generatePaletteWithAI}
+            // --- MODIFICACIÓN --- Pasamos las funciones para abrir los modales de análisis
+            onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
+            onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
           />
 
           <div className="space-y-6 mb-8">
@@ -148,10 +147,7 @@ function App() {
               themeOverride="light"
               previewMode={hook.lightPreviewMode}
               onCyclePreviewMode={() => hook.cyclePreviewMode(hook.lightPreviewMode, hook.setLightPreviewMode, ['white', 'T950'])}
-              brandColor={themeData.brandColor}
-              grayColor={themeData.grayColor}
-              brandShades={themeData.brandShades}
-              grayShades={themeData.grayShades}
+              hook={hook}
               onShadeCopy={hook.showNotification}
             />
             <ColorPreviewer
@@ -159,10 +155,7 @@ function App() {
               themeOverride="dark"
               previewMode={hook.darkPreviewMode}
               onCyclePreviewMode={() => hook.cyclePreviewMode(hook.darkPreviewMode, hook.setDarkPreviewMode, ['black', 'T0'])}
-              brandColor={themeData.brandColor}
-              grayColor={themeData.grayColor}
-              brandShades={themeData.brandShades}
-              grayShades={themeData.grayShades}
+              hook={hook}
               onShadeCopy={hook.showNotification}
             />
           </div>
@@ -217,8 +210,7 @@ function App() {
             onUndo={hook.handleUndo}
             onRedo={hook.handleRedo}
             canUndo={hook.historyIndex > 0}
-            canRedo={hook.historyIndex < hook.colorHistory.length - 1}
-            isGeneratingRandom={hook.isGeneratingRandom}
+            canRedo={hook.colorHistory.length - 1 > hook.historyIndex}
         />
       </div>
     </>

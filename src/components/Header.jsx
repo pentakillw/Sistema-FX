@@ -1,8 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { RefreshCcw, Upload, Download, HelpCircle, FileCode } from 'lucide-react'; // **FIX**: Importar FileCode
+// --- MODIFICACIÓN --- Añadimos el ícono de Texto (Type)
+import { RefreshCcw, Upload, Download, HelpCircle, FileCode, Type } from 'lucide-react';
 import { HelpModal } from './modals';
+// --- MODIFICACIÓN --- Importamos las fuentes disponibles
+import { availableFonts } from '../utils/colorUtils';
 
-const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData }) => { // **FIX**: Añadir prop onOpenExportModal
+// --- MODIFICACIÓN --- Añadimos 'font' y 'onFontChange' a las props
+const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, font, onFontChange }) => {
     const importFileRef = useRef(null);
     const [isHelpVisible, setIsHelpVisible] = useState(false);
     
@@ -20,9 +24,27 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData }) =
                         <p className="text-sm md:text-md" style={{ color: mutedTextColor }}>al sistema de diseño FX</p>
                     </div>
                 </div>
-                {/* **FIX**: Reorganizar botones y añadir el nuevo */}
                 <div className="flex items-center gap-2 self-start sm:self-center">
                     <input type="file" ref={importFileRef} onChange={onImport} accept=".json" className="hidden"/>
+                    
+                    {/* --- NUEVO --- Selector de fuentes como un menú desplegable con ícono */}
+                    <div className="relative group">
+                        <button title="Cambiar Fuente" className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}>
+                            <Type size={16}/>
+                        </button>
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
+                           {Object.keys(availableFonts).map(fontName => (
+                               <button
+                                 key={fontName}
+                                 onClick={() => onFontChange(fontName)}
+                                 className={`w-full text-left px-4 py-2 text-sm ${font === fontName ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}
+                               >
+                                   {fontName}
+                               </button>
+                           ))}
+                        </div>
+                    </div>
+
                     <button title="Importar Tema" onClick={() => importFileRef.current.click()} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Upload size={16}/></button>
                     <button title="Exportar Tema" onClick={onExport} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Download size={16}/></button>
                     <button title="Exportar Código" onClick={onOpenExportModal} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><FileCode size={16}/></button>
@@ -37,4 +59,3 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData }) =
 };
 
 export default Header;
-
