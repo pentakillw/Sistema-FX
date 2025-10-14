@@ -46,13 +46,14 @@ const Explorer = ({
     replaceColorInPalette,
     handlePaletteUndo,
     handlePaletteRedo,
-    paletteHistory,
-    paletteHistoryIndex,
+    history,
+    historyIndex,
     simulationMode,
     setSimulationMode,
     generatePaletteWithAI,
     onOpenAccessibilityModal,
-    onOpenComponentPreviewModal
+    onOpenComponentPreviewModal,
+    onCopy
 }) => {
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
@@ -66,8 +67,6 @@ const Explorer = ({
     
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
-
-    // --- MODIFICACIÓN --- El color del borde ahora usa una variable CSS para ser consistente
     const borderColor = 'var(--border-default)';
 
     const cyclePreviewMode = () => {
@@ -228,119 +227,120 @@ const Explorer = ({
             </section>
             
             {isExpanded && (
-                <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={(e) => { e.stopPropagation(); setIsExpanded(false); setActiveShadeIndex(null);}}>
-                    <div className="absolute top-4 left-4 flex gap-2 z-30">
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); handlePaletteUndo(); }}
-                            disabled={paletteHistoryIndex <= 0}
-                            className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Deshacer"
-                        >
-                            <Undo2 size={24} />
-                        </button>
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); handlePaletteRedo(); }}
-                            disabled={paletteHistoryIndex >= paletteHistory.length - 1}
-                            className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Rehacer"
-                        >
-                            <Redo2 size={24} />
-                        </button>
-                    </div>
+                <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}}>
+                    <div className="w-full h-full flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        <div className="absolute top-4 left-4 flex gap-2 z-30">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); handlePaletteUndo(); }}
+                                disabled={historyIndex <= 0}
+                                className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Deshacer"
+                            >
+                                <Undo2 size={24} />
+                            </button>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); handlePaletteRedo(); }}
+                                disabled={historyIndex >= history.length - 1}
+                                className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Rehacer"
+                            >
+                                <Redo2 size={24} />
+                            </button>
+                        </div>
 
-                    <button onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}} className="absolute top-4 right-4 text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors z-30">
-                        <X size={24} />
-                    </button>
-                    
-                    <DragDropContext onDragEnd={onDragEnd}>
-                        <Droppable droppableId="palette-expanded" direction="horizontal">
-                            {(provided) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className="w-full h-full flex items-center"
-                                >
-                                    {explorerPalette.map((color, index) => (
-                                        <Draggable key={"expanded-" + color + index} draggableId={"expanded-" + color + index} index={index}>
-                                            {(provided) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    className="relative group h-full flex-1 flex flex-col items-center justify-end text-white font-bold text-lg" 
-                                                    style={{...provided.draggableProps.style }}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <div {...provided.dragHandleProps} className="w-full h-full cursor-grab active:cursor-grabbing" style={{backgroundColor: color}}></div>
-                                                    
-                                                    {activeShadeIndex !== index && (
-                                                        <>
-                                                            <div className="text-center transition-opacity duration-300 pointer-events-none absolute bottom-4">
-                                                                <p className="font-mono text-sm" style={{ color: tinycolor(color).isLight() ? '#000' : '#FFF' }}>{color.toUpperCase()}</p>
-                                                            </div>
-                                                            <button 
-                                                                onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}}
-                                                                className="absolute top-2 right-2 p-1 bg-black/20 rounded-full text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-all"
-                                                                title="Quitar color"
-                                                            >
-                                                                <X size={16}/>
-                                                            </button>
-                                                            <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
-                                                                <button 
-                                                                    onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
-                                                                    className="bg-white/80 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform"
-                                                                    title="Insertar color"
-                                                                >
-                                                                    <Plus size={20}/>
-                                                                </button>
-                                                            </div>
-                                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); toggleShades(index); }}
-                                                                    className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/40"
-                                                                    title="Ver tonalidades"
-                                                                >
-                                                                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                                                                </button>
-                                                            </div>
-                                                        </>
-                                                    )}
-
-                                                    {activeShadeIndex === index && (
-                                                        <div className="absolute inset-0 flex flex-col z-20 animate-fade-in" onMouseLeave={() => setHoveredShade(null)}>
-                                                            {generateShades(color).map((shade, shadeIndex) => (
-                                                                <div
-                                                                    key={shadeIndex}
-                                                                    className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade"
-                                                                    style={{ backgroundColor: shade }}
-                                                                    onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); }}
-                                                                    title={`Usar ${shade.toUpperCase()}`}
-                                                                    onMouseEnter={() => setHoveredShade({ text: shade.toUpperCase(), color: shade })}
-                                                                >
-                                                                    {shade.toLowerCase() === color.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
-                                                                    
-                                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>
-                                                                        {shade.toUpperCase()}
-                                                                    </div>
+                        <button onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}} className="absolute top-4 right-4 text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors z-30">
+                            <X size={24} />
+                        </button>
+                        
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="palette-expanded" direction="horizontal">
+                                {(provided) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className="w-full h-full flex items-center"
+                                    >
+                                        {explorerPalette.map((color, index) => (
+                                            <Draggable key={"expanded-" + color + index} draggableId={"expanded-" + color + index} index={index}>
+                                                {(provided) => (
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        className="relative group h-full flex-1 flex flex-col items-center justify-end text-white font-bold text-lg" 
+                                                        style={{...provided.draggableProps.style }}
+                                                    >
+                                                        <div {...provided.dragHandleProps} className="w-full h-full cursor-grab active:cursor-grabbing" style={{backgroundColor: color}}></div>
+                                                        
+                                                        {activeShadeIndex !== index && (
+                                                            <>
+                                                                <div className="text-center transition-opacity duration-300 pointer-events-none absolute bottom-4">
+                                                                    <p className="font-mono text-sm" style={{ color: tinycolor(color).isLight() ? '#000' : '#FFF' }}>{color.toUpperCase()}</p>
                                                                 </div>
-                                                            ))}
-                                                             <button 
-                                                                onClick={(e) => { e.stopPropagation(); setActiveShadeIndex(null); }}
-                                                                className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50"
-                                                                title="Ocultar tonalidades"
-                                                            >
-                                                                <X size={16} />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
+                                                                <button 
+                                                                    onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}}
+                                                                    className="absolute top-2 right-2 p-1 bg-black/20 rounded-full text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-all"
+                                                                    title="Quitar color"
+                                                                >
+                                                                    <X size={16}/>
+                                                                </button>
+                                                                <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
+                                                                    <button 
+                                                                        onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                        className="bg-white/80 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform"
+                                                                        title="Insertar color"
+                                                                    >
+                                                                        <Plus size={20}/>
+                                                                    </button>
+                                                                </div>
+                                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); toggleShades(index); }}
+                                                                        className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/40"
+                                                                        title="Ver tonalidades"
+                                                                    >
+                                                                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                                                                    </button>
+                                                                </div>
+                                                            </>
+                                                        )}
+
+                                                        {activeShadeIndex === index && (
+                                                            <div className="absolute inset-0 flex flex-col z-20 animate-fade-in" onMouseLeave={() => setHoveredShade(null)}>
+                                                                {generateShades(color).map((shade, shadeIndex) => (
+                                                                    <div
+                                                                        key={shadeIndex}
+                                                                        className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade"
+                                                                        style={{ backgroundColor: shade }}
+                                                                        onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); }}
+                                                                        title={`Usar ${shade.toUpperCase()}`}
+                                                                        onMouseEnter={() => setHoveredShade({ text: shade.toUpperCase(), color: shade })}
+                                                                    >
+                                                                        {shade.toLowerCase() === color.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
+                                                                        
+                                                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>
+                                                                            {shade.toUpperCase()}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                                 <button 
+                                                                    onClick={(e) => { e.stopPropagation(); setActiveShadeIndex(null); }}
+                                                                    className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50"
+                                                                    title="Ocultar tonalidades"
+                                                                >
+                                                                    <X size={16} />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    </div>
                 </div>
             )}
             

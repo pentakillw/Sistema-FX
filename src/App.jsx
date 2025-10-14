@@ -106,7 +106,7 @@ function App() {
           onOpenExportModal={() => setIsExportModalVisible(true)}
           themeData={themeData}
           font={hook.font}
-          onFontChange={hook.setFont}
+          setFont={hook.setFont} 
         />
         
         <main>
@@ -126,15 +126,16 @@ function App() {
             explorerMethod={hook.explorerMethod}
             setExplorerMethod={hook.setExplorerMethod}
             replaceColorInPalette={hook.replaceColorInPalette}
-            handlePaletteUndo={hook.handleUndo} // Unificado
-            handlePaletteRedo={hook.handleRedo} // Unificado
-            paletteHistory={hook.history} // Unificado
-            paletteHistoryIndex={hook.historyIndex} // Unificado
+            handlePaletteUndo={hook.handleUndo}
+            handlePaletteRedo={hook.handleRedo}
+            history={hook.history}
+            historyIndex={hook.historyIndex}
             simulationMode={hook.simulationMode}
             setSimulationMode={hook.setSimulationMode}
             generatePaletteWithAI={hook.generatePaletteWithAI}
             onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
             onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
+            onCopy={hook.showNotification}
           />
 
           <div className="space-y-6 mb-8">
@@ -144,7 +145,6 @@ function App() {
               previewMode={hook.lightPreviewMode}
               onCyclePreviewMode={() => hook.cyclePreviewMode(hook.lightPreviewMode, hook.setLightPreviewMode, ['white', 'T950'])}
               hook={hook}
-              onShadeCopy={hook.showNotification}
             />
             <ColorPreviewer
               title="Modo Oscuro"
@@ -152,7 +152,6 @@ function App() {
               previewMode={hook.darkPreviewMode}
               onCyclePreviewMode={() => hook.cyclePreviewMode(hook.darkPreviewMode, hook.setDarkPreviewMode, ['black', 'T0'])}
               hook={hook}
-              onShadeCopy={hook.showNotification}
             />
           </div>
 
