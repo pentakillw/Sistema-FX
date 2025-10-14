@@ -10,11 +10,13 @@ export const availableFonts = {
   'Lato': '"Lato", sans-serif',
 };
 
+// --- MODIFICACIÓN --- Se añade el nuevo método "Complementario Dividido"
 export const generationMethods = [
     { id: 'auto', name: 'Auto' },
     { id: 'mono', name: 'Monocromo' },
     { id: 'analogous', name: 'Análogo' },
     { id: 'complement', name: 'Complementario' },
+    { id: 'split-complement', name: 'Comp. Dividido' }, // NUEVO
     { id: 'triad', name: 'Triádico' },
     { id: 'tetrad', name: 'Tetrádico' }
 ];
@@ -34,64 +36,74 @@ export const generateShades = (hex) => {
   return shades;
 };
 
-export const generateExplorerPalette = (method = 'auto', baseColorHex) => {
+export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 20) => {
     let newPalette = [];
-    const colorForExplorer = (method === 'auto' || !baseColorHex) 
-      ? tinycolor.random()
-      : tinycolor(baseColorHex);
+    const colorForExplorer = !baseColorHex ? tinycolor.random() : tinycolor(baseColorHex);
+
+    // --- MODIFICACIÓN --- Lógica mejorada para el modo "Auto"
+    if (method === 'auto') {
+      const harmonyMethods = ['analogous', 'complement', 'split-complement', 'triad'];
+      const randomMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
+      // Llama a esta misma función con el método aleatorio elegido
+      return generateExplorerPalette(randomMethod, colorForExplorer.toHexString(), count);
+    }
 
     switch (method) {
         case 'mono':
-            newPalette = generateShades(colorForExplorer.toHexString());
+            newPalette = generateShades(colorForExplorer.toHexString()).slice(0, count);
             break;
         case 'analogous': {
-            const analogousColors = colorForExplorer.analogous(5, 10);
-            analogousColors.forEach(c => {
-                newPalette.push(...generateShades(c.toHexString()).slice(4, 8));
-            });
+            const analogousColors = colorForExplorer.analogous(count);
+            newPalette = analogousColors.map(c => c.toHexString());
             break;
         }
         case 'complement': {
-            const complementColors = [colorForExplorer, colorForExplorer.complement()];
-            complementColors.forEach(c => {
-                newPalette.push(...generateShades(c.toHexString()).slice(0, 10));
-            });
+            const complementColor = colorForExplorer.complement();
+            for (let i = 0; i < count; i++) {
+                const mixAmount = (i / (count - 1)) * 100;
+                newPalette.push(tinycolor.mix(colorForExplorer, complementColor, mixAmount).toHexString());
+            }
+            break;
+        }
+        // --- NUEVO --- Lógica para "Complementario Dividido"
+        case 'split-complement': {
+            const splitColors = colorForExplorer.splitcomplement(); // Devuelve 3 colores
+            for (let i = 0; i < count; i++) {
+                const colorIndex = i % 3;
+                let hsv = splitColors[colorIndex].toHsv();
+                // Añade variaciones de saturación y brillo para más riqueza
+                hsv.s = 0.5 + Math.random() * 0.4;
+                hsv.v = 0.6 + Math.random() * 0.4;
+                newPalette.push(tinycolor(hsv).toHexString());
+            }
             break;
         }
         case 'triad': {
             const triadColors = colorForExplorer.triad();
-            for(let i = 0; i < 7; i++) {
-                if (triadColors[0] && triadColors[1] && triadColors[2]) {
-                    newPalette.push(...generateShades(triadColors[0].toHexString()).slice(i*2, i*2+2));
-                    newPalette.push(...generateShades(triadColors[1].toHexString()).slice(i*2, i*2+2));
-                    newPalette.push(...generateShades(triadColors[2].toHexString()).slice(i*2, i*2+2));
-                }
+            for (let i = 0; i < count; i++) {
+                const colorIndex = i % 3;
+                let hsv = triadColors[colorIndex].toHsv();
+                hsv.s = 0.5 + Math.random() * 0.5;
+                hsv.v = 0.7 + Math.random() * 0.3;
+                newPalette.push(tinycolor(hsv).toHexString());
             }
-             newPalette = newPalette.slice(0, 20);
             break;
         }
         case 'tetrad': {
             const tetradColors = colorForExplorer.tetrad();
-            tetradColors.forEach(c => {
-                newPalette.push(...generateShades(c.toHexString()).slice(2, 7));
-            });
-            break;
-        }
-        case 'auto':
-        default: {
-            let hsv = colorForExplorer.toHsv();
-            for (let i = 0; i < 20; i++) {
-                hsv.h = (hsv.h + 137.508) % 360; // Golden Angle
-                hsv.s = Math.max(0.3, Math.min(1, hsv.s + (Math.random() - 0.5) * 0.2));
-                hsv.v = Math.max(0.6, Math.min(1, hsv.v + (Math.random() - 0.5) * 0.2));
+             for (let i = 0; i < count; i++) {
+                const colorIndex = i % 4;
+                let hsv = tetradColors[colorIndex].toHsv();
+                hsv.s = 0.5 + Math.random() * 0.5;
+                hsv.v = 0.7 + Math.random() * 0.3;
                 newPalette.push(tinycolor(hsv).toHexString());
             }
             break;
         }
     }
     
-    const finalPalette = newPalette.slice(0, 20);
-    const baseForGray = finalPalette.length > 9 ? finalPalette[9] : tinycolor.random().toHexString();
+    const finalPalette = newPalette.slice(0, count);
+    const baseForGray = finalPalette.length > 0 ? finalPalette[Math.floor(finalPalette.length / 2)] : tinycolor.random().toHexString();
     const harmonicGrayShades = generateShades(tinycolor(baseForGray).desaturate(85).toHexString());
 
     return { palette: finalPalette, gray: harmonicGrayShades };

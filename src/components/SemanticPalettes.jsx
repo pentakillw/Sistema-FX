@@ -10,13 +10,13 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
     return (
         <div className="mb-4">
             <h3 className="text-sm font-medium mb-2" style={{ color: titleColor }}>{title}</h3>
-            <div className="flex flex-col">
-                <div className="flex rounded-md overflow-hidden h-10 relative group">
+            <div className="overflow-x-auto pb-2 -mb-2">
+                <div className="flex rounded-md overflow-hidden h-10 relative group" style={{ minWidth: `${colors.length * 30}px` }}>
                     {(colors || []).map((item) => (
                         <div
                             key={item.name}
                             className="flex-1 cursor-pointer transition-transform duration-100 ease-in-out group-hover:transform group-hover:scale-y-110 hover:!scale-125 hover:z-10 flex items-center justify-center"
-                            style={{ backgroundColor: item.color }}
+                            style={{ backgroundColor: item.color, minWidth: '30px' }}
                             onClick={() => onColorCopy(item.color, `${title}: ${item.name} (${item.color.toUpperCase()}) copiado!`)}
                             title={`${item.name} - ${item.color.toUpperCase()}`}
                         >
@@ -26,10 +26,15 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
                         </div>
                     ))}
                 </div>
-                {/* **FIX**: Ocultar los títulos en móvil (hidden) y mostrarlos en pantallas pequeñas y más grandes (sm:flex) */}
-                <div className={`hidden sm:flex flex-wrap text-xs px-1 relative pt-2 mt-1`} style={{ color: textColor }}>
+            </div>
+             {/* --- MODIFICACIÓN --- Se cambia la forma de mostrar los títulos para evitar el desbordamiento y desalineación. */}
+            <div className={`hidden sm:block overflow-x-auto pb-2 -mb-2`}>
+                <div className="flex text-xs pt-2 mt-1" style={{ color: textColor, minWidth: `${colors.length * 60}px` }}>
+                    {/* En lugar de mapear cada título, los unimos en un solo elemento para un mejor control del layout */}
                     {(colors || []).map((item) => (
-                        <div key={item.name} className="flex-1 min-w-[60px] text-center text-wrap text-[10px] py-1" title={item.name}>{item.name}</div>
+                         <div key={item.name} className="flex-1 text-center text-wrap text-[10px] py-1" title={item.name} style={{ minWidth: '60px' }}>
+                            {item.name}
+                        </div>
                     ))}
                 </div>
             </div>
@@ -58,7 +63,6 @@ const getPreviewBgColor = (mode, themeData) => {
             return stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
     }
 };
-
 
 const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCyclePreviewMode }) => {
     const bgColor = getPreviewBgColor(previewMode, themeData);

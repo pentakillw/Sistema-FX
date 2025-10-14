@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Layers, Settings, Palette, ShieldCheck } from 'lucide-react';
+import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon } from 'lucide-react';
 import tinycolor from 'tinycolor2';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from './ColorPalette.jsx';
-import { VariationsModal, PaletteContrastChecker, PaletteAdjusterModal } from './modals/index.jsx';
+import { VariationsModal, PaletteContrastChecker, PaletteAdjusterModal, ImagePaletteModal } from './modals/index.jsx';
+import { generationMethods, generateShades } from '../utils/colorUtils.js';
 
 const backgroundModeLabels = {
     'T950': 'Fondo T950',
@@ -14,19 +16,21 @@ const backgroundModeLabels = {
 };
 
 const getPreviewBgColor = (mode, shades, cardColor) => {
-    if (!shades || shades.length < 20) return '#FFFFFF';
+    if (!shades || shades.length === 0) return '#FFFFFF';
     switch (mode) {
-        case 'T950': return shades[19];
+        case 'T950': return shades[shades.length - 1];
         case 'T0': return shades[0];
         case 'white': return '#FFFFFF';
         case 'black': return '#000000';
         case 'card': return cardColor;
-        default: return shades[19];
+        default: return shades[shades.length - 1];
     }
 }
 
+
 const Explorer = ({
     explorerPalette,
+    reorderExplorerPalette,
     explorerGrayShades,
     onShadeCopy,
     onGrayShadeCopy,
@@ -34,14 +38,23 @@ const Explorer = ({
     onAdjust,
     brandColor,
     onColorSelect,
-    themeData
+    themeData,
+    insertColorInPalette,
+    removeColorFromPalette,
+    explorerMethod,
+    setExplorerMethod,
+    // --- NUEVO --- Se recibe la nueva función
+    replaceColorInPalette
 }) => {
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
     const [isPaletteAdjusterVisible, setIsPaletteAdjusterVisible] = useState(false);
     const [colorModePreview, setColorModePreview] = useState('white');
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+    const [activeShadeIndex, setActiveShadeIndex] = useState(null);
+    const [hoveredShade, setHoveredShade] = useState(null);
     
-    // Acceso seguro a los datos del tema, que ahora se reciben como prop.
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
 
@@ -52,33 +65,111 @@ const Explorer = ({
         setColorModePreview(options[nextIndex]);
     };
 
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        reorderExplorerPalette(result.source.index, result.destination.index);
+    };
+
+    const toggleShades = (index) => {
+        setActiveShadeIndex(activeShadeIndex === index ? null : index);
+    };
+
     return (
         <>
-            <section className="p-4 sm:p-6 rounded-xl border mb-8" style={{ backgroundColor: colorModeBg, borderColor: themeData.grayShades[2] }}>
+            <section className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} style={{ backgroundColor: colorModeBg, borderColor: themeData.grayShades[2] }}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div className="flex-1 min-w-0">
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
-                        <p className="text-sm mt-1 truncate" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Toca un color para usarlo como Color de Marca.</p>
+                        <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Arrastra, inserta o quita colores para crear tu paleta.</p>
                     </div>
                     <div className="flex items-center flex-wrap justify-end gap-2">
-                        <span className="text-xs font-mono p-1 rounded-md" style={{ backgroundColor: 'rgba(0,0,0,0.1)', color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>{backgroundModeLabels[colorModePreview]}</span>
-                        <button onClick={cyclePreviewMode} className="text-sm font-medium py-1 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                            <Layers size={14} /> Alternar Fondo
+                         <select value={explorerMethod} onChange={(e) => setExplorerMethod(e.target.value)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Generar por Método">
+                            {generationMethods.map(method => (<option key={method.id} value={method.id}>{method.name}</option>))}
+                        </select>
+                        <button onClick={() => setIsImageModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                            <ImageIcon size={14} /> <span className="hidden sm:inline">Imagen</span>
                         </button>
-                        <button onClick={() => setIsPaletteAdjusterVisible(true)} className="text-sm font-medium py-1 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                            <Settings size={14} /> Ajustar
+                        <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
+                        <button onClick={cyclePreviewMode} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                            <Layers size={14} /> <span className="hidden sm:inline">Fondo</span>
                         </button>
-                        <button onClick={() => setIsVariationsVisible(true)} className="text-sm font-medium py-1 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                            <Palette size={14} /> Variaciones
-                        </button>
-                        <button onClick={() => setIsContrastCheckerVisible(true)} className="text-sm font-medium py-1 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                            <ShieldCheck size={14} /> Contraste
+                        <button onClick={() => setIsExpanded(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                            <Maximize size={14} />
+                            <span className="hidden sm:inline">Expandir</span>
                         </button>
                     </div>
                 </div>
-                <ColorPalette isExplorer={true} shades={explorerPalette} onShadeCopy={onShadeCopy} themeOverride={tinycolor(colorModeBg).isLight() ? 'light' : 'dark'} />
+
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="palette-main" direction="horizontal">
+                        {(provided) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className="flex items-center rounded-md h-12 relative group"
+                            >
+                                {explorerPalette.map((shade, index) => (
+                                    <Draggable key={"main-" + shade + index} draggableId={"main-" + shade + index} index={index}>
+                                        {(provided) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                className="relative h-full flex-1 flex items-center justify-center group/color-wrapper"
+                                                style={{...provided.draggableProps.style}}
+                                            >
+                                                <div
+                                                    {...provided.dragHandleProps}
+                                                    className="relative group/item h-full w-full cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform duration-100 ease-in-out"
+                                                    style={{ backgroundColor: shade}}
+                                                    onClick={() => onShadeCopy(shade)}
+                                                    title={`Usar ${shade.toUpperCase()}`}
+                                                >
+                                                    <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
+                                                        {shade.substring(1).toUpperCase()}
+                                                    </span>
+                                                   <button 
+                                                        onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}}
+                                                        className="absolute top-1 right-1 p-0.5 bg-black/30 rounded-full text-white opacity-0 group-hover/item:opacity-100 hover:bg-black/60 transition-opacity z-20"
+                                                        title="Quitar color"
+                                                    >
+                                                        <X size={12}/>
+                                                    </button>
+                                                </div>
+
+                                                <div className="absolute top-0 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                        className="bg-white/90 backdrop-blur-sm rounded-full p-0.5 text-black shadow-lg hover:scale-110 transition-transform"
+                                                        title="Insertar color"
+                                                    >
+                                                        <Plus size={14}/>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </Droppable>
+                </DragDropContext>
+                
                 <div className="mt-6 pt-4 border-t" style={{ borderColor: tinycolor(colorModeBg).isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}>
-                    <p className="text-sm font-semibold mb-2" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Escala de Grises Sugerida</p>
+                     <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-4">
+                        <p className="text-sm font-semibold self-start sm:self-center" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Escala de Grises Sugerida</p>
+                        <div className="flex items-center gap-2 self-start sm:self-center">
+                            <button onClick={() => setIsPaletteAdjusterVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                                <Settings size={14} /> <span className="hidden sm:inline">Ajustar</span>
+                            </button>
+                            <button onClick={() => setIsVariationsVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                                <Palette size={14} /> <span className="hidden sm:inline">Variaciones</span>
+                            </button>
+                            <button onClick={() => setIsContrastCheckerVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                                <ShieldCheck size={14} /> <span className="hidden sm:inline">Contraste</span>
+                            </button>
+                        </div>
+                     </div>
                     <ColorPalette
                         isExplorer={true}
                         shades={explorerGrayShades}
@@ -88,6 +179,113 @@ const Explorer = ({
                 </div>
             </section>
             
+            {isExpanded && (
+                <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}}>
+                    <button onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}} className="absolute top-4 right-4 text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors z-30">
+                        <X size={24} />
+                    </button>
+                    
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable droppableId="palette-expanded" direction="horizontal">
+                            {(provided) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className="w-full h-full flex items-center"
+                                >
+                                    {explorerPalette.map((color, index) => (
+                                        <Draggable key={"expanded-" + color + index} draggableId={"expanded-" + color + index} index={index}>
+                                            {(provided) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    className="relative group h-full flex-1 flex flex-col items-center justify-end text-white font-bold text-lg" 
+                                                    style={{...provided.draggableProps.style }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <div {...provided.dragHandleProps} className="w-full h-full cursor-grab active:cursor-grabbing" style={{backgroundColor: color}}></div>
+                                                    
+                                                    {activeShadeIndex !== index && (
+                                                        <>
+                                                            <div className="text-center transition-opacity duration-300 pointer-events-none absolute bottom-4">
+                                                                <p className="font-mono text-sm" style={{ color: tinycolor(color).isLight() ? '#000' : '#FFF' }}>{color.toUpperCase()}</p>
+                                                            </div>
+                                                            <button 
+                                                                onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}}
+                                                                className="absolute top-2 right-2 p-1 bg-black/20 rounded-full text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-all"
+                                                                title="Quitar color"
+                                                            >
+                                                                <X size={16}/>
+                                                            </button>
+                                                            <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                    className="bg-white/80 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform"
+                                                                    title="Insertar color"
+                                                                >
+                                                                    <Plus size={20}/>
+                                                                </button>
+                                                            </div>
+                                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); toggleShades(index); }}
+                                                                    className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/40"
+                                                                    title="Ver tonalidades"
+                                                                >
+                                                                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+
+                                                    {/* --- MODIFICACIÓN --- Vista de tonalidades mejorada */}
+                                                    {activeShadeIndex === index && (
+                                                        <div className="absolute inset-0 flex flex-col z-20 animate-fade-in">
+                                                            {generateShades(color).map((shade, shadeIndex) => (
+                                                                <div
+                                                                    key={shadeIndex}
+                                                                    className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade"
+                                                                    style={{ backgroundColor: shade }}
+                                                                    // --- MODIFICACIÓN --- Llama a replaceColorInPalette y NO cierra el modal
+                                                                    onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }}
+                                                                    title={`Usar ${shade.toUpperCase()}`}
+                                                                >
+                                                                    {/* Indicador del color base */}
+                                                                    {shade.toLowerCase() === color.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
+                                                                    
+                                                                    {/* --- MODIFICACIÓN --- Etiqueta de texto individual por tonalidad */}
+                                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>
+                                                                        {shade.toUpperCase()}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                             <button 
+                                                                onClick={(e) => { e.stopPropagation(); setActiveShadeIndex(null); }}
+                                                                className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50"
+                                                                title="Ocultar tonalidades"
+                                                            >
+                                                                <X size={16} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
+                </div>
+            )}
+            
+            {isImageModalVisible && (
+                <ImagePaletteModal 
+                    onColorSelect={onColorSelect}
+                    onClose={() => setIsImageModalVisible(false)}
+                />
+            )}
             {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={onColorSelect} />}
             {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(text, msg) => alert(msg)} />}
             {isPaletteAdjusterVisible && <PaletteAdjusterModal adjustments={adjustments} onAdjust={onAdjust} onClose={() => setIsPaletteAdjusterVisible(false)} brandColor={brandColor} />}

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import useThemeGenerator from './hooks/useThemeGenerator';
-import { availableFonts } from './utils/colorUtils';
-import Header from './components/Header';
-import Controls from './components/Controls';
-import Explorer from './components/Explorer';
-import FloatingActionButtons from './components/FloatingActionButtons';
-import ColorPreviewer from './components/ColorPreviewer';
-import SemanticPalettes from './components/SemanticPalettes';
-import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import useThemeGenerator from './hooks/useThemeGenerator.js';
+import { availableFonts } from './utils/colorUtils.js';
+import Header from './components/Header.jsx';
+import Controls from './components/Controls.jsx';
+import Explorer from './components/Explorer.jsx';
+import FloatingActionButtons from './components/FloatingActionButtons.jsx';
+import ColorPreviewer from './components/ColorPreviewer.jsx';
+import SemanticPalettes from './components/SemanticPalettes.jsx';
+import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals/index.jsx';
 
 function App() {
   const hook = useThemeGenerator();
@@ -16,14 +18,59 @@ function App() {
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
   const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
+  const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+    
     if (themeData?.theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
   }, [themeData?.theme]);
+
+  const handleNativeExport = async () => {
+    const data = { 
+      brandColor: hook.brandColor, 
+      grayColor: hook.grayColor, 
+      font: hook.font, 
+      theme: themeData.theme, 
+      isGrayAuto: hook.isGrayAuto,
+      explorerPalette: hook.originalExplorerPalette,
+    };
+    
+    try {
+      const jsonString = JSON.stringify(data, null, 2);
+      const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+
+      await Share.share({
+        title: 'Mi Tema de Color',
+        text: 'Aquí está el archivo JSON de mi tema de color.',
+        url: `data:application/json;name=mi-tema.json;base64,${base64Data}`,
+        dialogTitle: 'Exportar Tema',
+      });
+    } catch (error) {
+       console.log('Share API no disponible o cancelado', error);
+       hook.showNotification('La exportación nativa no está disponible.', 'error');
+    }
+  };
+
+  const handleWebExport = () => {
+    const data = { 
+      brandColor: hook.brandColor, 
+      grayColor: hook.grayColor, 
+      font: hook.font, 
+      theme: themeData.theme, 
+      isGrayAuto: hook.isGrayAuto,
+      explorerPalette: hook.originalExplorerPalette,
+    };
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
+    const link = document.createElement("a");
+    link.href = jsonString;
+    link.download = "mi-tema.json";
+    link.click();
+  };
 
 
   if (!themeData || !themeData.stylePalette || !themeData.stylePalette.fullActionColors) {
@@ -55,7 +102,7 @@ function App() {
       <div className={`min-h-screen p-4 md:p-8`} style={pageThemeStyle}>
         <Header 
           onImport={hook.handleImport} 
-          onExport={hook.handleExport} 
+          onExport={isNative ? handleNativeExport : handleWebExport} 
           onReset={hook.handleReset} 
           onOpenExportModal={() => setIsExportModalVisible(true)}
           themeData={themeData} 
@@ -72,6 +119,7 @@ function App() {
 
           <Explorer
             explorerPalette={hook.explorerPalette}
+            reorderExplorerPalette={hook.reorderExplorerPalette}
             explorerGrayShades={hook.explorerGrayShades}
             onShadeCopy={hook.handleExplorerColorPick}
             onGrayShadeCopy={hook.setGrayColor}
@@ -80,6 +128,12 @@ function App() {
             brandColor={hook.brandColor}
             onColorSelect={hook.updateBrandColor}
             themeData={themeData}
+            insertColorInPalette={hook.insertColorInPalette}
+            removeColorFromPalette={hook.removeColorFromPalette}
+            explorerMethod={hook.explorerMethod}
+            setExplorerMethod={hook.setExplorerMethod}
+            // --- MODIFICACIÓN --- Se pasa la nueva función al componente
+            replaceColorInPalette={hook.replaceColorInPalette}
           />
 
           <div className="space-y-6 mb-8">
@@ -114,7 +168,6 @@ function App() {
             previewMode={hook.semanticPreviewMode}
             onCyclePreviewMode={() => hook.cyclePreviewMode(hook.semanticPreviewMode, hook.setSemanticPreviewMode, ['card', 'white', 'T950', 'black', 'T0'])}
           />
-
         </main>
 
         <footer className="text-center mt-12 pt-8 border-t" style={{ borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
@@ -151,7 +204,6 @@ function App() {
             />
         )}
 
-        {/* MODIFICACIÓN: Se pasan las props del historial a FloatingActionButtons */}
         <FloatingActionButtons 
             onRandomClick={hook.handleRandomTheme}
             onThemeToggle={hook.handleThemeToggle}
@@ -167,4 +219,3 @@ function App() {
 }
 
 export default App;
-

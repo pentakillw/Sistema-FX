@@ -21,11 +21,58 @@ const ExportModal = ({
 
     const codeToDisplay = activeExport === 'powerfx' ? generatedCode : activeExport === 'css' ? cssCode : tailwindCode;
 
+    // --- MODIFICACIÓN --- Función de copiado más robusta para compatibilidad móvil
     const handleCopy = () => {
-        navigator.clipboard.writeText(codeToDisplay);
-        onCopy('¡Código copiado al portapapeles!');
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
+        const textToCopy = codeToDisplay;
+
+        // Intenta usar la API moderna primero
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showCopySuccess();
+            }).catch(() => {
+                fallbackCopy(); // Si falla, usa el método antiguo
+            });
+        } else {
+           fallbackCopy();
+        }
+
+        function fallbackCopy() {
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            
+            // Evita que la pantalla salte al añadir el textarea
+            textArea.style.position = "fixed";
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.width = "2em";
+            textArea.style.height = "2em";
+            textArea.style.padding = "0";
+            textArea.style.border = "none";
+            textArea.style.outline = "none";
+            textArea.style.boxShadow = "none";
+            textArea.style.background = "transparent";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess();
+                }
+            } catch (err) {
+                // No hacer nada si falla
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess() {
+            onCopy('¡Código copiado al portapapeles!');
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        }
     };
 
     return (

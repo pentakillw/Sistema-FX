@@ -35,7 +35,7 @@ const useThemeGenerator = () => {
     
     const [lightPreviewMode, setLightPreviewMode] = useState('white');
     const [darkPreviewMode, setDarkPreviewMode] = useState('black');
-    const [semanticPreviewMode, setSemanticPreviewMode] = useState('card'); // **FIX**: Add state for semantic preview
+    const [semanticPreviewMode, setSemanticPreviewMode] = useState('card');
 
     const [themeData, setThemeData] = useState(null);
     
@@ -49,9 +49,53 @@ const useThemeGenerator = () => {
         const nextIndex = (currentIndex + 1) % options.length;
         setMode(options[nextIndex]);
     };
+    
+    const reorderExplorerPalette = (sourceIndex, destinationIndex) => {
+        const items = Array.from(originalExplorerPalette);
+        const [reorderedItem] = items.splice(sourceIndex, 1);
+        items.splice(destinationIndex, 0, reorderedItem);
+        setOriginalExplorerPalette(items);
+    };
+    
+    const insertColorInPalette = (index) => {
+        if (originalExplorerPalette.length >= 20) {
+            showNotification("Máximo de 20 colores alcanzado.", "error");
+            return;
+        }
 
-    const memoizedGenerateExplorerPalette = useCallback((method, baseColorHex) => {
-        const { palette, gray } = generateExplorerPalette(method, baseColorHex);
+        const colorA = tinycolor(originalExplorerPalette[index]);
+        const colorB = originalExplorerPalette[index + 1] 
+            ? tinycolor(originalExplorerPalette[index + 1])
+            : colorA.clone().spin(30); 
+
+        const newColor = tinycolor.mix(colorA, colorB, 50).toHexString();
+        
+        const newPalette = [
+            ...originalExplorerPalette.slice(0, index + 1),
+            newColor,
+            ...originalExplorerPalette.slice(index + 1)
+        ];
+        setOriginalExplorerPalette(newPalette);
+    };
+
+    const removeColorFromPalette = (index) => {
+        if (originalExplorerPalette.length <= 2) {
+            showNotification("La paleta debe tener al menos 2 colores.", "error");
+            return;
+        }
+        const newPalette = originalExplorerPalette.filter((_, i) => i !== index);
+        setOriginalExplorerPalette(newPalette);
+    };
+
+    // --- NUEVO --- Función para reemplazar un color específico en la paleta
+    const replaceColorInPalette = (index, newColor) => {
+        const newPalette = [...originalExplorerPalette];
+        newPalette[index] = newColor;
+        setOriginalExplorerPalette(newPalette);
+    };
+
+    const memoizedGenerateExplorerPalette = useCallback((method, baseColorHex, count = 4) => {
+        const { palette, gray } = generateExplorerPalette(method, baseColorHex, count);
         setOriginalExplorerPalette(palette);
         setExplorerGrayShades(gray);
         setPaletteAdjustments({ hue: 0, saturation: 0, brightness: 0, temperature: 0 });
@@ -78,7 +122,8 @@ const useThemeGenerator = () => {
             isUpdateFromExplorer.current = false;
             return;
         }
-        memoizedGenerateExplorerPalette(explorerMethod, brandColor);
+        const currentPaletteSize = originalExplorerPalette.length || 4;
+        memoizedGenerateExplorerPalette(explorerMethod, brandColor, currentPaletteSize);
     }, [explorerMethod, brandColor, memoizedGenerateExplorerPalette]);
 
     useEffect(() => {
@@ -172,7 +217,7 @@ const useThemeGenerator = () => {
             { name: 'CriticoFuerte', color: critical }, { name: 'AtencionFuerte', color: attention },
             { name: 'ExitoFuerte', color: success },
           ];
-        } else { // light theme
+        } else {
            stylePalette.fullBackgroundColors = [
             { name: 'Predeterminado', color: grayShades[19] }, { name: 'Apagado', color: grayShades[18] },
             { name: 'Debil', color: grayShades[17] }, { name: 'Fuerte', color: grayShades[0] },
@@ -252,6 +297,9 @@ const useThemeGenerator = () => {
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
+                if (imported.explorerPalette) {
+                    setOriginalExplorerPalette(imported.explorerPalette);
+                }
                 updateBrandColor(imported.brandColor);
                 setGrayColor(imported.grayColor);
                 setFont(imported.font);
@@ -265,35 +313,37 @@ const useThemeGenerator = () => {
         reader.readAsText(file);
     };
 
-    const handleExport = () => {
-        const data = { brandColor, grayColor, font, theme, isGrayAuto };
-        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
-        const link = document.createElement("a");
-        link.href = jsonString;
-        link.download = "mi-tema.json";
-        link.click();
-    };
-
     const handleReset = () => {
         setTheme(defaultState.theme);
         updateBrandColor(defaultState.brandColor);
         setIsGrayAuto(defaultState.isGrayAuto);
         setFont(defaultState.font);
         setGrayColor(defaultState.grayColor);
+        memoizedGenerateExplorerPalette('auto', defaultState.brandColor, 4);
         showNotification("Tema reiniciado.");
     };
 
     const handleThemeToggle = () => setTheme(t => t === 'light' ? 'dark' : 'light');
-    const handleRandomTheme = () => updateBrandColor(tinycolor.random().toHexString());
+    
+    const handleRandomTheme = () => {
+        const newColor = tinycolor.random().toHexString();
+        updateBrandColor(newColor);
+    };
 
     return {
         themeData, font, brandColor, grayColor, isGrayAuto, explorerMethod, simulationMode, historyIndex, colorHistory,
         explorerPalette, explorerGrayShades, paletteAdjustments, notification, fxSeparator, useFxQuotes,
-        lightPreviewMode, darkPreviewMode, semanticPreviewMode, // **FIX**: Export new state
+        lightPreviewMode, darkPreviewMode, semanticPreviewMode, 
         setFont, updateBrandColor, setGrayColor, setIsGrayAuto, setExplorerMethod, setSimulationMode, handleUndo, handleRedo, 
-        handleImport, handleExport, handleReset, showNotification, setPaletteAdjustments, handleExplorerColorPick, 
+        handleImport, 
+        handleReset, showNotification, setPaletteAdjustments, handleExplorerColorPick, 
         handleRandomTheme, handleThemeToggle, setFxSeparator, setUseFxQuotes,
-        cyclePreviewMode, setLightPreviewMode, setDarkPreviewMode, setSemanticPreviewMode // **FIX**: Export new setter
+        cyclePreviewMode, setLightPreviewMode, setDarkPreviewMode, setSemanticPreviewMode,
+        reorderExplorerPalette,
+        insertColorInPalette, removeColorFromPalette,
+        // --- MODIFICACIÓN --- Se exporta la nueva función
+        replaceColorInPalette,
+        originalExplorerPalette
     };
 };
 
