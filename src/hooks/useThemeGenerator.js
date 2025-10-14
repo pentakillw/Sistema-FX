@@ -28,7 +28,6 @@ const useThemeGenerator = () => {
     const [explorerGrayShades, setExplorerGrayShades] = useState([]);
     const [paletteAdjustments, setPaletteAdjustments] = useState({ hue: 0, saturation: 0, brightness: 0, temperature: 0 });
 
-    // --- CORRECCIÓN --- Se restaura el historial de la paleta
     const [paletteHistory, setPaletteHistory] = useState([]);
     const [paletteHistoryIndex, setPaletteHistoryIndex] = useState(-1);
     const isUpdatingFromHistory = useRef(false);
@@ -125,6 +124,63 @@ const useThemeGenerator = () => {
         updateBrandColor(newColor);
     };
     
+    const generatePaletteWithAI = async (prompt) => {
+        // --- CORRECCIÓN ---
+        // Se ha agregado tu clave de API y se eliminó la verificación innecesaria.
+        const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss";
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        
+        const currentPaletteSize = originalExplorerPalette.length || 5;
+        const fullPrompt = `You are an expert color palette generator. Based on the theme "${prompt}", generate an array of exactly ${currentPaletteSize} aesthetically pleasing and harmonious hex color codes.`;
+
+        const payload = {
+            contents: [{ parts: [{ text: fullPrompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "ARRAY",
+                    items: { "type": "STRING" }
+                }
+            }
+        };
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error("403 Forbidden: Verifica que tu clave de API sea correcta y esté habilitada.");
+                }
+                throw new Error(`La solicitud a la API falló con el estado ${response.status}`);
+            }
+
+            const result = await response.json();
+            const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            
+            if (jsonText) {
+                const newPalette = JSON.parse(jsonText);
+                if (Array.isArray(newPalette) && newPalette.every(c => tinycolor(c).isValid())) {
+                    setOriginalExplorerPalette(newPalette);
+                    return true;
+                }
+            }
+            throw new Error("Formato de paleta inválido recibido de la IA.");
+        } catch (error) {
+            console.error("Error al generar la paleta con IA:", error);
+            if (error.message.includes("403")) {
+                showNotification("Acceso denegado (Error 403). Revisa tu clave de API.", "error");
+            } else {
+                showNotification("Error al generar la paleta con IA.", "error");
+            }
+            return false;
+        }
+    };
+
     const handlePaletteUndo = () => {
         if (paletteHistoryIndex > 0) {
             isUpdatingFromHistory.current = true;
@@ -372,7 +428,8 @@ const useThemeGenerator = () => {
         replaceColorInPalette,
         originalExplorerPalette,
         handlePaletteUndo, handlePaletteRedo,
-        paletteHistory, paletteHistoryIndex
+        paletteHistory, paletteHistoryIndex,
+        generatePaletteWithAI
     };
 };
 

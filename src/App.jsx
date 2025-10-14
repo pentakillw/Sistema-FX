@@ -139,6 +139,7 @@ function App() {
             paletteHistoryIndex={hook.paletteHistoryIndex}
             simulationMode={hook.simulationMode}
             setSimulationMode={hook.setSimulationMode}
+            generatePaletteWithAI={hook.generatePaletteWithAI}
           />
 
           <div className="space-y-6 mb-8">
@@ -217,6 +218,7 @@ function App() {
             onRedo={hook.handleRedo}
             canUndo={hook.historyIndex > 0}
             canRedo={hook.historyIndex < hook.colorHistory.length - 1}
+            isGeneratingRandom={hook.isGeneratingRandom}
         />
       </div>
     </>

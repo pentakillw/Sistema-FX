@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-// --- MODIFICACIÓN --- Se añade el ícono `Eye`
-import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye } from 'lucide-react';
+import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from './ColorPalette.jsx';
-import { VariationsModal, PaletteContrastChecker, PaletteAdjusterModal, ImagePaletteModal } from './modals/index.jsx';
+import { VariationsModal, PaletteContrastChecker, PaletteAdjusterModal, ImagePaletteModal, AIPaletteModal } from './modals/index.jsx';
 import { generationMethods, generateShades } from '../utils/colorUtils.js';
 
 const backgroundModeLabels = {
@@ -49,9 +48,9 @@ const Explorer = ({
     handlePaletteRedo,
     paletteHistory,
     paletteHistoryIndex,
-    // --- NUEVO --- Se reciben las props del simulador
     simulationMode,
-    setSimulationMode
+    setSimulationMode,
+    generatePaletteWithAI
 }) => {
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
@@ -61,6 +60,7 @@ const Explorer = ({
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
     const [hoveredShade, setHoveredShade] = useState(null);
+    const [isAIModalVisible, setIsAIModalVisible] = useState(false);
     
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
@@ -89,8 +89,10 @@ const Explorer = ({
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
                         <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Arrastra, inserta o quita colores para crear tu paleta.</p>
                     </div>
-                    {/* --- MODIFICACIÓN --- Se añade el simulador de daltonismo a los controles */}
                     <div className="flex items-center flex-wrap justify-end gap-2">
+                         <button onClick={() => setIsAIModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" title="Generar con IA">
+                            <Sparkles size={14} /> <span className="hidden sm:inline">IA</span>
+                        </button>
                          <select value={explorerMethod} onChange={(e) => setExplorerMethod(e.target.value)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Generar por Método">
                             {generationMethods.map(method => (<option key={method.id} value={method.id}>{method.name}</option>))}
                         </select>
@@ -201,7 +203,7 @@ const Explorer = ({
                     <div className="absolute top-4 left-4 flex gap-2 z-30">
                         <button 
                             onClick={(e) => { e.stopPropagation(); handlePaletteUndo(); }}
-                            disabled={paletteHistoryIndex <= 0}
+                            disabled={!paletteHistory || paletteHistoryIndex <= 0}
                             className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Deshacer cambio de paleta"
                         >
@@ -209,7 +211,7 @@ const Explorer = ({
                         </button>
                         <button 
                             onClick={(e) => { e.stopPropagation(); handlePaletteRedo(); }}
-                            disabled={paletteHistoryIndex >= paletteHistory.length - 1}
+                            disabled={!paletteHistory || paletteHistoryIndex >= paletteHistory.length - 1}
                             className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Rehacer cambio de paleta"
                         >
@@ -311,6 +313,13 @@ const Explorer = ({
                         </Droppable>
                     </DragDropContext>
                 </div>
+            )}
+            
+            {isAIModalVisible && (
+                <AIPaletteModal
+                    onClose={() => setIsAIModalVisible(false)}
+                    onGenerate={generatePaletteWithAI}
+                />
             )}
             
             {isImageModalVisible && (
