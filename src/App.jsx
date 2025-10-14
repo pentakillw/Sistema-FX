@@ -3,7 +3,6 @@ import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import Header from './components/Header.jsx';
-// --- MODIFICACIÓN --- El componente Controls se elimina
 import Explorer from './components/Explorer.jsx';
 import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
@@ -106,13 +105,11 @@ function App() {
           onReset={hook.handleReset} 
           onOpenExportModal={() => setIsExportModalVisible(true)}
           themeData={themeData}
-          // --- MODIFICACIÓN --- Pasamos la fuente y la función para cambiarla
           font={hook.font}
           onFontChange={hook.setFont}
         />
         
         <main>
-          {/* --- MODIFICACIÓN --- Se ha eliminado el componente Controls */}
           <Explorer
             explorerPalette={hook.explorerPalette}
             reorderExplorerPalette={hook.reorderExplorerPalette}
@@ -129,14 +126,13 @@ function App() {
             explorerMethod={hook.explorerMethod}
             setExplorerMethod={hook.setExplorerMethod}
             replaceColorInPalette={hook.replaceColorInPalette}
-            handlePaletteUndo={hook.handlePaletteUndo}
-            handlePaletteRedo={hook.handlePaletteRedo}
-            paletteHistory={hook.paletteHistory}
-            paletteHistoryIndex={hook.paletteHistoryIndex}
+            handlePaletteUndo={hook.handleUndo} // Unificado
+            handlePaletteRedo={hook.handleRedo} // Unificado
+            paletteHistory={hook.history} // Unificado
+            paletteHistoryIndex={hook.historyIndex} // Unificado
             simulationMode={hook.simulationMode}
             setSimulationMode={hook.setSimulationMode}
             generatePaletteWithAI={hook.generatePaletteWithAI}
-            // --- MODIFICACIÓN --- Pasamos las funciones para abrir los modales de análisis
             onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
             onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
           />
@@ -210,7 +206,7 @@ function App() {
             onUndo={hook.handleUndo}
             onRedo={hook.handleRedo}
             canUndo={hook.historyIndex > 0}
-            canRedo={hook.colorHistory.length - 1 > hook.historyIndex}
+            canRedo={hook.historyIndex < hook.history.length - 1}
         />
       </div>
     </>

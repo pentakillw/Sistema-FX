@@ -10,6 +10,7 @@ const defaultState = {
     font: 'Segoe UI',
     fxSeparator: ';',
     useFxQuotes: true,
+    explorerPalette: [],
 };
 
 const useThemeGenerator = () => {
@@ -19,17 +20,19 @@ const useThemeGenerator = () => {
     const [isGrayAuto, setIsGrayAuto] = useState(defaultState.isGrayAuto);
     const [font, setFont] = useState(defaultState.font);
 
-    const [colorHistory, setColorHistory] = useState([defaultState.brandColor]);
+    const [history, setHistory] = useState([{
+        brandColor: defaultState.brandColor,
+        grayColor: defaultState.grayColor,
+        explorerPalette: defaultState.explorerPalette
+    }]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
     const [explorerMethod, setExplorerMethod] = useState('auto');
-    const [explorerPalette, setExplorerPalette] = useState([]);
+    const [explorerPalette, setExplorerPalette] = useState(defaultState.explorerPalette);
     const [originalExplorerPalette, setOriginalExplorerPalette] = useState([]);
     const [explorerGrayShades, setExplorerGrayShades] = useState([]);
     const [paletteAdjustments, setPaletteAdjustments] = useState({ hue: 0, saturation: 0, brightness: 0, temperature: 0 });
 
-    const [paletteHistory, setPaletteHistory] = useState([]);
-    const [paletteHistoryIndex, setPaletteHistoryIndex] = useState(-1);
     const isUpdatingFromHistory = useRef(false);
 
     const [simulationMode, setSimulationMode] = useState('none');
@@ -43,33 +46,39 @@ const useThemeGenerator = () => {
 
     const [themeData, setThemeData] = useState(null);
 
-    useEffect(() => {
-        if (isUpdatingFromHistory.current || (paletteHistory[paletteHistoryIndex] && JSON.stringify(paletteHistory[paletteHistoryIndex]) === JSON.stringify(originalExplorerPalette))) {
+    const saveStateToHistory = (newState) => {
+        if (isUpdatingFromHistory.current) {
             isUpdatingFromHistory.current = false;
             return;
         }
-        const newHistory = paletteHistory.slice(0, paletteHistoryIndex + 1);
-        newHistory.push(originalExplorerPalette);
-        setPaletteHistory(newHistory);
-        setPaletteHistoryIndex(newHistory.length - 1);
-    }, [originalExplorerPalette]);
-    
-    const showNotification = (message, type = 'success') => {
-        setNotification({ message, type });
-        setTimeout(() => setNotification({ message: '', type: 'success' }), 3000);
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push(newState);
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
     };
 
-    const cyclePreviewMode = (mode, setMode, options) => {
-        const currentIndex = options.indexOf(mode);
-        const nextIndex = (currentIndex + 1) % options.length;
-        setMode(options[nextIndex]);
+    const updateBrandColor = useCallback((newColor) => {
+        if (!newColor || newColor === brandColor) return;
+        setBrandColor(newColor);
+        // --- CORRECCIÓN ---
+        // Ahora se usa la longitud actual de la paleta en lugar de un número fijo.
+        // Si la paleta está vacía, por defecto se usan 5 colores.
+        const currentPaletteSize = originalExplorerPalette.length || 5;
+        const { palette } = generateExplorerPalette(explorerMethod, newColor, currentPaletteSize);
+        setOriginalExplorerPalette(palette);
+        saveStateToHistory({ brandColor: newColor, grayColor, explorerPalette: palette });
+    }, [brandColor, grayColor, explorerMethod, originalExplorerPalette.length, history, historyIndex]);
+
+    const updatePaletteState = (newPalette) => {
+        setOriginalExplorerPalette(newPalette);
+        saveStateToHistory({ brandColor, grayColor, explorerPalette: newPalette });
     };
-    
+
     const reorderExplorerPalette = (sourceIndex, destinationIndex) => {
         const items = Array.from(originalExplorerPalette);
         const [reorderedItem] = items.splice(sourceIndex, 1);
         items.splice(destinationIndex, 0, reorderedItem);
-        setOriginalExplorerPalette(items);
+        updatePaletteState(items);
     };
     
     const insertColorInPalette = (index) => {
@@ -81,7 +90,7 @@ const useThemeGenerator = () => {
         const colorB = originalExplorerPalette[index + 1] ? tinycolor(originalExplorerPalette[index + 1]) : colorA.clone().spin(30);
         const newColor = tinycolor.mix(colorA, colorB, 50).toHexString();
         const newPalette = [...originalExplorerPalette.slice(0, index + 1), newColor, ...originalExplorerPalette.slice(index + 1)];
-        setOriginalExplorerPalette(newPalette);
+        updatePaletteState(newPalette);
     };
 
     const removeColorFromPalette = (index) => {
@@ -90,50 +99,44 @@ const useThemeGenerator = () => {
             return;
         }
         const newPalette = originalExplorerPalette.filter((_, i) => i !== index);
-        setOriginalExplorerPalette(newPalette);
+        updatePaletteState(newPalette);
     };
 
     const replaceColorInPalette = (index, newColor) => {
         const newPalette = [...originalExplorerPalette];
         newPalette[index] = newColor;
-        setOriginalExplorerPalette(newPalette);
-    };
-
-    const memoizedGenerateExplorerPalette = useCallback((method, baseColorHex, count = 4) => {
-        const { palette, gray } = generateExplorerPalette(method, baseColorHex, count);
-        setOriginalExplorerPalette(palette);
-        setExplorerGrayShades(gray);
-        setPaletteAdjustments({ hue: 0, saturation: 0, brightness: 0, temperature: 0 });
-        setPaletteHistory([palette]);
-        setPaletteHistoryIndex(0);
-    }, []);
-
-    const updateBrandColor = useCallback((newColor) => {
-        if (!newColor || newColor === brandColor) return;
-        const newHistory = colorHistory.slice(0, historyIndex + 1);
-        newHistory.push(newColor);
-        setColorHistory(newHistory);
-        setHistoryIndex(newHistory.length - 1);
-        setBrandColor(newColor);
-    }, [brandColor, colorHistory, historyIndex]);
-
-    const isUpdateFromExplorer = useRef(false);
-
-    const handleExplorerColorPick = (newColor) => {
-        isUpdateFromExplorer.current = true;
-        updateBrandColor(newColor);
+        updatePaletteState(newPalette);
     };
     
-    const generatePaletteWithAI = async (prompt) => {
-        // --- CORRECCIÓN ---
-        // Se ha agregado tu clave de API y se eliminó la verificación innecesaria.
-        const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss";
+    const handleUndo = () => {
+        if (historyIndex > 0) {
+            isUpdatingFromHistory.current = true;
+            const newIndex = historyIndex - 1;
+            const previousState = history[newIndex];
+            setHistoryIndex(newIndex);
+            setBrandColor(previousState.brandColor);
+            setGrayColor(previousState.grayColor);
+            setOriginalExplorerPalette(previousState.explorerPalette);
+        }
+    };
 
+    const handleRedo = () => {
+        if (historyIndex < history.length - 1) {
+            isUpdatingFromHistory.current = true;
+            const newIndex = historyIndex + 1;
+            const nextState = history[newIndex];
+            setHistoryIndex(newIndex);
+            setBrandColor(nextState.brandColor);
+            setGrayColor(nextState.grayColor);
+            setOriginalExplorerPalette(nextState.explorerPalette);
+        }
+    };
+    
+     const generatePaletteWithAI = async (prompt) => {
+        const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-        
         const currentPaletteSize = originalExplorerPalette.length || 5;
         const fullPrompt = `You are an expert color palette generator. Based on the theme "${prompt}", generate an array of exactly ${currentPaletteSize} aesthetically pleasing and harmonious hex color codes.`;
-
         const payload = {
             contents: [{ parts: [{ text: fullPrompt }] }],
             generationConfig: {
@@ -151,65 +154,52 @@ const useThemeGenerator = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
-            if (!response.ok) {
-                if (response.status === 403) {
-                    throw new Error("403 Forbidden: Verifica que tu clave de API sea correcta y esté habilitada.");
-                }
-                throw new Error(`La solicitud a la API falló con el estado ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
             const result = await response.json();
             const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
             
             if (jsonText) {
                 const newPalette = JSON.parse(jsonText);
                 if (Array.isArray(newPalette) && newPalette.every(c => tinycolor(c).isValid())) {
-                    setOriginalExplorerPalette(newPalette);
+                    updatePaletteState(newPalette);
                     return true;
                 }
             }
-            throw new Error("Formato de paleta inválido recibido de la IA.");
+            throw new Error("Invalid palette format received from AI.");
         } catch (error) {
-            console.error("Error al generar la paleta con IA:", error);
-            if (error.message.includes("403")) {
-                showNotification("Acceso denegado (Error 403). Revisa tu clave de API.", "error");
-            } else {
-                showNotification("Error al generar la paleta con IA.", "error");
-            }
+            console.error("Error generating palette with AI:", error);
+            showNotification("Error al generar la paleta con IA.", "error");
             return false;
-        }
-    };
-
-    const handlePaletteUndo = () => {
-        if (paletteHistoryIndex > 0) {
-            isUpdatingFromHistory.current = true;
-            const newIndex = paletteHistoryIndex - 1;
-            setPaletteHistoryIndex(newIndex);
-            setOriginalExplorerPalette(paletteHistory[newIndex]);
-        }
-    };
-
-    const handlePaletteRedo = () => {
-        if (paletteHistoryIndex < paletteHistory.length - 1) {
-            isUpdatingFromHistory.current = true;
-            const newIndex = paletteHistoryIndex + 1;
-            setPaletteHistoryIndex(newIndex);
-            setOriginalExplorerPalette(paletteHistory[newIndex]);
         }
     };
     
     useEffect(() => {
-        if (isUpdateFromExplorer.current) {
-            isUpdateFromExplorer.current = false;
-            return;
+        if (originalExplorerPalette.length === 0 && brandColor) {
+            const { palette } = generateExplorerPalette('auto', brandColor, 5);
+            setOriginalExplorerPalette(palette);
+            const initialState = { brandColor, grayColor, explorerPalette: palette };
+            setHistory([initialState]);
+            setHistoryIndex(0);
         }
-        const currentPaletteSize = originalExplorerPalette.length || 4;
-        memoizedGenerateExplorerPalette(explorerMethod, brandColor, currentPaletteSize);
-    }, [explorerMethod, brandColor, memoizedGenerateExplorerPalette]);
+    }, [brandColor, grayColor]);
 
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification({ message: '', type: 'success' }), 3000);
+    };
+
+    const cyclePreviewMode = (mode, setMode, options) => {
+        const currentIndex = options.indexOf(mode);
+        const nextIndex = (currentIndex + 1) % options.length;
+        setMode(options[nextIndex]);
+    };
+
+    const handleExplorerColorPick = (newColor) => {
+        updateBrandColor(newColor);
+    };
+    
     useEffect(() => {
-        if (!originalExplorerPalette.length) return;
+        if (!originalExplorerPalette || originalExplorerPalette.length === 0) return;
         const adjusted = originalExplorerPalette.map(hex => {
             let color = tinycolor(hex);
             const { hue, saturation, brightness, temperature } = paletteAdjustments;
@@ -223,6 +213,8 @@ const useThemeGenerator = () => {
             return color.toHexString();
         });
         setExplorerPalette(adjusted);
+        const grayBase = adjusted.length > 0 ? adjusted[Math.floor(adjusted.length / 2)] : tinycolor.random().toHexString();
+        setExplorerGrayShades(generateShades(tinycolor(grayBase).desaturate(85).toHexString()));
     }, [originalExplorerPalette, paletteAdjustments]);
 
     useEffect(() => {
@@ -356,22 +348,7 @@ const useThemeGenerator = () => {
 
     }, [brandColor, grayColor, theme]);
 
-    const handleUndo = () => {
-        if (historyIndex > 0) {
-            const newIndex = historyIndex - 1;
-            setHistoryIndex(newIndex);
-            setBrandColor(colorHistory[newIndex]);
-        }
-    };
 
-    const handleRedo = () => {
-        if (historyIndex < colorHistory.length - 1) {
-            const newIndex = historyIndex + 1;
-            setHistoryIndex(newIndex);
-            setBrandColor(colorHistory[newIndex]);
-        }
-    };
-    
     const handleImport = (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -379,16 +356,22 @@ const useThemeGenerator = () => {
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (imported.explorerPalette) {
-                    setOriginalExplorerPalette(imported.explorerPalette);
-                    setPaletteHistory([imported.explorerPalette]);
-                    setPaletteHistoryIndex(0);
-                }
-                updateBrandColor(imported.brandColor);
+                const importedPalette = imported.explorerPalette || generateExplorerPalette('auto', imported.brandColor, 5).palette;
+                
+                setBrandColor(imported.brandColor);
                 setGrayColor(imported.grayColor);
                 setFont(imported.font);
                 setTheme(imported.theme);
                 setIsGrayAuto(imported.isGrayAuto);
+                setOriginalExplorerPalette(importedPalette);
+                
+                const newState = {
+                    brandColor: imported.brandColor,
+                    grayColor: imported.grayColor,
+                    explorerPalette: importedPalette
+                };
+                saveStateToHistory(newState);
+                
                 showNotification('¡Tema importado!');
             } catch (_error) {
                 showNotification('Error al leer el archivo.', 'error');
@@ -398,12 +381,16 @@ const useThemeGenerator = () => {
     };
 
     const handleReset = () => {
+        const { palette } = generateExplorerPalette('auto', defaultState.brandColor, 5);
         setTheme(defaultState.theme);
-        updateBrandColor(defaultState.brandColor);
+        setBrandColor(defaultState.brandColor);
         setIsGrayAuto(defaultState.isGrayAuto);
         setFont(defaultState.font);
         setGrayColor(defaultState.grayColor);
-        memoizedGenerateExplorerPalette('auto', defaultState.brandColor, 4);
+        setOriginalExplorerPalette(palette);
+        const initialState = { brandColor: defaultState.brandColor, grayColor: defaultState.grayColor, explorerPalette: palette };
+        setHistory([initialState]);
+        setHistoryIndex(0);
         showNotification("Tema reiniciado.");
     };
 
@@ -415,10 +402,11 @@ const useThemeGenerator = () => {
     };
 
     return {
-        themeData, font, brandColor, grayColor, isGrayAuto, explorerMethod, simulationMode, historyIndex, colorHistory,
+        themeData, font, brandColor, grayColor, isGrayAuto, explorerMethod, simulationMode,
         explorerPalette, explorerGrayShades, paletteAdjustments, notification, fxSeparator, useFxQuotes,
         lightPreviewMode, darkPreviewMode, semanticPreviewMode, 
-        setFont, updateBrandColor, setGrayColor, setIsGrayAuto, setExplorerMethod, setSimulationMode, handleUndo, handleRedo, 
+        setFont, updateBrandColor, setGrayColor, setIsGrayAuto, setExplorerMethod, setSimulationMode, 
+        handleUndo, handleRedo, 
         handleImport, 
         handleReset, showNotification, setPaletteAdjustments, handleExplorerColorPick, 
         handleRandomTheme, handleThemeToggle, setFxSeparator, setUseFxQuotes,
@@ -427,8 +415,7 @@ const useThemeGenerator = () => {
         insertColorInPalette, removeColorFromPalette,
         replaceColorInPalette,
         originalExplorerPalette,
-        handlePaletteUndo, handlePaletteRedo,
-        paletteHistory, paletteHistoryIndex,
+        history, historyIndex,
         generatePaletteWithAI
     };
 };

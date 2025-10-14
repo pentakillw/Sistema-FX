@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// --- MODIFICACIÓN --- Añadimos TestTube y TestTube2 para los nuevos botones
 import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, TestTube, TestTube2 } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -52,7 +51,6 @@ const Explorer = ({
     simulationMode,
     setSimulationMode,
     generatePaletteWithAI,
-    // --- NUEVO --- Añadimos las funciones para abrir los modales de análisis
     onOpenAccessibilityModal,
     onOpenComponentPreviewModal
 }) => {
@@ -68,6 +66,9 @@ const Explorer = ({
     
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
+
+    // --- MODIFICACIÓN --- El color del borde ahora usa una variable CSS para ser consistente
+    const borderColor = 'var(--border-default)';
 
     const cyclePreviewMode = () => {
         const options = ['white', 'T950', 'black', 'T0', 'card'];
@@ -87,7 +88,7 @@ const Explorer = ({
 
     return (
         <>
-            <section className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} style={{ backgroundColor: colorModeBg, borderColor: themeData.grayShades[2] }}>
+            <section className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} style={{ backgroundColor: colorModeBg, borderColor: borderColor }}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div className="flex-1 min-w-0">
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
@@ -199,7 +200,6 @@ const Explorer = ({
                      <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-4">
                         <p className="text-sm font-semibold self-start sm:self-center" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Escala de Grises Sugerida</p>
                         <div className="flex items-center gap-2 self-start sm:self-center">
-                            {/* --- NUEVO --- Botones de análisis reubicados aquí */}
                             <button onClick={onOpenAccessibilityModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <TestTube size={14} /> <span className="hidden sm:inline">Accesibilidad</span>
                             </button>
@@ -207,7 +207,6 @@ const Explorer = ({
                                 <TestTube2 size={14} /> <span className="hidden sm:inline">Componentes</span>
                             </button>
                             <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
-                            {/* --- FIN NUEVO --- */}
                             <button onClick={() => setIsPaletteAdjusterVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <Settings size={14} /> <span className="hidden sm:inline">Ajustar</span>
                             </button>
@@ -233,17 +232,17 @@ const Explorer = ({
                     <div className="absolute top-4 left-4 flex gap-2 z-30">
                         <button 
                             onClick={(e) => { e.stopPropagation(); handlePaletteUndo(); }}
-                            disabled={!paletteHistory || paletteHistoryIndex <= 0}
+                            disabled={paletteHistoryIndex <= 0}
                             className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Deshacer cambio de paleta"
+                            title="Deshacer"
                         >
                             <Undo2 size={24} />
                         </button>
                         <button 
                             onClick={(e) => { e.stopPropagation(); handlePaletteRedo(); }}
-                            disabled={!paletteHistory || paletteHistoryIndex >= paletteHistory.length - 1}
+                            disabled={paletteHistoryIndex >= paletteHistory.length - 1}
                             className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Rehacer cambio de paleta"
+                            title="Rehacer"
                         >
                             <Redo2 size={24} />
                         </button>
@@ -359,7 +358,7 @@ const Explorer = ({
                 />
             )}
             {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={onColorSelect} />}
-            {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(text, msg) => alert(msg)} />}
+            {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(text, msg) => onCopy(text, msg)} />}
             {isPaletteAdjusterVisible && <PaletteAdjusterModal adjustments={adjustments} onAdjust={onAdjust} onClose={() => setIsPaletteAdjusterVisible(false)} brandColor={brandColor} />}
         </>
     );

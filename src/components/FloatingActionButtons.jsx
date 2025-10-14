@@ -29,7 +29,6 @@ const FloatingActionButtons = ({
     canRedo
 }) => (
     <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 flex flex-col items-center gap-3">
-      {/* --- MODIFICACIÓN --- Se usa un color sólido de la paleta de CSS (--bg-card) */}
       <ActionButton
         onClick={onUndo}
         title="Deshacer"
@@ -40,7 +39,6 @@ const FloatingActionButtons = ({
         <Undo2 size={20} />
       </ActionButton>
       
-      {/* --- MODIFICACIÓN --- Se usa un color sólido de la paleta de CSS (--bg-card) */}
       <ActionButton
         onClick={onRedo}
         title="Rehacer"
@@ -51,7 +49,6 @@ const FloatingActionButtons = ({
         <Redo2 size={20} />
       </ActionButton>
 
-      {/* --- MODIFICACIÓN --- Se usa un color sólido de la paleta de CSS (--bg-card) */}
       <ActionButton
         onClick={onThemeToggle}
         title={currentTheme === 'light' ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro'}
