@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
+// --- MODIFICACIÓN --- Se quita el ícono `Eye` que ya no se usa aquí
 import { 
-    Eye, SlidersHorizontal, ChevronDown, 
-    Paintbrush, TestTube2 
+    SlidersHorizontal, ChevronDown, 
+    Paintbrush, TestTube2, Eye
 } from 'lucide-react';
-// --- MODIFICACIÓN --- Se elimina `generationMethods` ya que se movió al Explorer
 import { availableFonts } from '../utils/colorUtils.js';
 import Switch from './ui/Switch.jsx';
-// --- MODIFICACIÓN --- Se elimina `ImagePaletteModal` ya que se movió al Explorer
-import { ImagePaletteModal } from './modals/index.jsx';
 
 const TabButton = ({ label, icon, isActive, onClick }) => {
     return (
@@ -38,17 +36,16 @@ const FormField = ({ label, children, className = '' }) => (
 
 const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal }) => {
     const [isOpen, setIsOpen] = useState(false);
-    // --- MODIFICACIÓN --- Se elimina la pestaña "Avanzado" que ya no es necesaria
     const [activeTab, setActiveTab] = useState('essentials');
     
     const [isBrandPickerVisible, setIsBrandPickerVisible] = useState(false);
     const [isGrayPickerVisible, setIsGrayPickerVisible] = useState(false);
 
-    // --- MODIFICACIÓN --- Se quitan `explorerMethod` y `setExplorerMethod` de aquí
+    // --- MODIFICACIÓN --- Se quitan `simulationMode` y `setSimulationMode` de aquí
     const {
-        font, brandColor, grayColor, isGrayAuto, simulationMode,
+        font, brandColor, grayColor, isGrayAuto,
         setFont, updateBrandColor, setGrayColor,
-        setIsGrayAuto, setSimulationMode
+        setIsGrayAuto
     } = hook;
     
     const selectStyles = "w-full bg-[var(--bg-muted)] font-semibold px-3 py-2.5 rounded-lg border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)] focus:border-[var(--action-primary-default)] transition-all";
@@ -82,7 +79,6 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                         
                         <div className="flex justify-center items-center gap-2 sm:gap-4 p-2 my-4 rounded-full" style={{ backgroundColor: 'var(--bg-muted)'}}>
                             <TabButton label="Esenciales" icon={<Paintbrush size={16}/>} isActive={activeTab === 'essentials'} onClick={() => setActiveTab('essentials')} />
-                            {/* --- MODIFICACIÓN --- Se quita la pestaña "Avanzado" */}
                             <TabButton label="Análisis" icon={<TestTube2 size={16}/>} isActive={activeTab === 'analysis'} onClick={() => setActiveTab('analysis')} />
                         </div>
 
@@ -120,17 +116,7 @@ const Controls = ({ hook, onOpenAccessibilityModal, onOpenComponentPreviewModal 
                                     </select>
                                 </FormField>
 
-                                <FormField label="Simulador Daltonismo" className="md:col-span-2">
-                                    <div className="relative">
-                                        <Eye size={16} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }}/>
-                                        <select value={simulationMode} onChange={(e) => setSimulationMode(e.target.value)} className={`${selectStyles} pl-12`} style={{ color: 'var(--text-default)' }}>
-                                            <option value="none">Ninguno</option>
-                                            <option value="protanopia">Protanopia</option>
-                                            <option value="deuteranopia">Deuteranopia</option>
-                                            <option value="tritanopia">Tritanopia</option>
-                                        </select>
-                                    </div>
-                                </FormField>
+                                {/* --- MODIFICACIÓN --- Se elimina el FormField del simulador de daltonismo */}
                             </div>
                         )}
                         

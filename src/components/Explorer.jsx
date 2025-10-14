@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon } from 'lucide-react';
+// --- MODIFICACIÓN --- Se añade el ícono `Eye`
+import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from './ColorPalette.jsx';
@@ -43,8 +44,14 @@ const Explorer = ({
     removeColorFromPalette,
     explorerMethod,
     setExplorerMethod,
-    // --- NUEVO --- Se recibe la nueva función
-    replaceColorInPalette
+    replaceColorInPalette,
+    handlePaletteUndo,
+    handlePaletteRedo,
+    paletteHistory,
+    paletteHistoryIndex,
+    // --- NUEVO --- Se reciben las props del simulador
+    simulationMode,
+    setSimulationMode
 }) => {
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
@@ -82,6 +89,7 @@ const Explorer = ({
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
                         <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Arrastra, inserta o quita colores para crear tu paleta.</p>
                     </div>
+                    {/* --- MODIFICACIÓN --- Se añade el simulador de daltonismo a los controles */}
                     <div className="flex items-center flex-wrap justify-end gap-2">
                          <select value={explorerMethod} onChange={(e) => setExplorerMethod(e.target.value)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Generar por Método">
                             {generationMethods.map(method => (<option key={method.id} value={method.id}>{method.name}</option>))}
@@ -89,6 +97,15 @@ const Explorer = ({
                         <button onClick={() => setIsImageModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                             <ImageIcon size={14} /> <span className="hidden sm:inline">Imagen</span>
                         </button>
+                        <div className="relative">
+                            <Eye size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]"/>
+                            <select value={simulationMode} onChange={(e) => setSimulationMode(e.target.value)} className="text-sm font-medium py-2 pl-9 pr-3 rounded-lg appearance-none bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Simulador de Daltonismo">
+                                <option value="none">Normal</option>
+                                <option value="protanopia">Protanopia</option>
+                                <option value="deuteranopia">Deuteranopia</option>
+                                <option value="tritanopia">Tritanopia</option>
+                            </select>
+                        </div>
                         <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
                         <button onClick={cyclePreviewMode} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                             <Layers size={14} /> <span className="hidden sm:inline">Fondo</span>
@@ -180,7 +197,26 @@ const Explorer = ({
             </section>
             
             {isExpanded && (
-                <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}}>
+                <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={(e) => { e.stopPropagation(); setIsExpanded(false); setActiveShadeIndex(null);}}>
+                    <div className="absolute top-4 left-4 flex gap-2 z-30">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handlePaletteUndo(); }}
+                            disabled={paletteHistoryIndex <= 0}
+                            className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Deshacer cambio de paleta"
+                        >
+                            <Undo2 size={24} />
+                        </button>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handlePaletteRedo(); }}
+                            disabled={paletteHistoryIndex >= paletteHistory.length - 1}
+                            className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Rehacer cambio de paleta"
+                        >
+                            <Redo2 size={24} />
+                        </button>
+                    </div>
+
                     <button onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}} className="absolute top-4 right-4 text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors z-30">
                         <X size={24} />
                     </button>
@@ -238,22 +274,19 @@ const Explorer = ({
                                                         </>
                                                     )}
 
-                                                    {/* --- MODIFICACIÓN --- Vista de tonalidades mejorada */}
                                                     {activeShadeIndex === index && (
-                                                        <div className="absolute inset-0 flex flex-col z-20 animate-fade-in">
+                                                        <div className="absolute inset-0 flex flex-col z-20 animate-fade-in" onMouseLeave={() => setHoveredShade(null)}>
                                                             {generateShades(color).map((shade, shadeIndex) => (
                                                                 <div
                                                                     key={shadeIndex}
                                                                     className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade"
                                                                     style={{ backgroundColor: shade }}
-                                                                    // --- MODIFICACIÓN --- Llama a replaceColorInPalette y NO cierra el modal
-                                                                    onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }}
+                                                                    onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); }}
                                                                     title={`Usar ${shade.toUpperCase()}`}
+                                                                    onMouseEnter={() => setHoveredShade({ text: shade.toUpperCase(), color: shade })}
                                                                 >
-                                                                    {/* Indicador del color base */}
                                                                     {shade.toLowerCase() === color.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
                                                                     
-                                                                    {/* --- MODIFICACIÓN --- Etiqueta de texto individual por tonalidad */}
                                                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>
                                                                         {shade.toUpperCase()}
                                                                     </div>

@@ -28,6 +28,11 @@ const useThemeGenerator = () => {
     const [explorerGrayShades, setExplorerGrayShades] = useState([]);
     const [paletteAdjustments, setPaletteAdjustments] = useState({ hue: 0, saturation: 0, brightness: 0, temperature: 0 });
 
+    // --- CORRECCIÓN --- Se restaura el historial de la paleta
+    const [paletteHistory, setPaletteHistory] = useState([]);
+    const [paletteHistoryIndex, setPaletteHistoryIndex] = useState(-1);
+    const isUpdatingFromHistory = useRef(false);
+
     const [simulationMode, setSimulationMode] = useState('none');
     const [fxSeparator, setFxSeparator] = useState(defaultState.fxSeparator);
     const [useFxQuotes, setUseFxQuotes] = useState(defaultState.useFxQuotes);
@@ -38,6 +43,17 @@ const useThemeGenerator = () => {
     const [semanticPreviewMode, setSemanticPreviewMode] = useState('card');
 
     const [themeData, setThemeData] = useState(null);
+
+    useEffect(() => {
+        if (isUpdatingFromHistory.current || (paletteHistory[paletteHistoryIndex] && JSON.stringify(paletteHistory[paletteHistoryIndex]) === JSON.stringify(originalExplorerPalette))) {
+            isUpdatingFromHistory.current = false;
+            return;
+        }
+        const newHistory = paletteHistory.slice(0, paletteHistoryIndex + 1);
+        newHistory.push(originalExplorerPalette);
+        setPaletteHistory(newHistory);
+        setPaletteHistoryIndex(newHistory.length - 1);
+    }, [originalExplorerPalette]);
     
     const showNotification = (message, type = 'success') => {
         setNotification({ message, type });
@@ -62,19 +78,10 @@ const useThemeGenerator = () => {
             showNotification("Máximo de 20 colores alcanzado.", "error");
             return;
         }
-
         const colorA = tinycolor(originalExplorerPalette[index]);
-        const colorB = originalExplorerPalette[index + 1] 
-            ? tinycolor(originalExplorerPalette[index + 1])
-            : colorA.clone().spin(30); 
-
+        const colorB = originalExplorerPalette[index + 1] ? tinycolor(originalExplorerPalette[index + 1]) : colorA.clone().spin(30);
         const newColor = tinycolor.mix(colorA, colorB, 50).toHexString();
-        
-        const newPalette = [
-            ...originalExplorerPalette.slice(0, index + 1),
-            newColor,
-            ...originalExplorerPalette.slice(index + 1)
-        ];
+        const newPalette = [...originalExplorerPalette.slice(0, index + 1), newColor, ...originalExplorerPalette.slice(index + 1)];
         setOriginalExplorerPalette(newPalette);
     };
 
@@ -87,7 +94,6 @@ const useThemeGenerator = () => {
         setOriginalExplorerPalette(newPalette);
     };
 
-    // --- NUEVO --- Función para reemplazar un color específico en la paleta
     const replaceColorInPalette = (index, newColor) => {
         const newPalette = [...originalExplorerPalette];
         newPalette[index] = newColor;
@@ -99,6 +105,8 @@ const useThemeGenerator = () => {
         setOriginalExplorerPalette(palette);
         setExplorerGrayShades(gray);
         setPaletteAdjustments({ hue: 0, saturation: 0, brightness: 0, temperature: 0 });
+        setPaletteHistory([palette]);
+        setPaletteHistoryIndex(0);
     }, []);
 
     const updateBrandColor = useCallback((newColor) => {
@@ -115,6 +123,24 @@ const useThemeGenerator = () => {
     const handleExplorerColorPick = (newColor) => {
         isUpdateFromExplorer.current = true;
         updateBrandColor(newColor);
+    };
+    
+    const handlePaletteUndo = () => {
+        if (paletteHistoryIndex > 0) {
+            isUpdatingFromHistory.current = true;
+            const newIndex = paletteHistoryIndex - 1;
+            setPaletteHistoryIndex(newIndex);
+            setOriginalExplorerPalette(paletteHistory[newIndex]);
+        }
+    };
+
+    const handlePaletteRedo = () => {
+        if (paletteHistoryIndex < paletteHistory.length - 1) {
+            isUpdatingFromHistory.current = true;
+            const newIndex = paletteHistoryIndex + 1;
+            setPaletteHistoryIndex(newIndex);
+            setOriginalExplorerPalette(paletteHistory[newIndex]);
+        }
     };
     
     useEffect(() => {
@@ -299,6 +325,8 @@ const useThemeGenerator = () => {
                 const imported = JSON.parse(e.target.result);
                 if (imported.explorerPalette) {
                     setOriginalExplorerPalette(imported.explorerPalette);
+                    setPaletteHistory([imported.explorerPalette]);
+                    setPaletteHistoryIndex(0);
                 }
                 updateBrandColor(imported.brandColor);
                 setGrayColor(imported.grayColor);
@@ -341,9 +369,10 @@ const useThemeGenerator = () => {
         cyclePreviewMode, setLightPreviewMode, setDarkPreviewMode, setSemanticPreviewMode,
         reorderExplorerPalette,
         insertColorInPalette, removeColorFromPalette,
-        // --- MODIFICACIÓN --- Se exporta la nueva función
         replaceColorInPalette,
-        originalExplorerPalette
+        originalExplorerPalette,
+        handlePaletteUndo, handlePaletteRedo,
+        paletteHistory, paletteHistoryIndex
     };
 };
 

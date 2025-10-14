@@ -132,8 +132,13 @@ function App() {
             removeColorFromPalette={hook.removeColorFromPalette}
             explorerMethod={hook.explorerMethod}
             setExplorerMethod={hook.setExplorerMethod}
-            // --- MODIFICACIÓN --- Se pasa la nueva función al componente
             replaceColorInPalette={hook.replaceColorInPalette}
+            handlePaletteUndo={hook.handlePaletteUndo}
+            handlePaletteRedo={hook.handlePaletteRedo}
+            paletteHistory={hook.paletteHistory}
+            paletteHistoryIndex={hook.paletteHistoryIndex}
+            simulationMode={hook.simulationMode}
+            setSimulationMode={hook.setSimulationMode}
           />
 
           <div className="space-y-6 mb-8">
@@ -219,3 +224,4 @@ function App() {
 }
 
 export default App;
+
