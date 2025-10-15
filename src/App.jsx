@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
+import { availableFonts } from './utils/colorUtils.js';
 import Header from './components/Header.jsx';
 import Explorer from './components/Explorer.jsx';
 import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
 import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals/index.jsx';
-import { availableFonts } from './utils/colorUtils.js';
+import AdBanner from './components/AdBanner.jsx';
 
 function App() {
   const hook = useThemeGenerator();
@@ -104,12 +105,14 @@ function App() {
           onExport={isNative ? handleNativeExport : handleWebExport} 
           onReset={hook.handleReset} 
           onOpenExportModal={() => setIsExportModalVisible(true)}
-          themeData={themeData}
+          themeData={themeData} 
           font={hook.font}
-          setFont={hook.setFont} 
+          setFont={hook.setFont}
         />
         
         <main>
+          <AdBanner />
+          
           <Explorer
             explorerPalette={hook.explorerPalette}
             reorderExplorerPalette={hook.reorderExplorerPalette}
@@ -126,8 +129,6 @@ function App() {
             explorerMethod={hook.explorerMethod}
             setExplorerMethod={hook.setExplorerMethod}
             replaceColorInPalette={hook.replaceColorInPalette}
-            handlePaletteUndo={hook.handleUndo}
-            handlePaletteRedo={hook.handleRedo}
             history={hook.history}
             historyIndex={hook.historyIndex}
             simulationMode={hook.simulationMode}
@@ -135,7 +136,8 @@ function App() {
             generatePaletteWithAI={hook.generatePaletteWithAI}
             onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
             onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
-            onCopy={hook.showNotification}
+            handleUndo={hook.handleUndo}
+            handleRedo={hook.handleRedo}
           />
 
           <div className="space-y-6 mb-8">
@@ -145,6 +147,7 @@ function App() {
               previewMode={hook.lightPreviewMode}
               onCyclePreviewMode={() => hook.cyclePreviewMode(hook.lightPreviewMode, hook.setLightPreviewMode, ['white', 'T950'])}
               hook={hook}
+              onShadeCopy={hook.showNotification}
             />
             <ColorPreviewer
               title="Modo Oscuro"
@@ -152,6 +155,7 @@ function App() {
               previewMode={hook.darkPreviewMode}
               onCyclePreviewMode={() => hook.cyclePreviewMode(hook.darkPreviewMode, hook.setDarkPreviewMode, ['black', 'T0'])}
               hook={hook}
+              onShadeCopy={hook.showNotification}
             />
           </div>
 

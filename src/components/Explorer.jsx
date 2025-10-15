@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, TestTube, TestTube2 } from 'lucide-react';
+import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, Type, Check, Accessibility, TestTube2 } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from './ColorPalette.jsx';
@@ -44,16 +44,15 @@ const Explorer = ({
     explorerMethod,
     setExplorerMethod,
     replaceColorInPalette,
-    handlePaletteUndo,
-    handlePaletteRedo,
+    handleUndo,
+    handleRedo,
     history,
     historyIndex,
     simulationMode,
     setSimulationMode,
     generatePaletteWithAI,
     onOpenAccessibilityModal,
-    onOpenComponentPreviewModal,
-    onCopy
+    onOpenComponentPreviewModal
 }) => {
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
@@ -64,10 +63,13 @@ const Explorer = ({
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
     const [hoveredShade, setHoveredShade] = useState(null);
     const [isAIModalVisible, setIsAIModalVisible] = useState(false);
+
+    if (!themeData || !themeData.stylePalette || !themeData.grayShades) {
+        return null;
+    }
     
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
-    const borderColor = 'var(--border-default)';
 
     const cyclePreviewMode = () => {
         const options = ['white', 'T950', 'black', 'T0', 'card'];
@@ -87,7 +89,7 @@ const Explorer = ({
 
     return (
         <>
-            <section className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} style={{ backgroundColor: colorModeBg, borderColor: borderColor }}>
+            <section className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div className="flex-1 min-w-0">
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
@@ -97,37 +99,20 @@ const Explorer = ({
                          <button onClick={() => setIsAIModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" title="Generar con IA">
                             <Sparkles size={14} /> <span className="hidden sm:inline">IA</span>
                         </button>
-                        <div className="relative group">
-                            <button className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                                <Palette size={14} />
-                                <span className="hidden sm:inline">{generationMethods.find(m => m.id === explorerMethod)?.name || 'Auto'}</span>
-                            </button>
-                            <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
-                                {generationMethods.map(method => (
-                                    <button
-                                      key={method.id}
-                                      onClick={() => setExplorerMethod(method.id)}
-                                      className={`w-full text-left px-4 py-2 text-sm ${explorerMethod === method.id ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}
-                                    >
-                                        {method.name}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                         <select value={explorerMethod} onChange={(e) => setExplorerMethod(e.target.value)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Generar por Método">
+                            {generationMethods.map(method => (<option key={method.id} value={method.id}>{method.name}</option>))}
+                        </select>
                         <button onClick={() => setIsImageModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                             <ImageIcon size={14} /> <span className="hidden sm:inline">Imagen</span>
                         </button>
-                        <div className="relative group">
-                            <button className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                                <Eye size={14} />
-                                <span className="hidden sm:inline">{simulationMode === 'none' ? 'Normal' : simulationMode.charAt(0).toUpperCase() + simulationMode.slice(1)}</span>
-                            </button>
-                            <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
-                                <button onClick={() => setSimulationMode('none')} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === 'none' ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>Normal</button>
-                                <button onClick={() => setSimulationMode('protanopia')} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === 'protanopia' ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>Protanopia</button>
-                                <button onClick={() => setSimulationMode('deuteranopia')} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === 'deuteranopia' ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>Deuteranopia</button>
-                                <button onClick={() => setSimulationMode('tritanopia')} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === 'tritanopia' ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>Tritanopia</button>
-                            </div>
+                        <div className="relative">
+                            <Eye size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]"/>
+                            <select value={simulationMode} onChange={(e) => setSimulationMode(e.target.value)} className="text-sm font-medium py-2 pl-9 pr-3 rounded-lg appearance-none bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Simulador de Daltonismo">
+                                <option value="none">Normal</option>
+                                <option value="protanopia">Protanopia</option>
+                                <option value="deuteranopia">Deuteranopia</option>
+                                <option value="tritanopia">Tritanopia</option>
+                            </select>
                         </div>
                         <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
                         <button onClick={cyclePreviewMode} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
@@ -140,72 +125,75 @@ const Explorer = ({
                     </div>
                 </div>
 
-                <DragDropContext onDragEnd={onDragEnd}>
-                    <Droppable droppableId="palette-main" direction="horizontal">
-                        {(provided) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className="flex items-center rounded-md h-12 relative group"
-                            >
-                                {explorerPalette.map((shade, index) => (
-                                    <Draggable key={"main-" + shade + index} draggableId={"main-" + shade + index} index={index}>
-                                        {(provided) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                className="relative h-full flex-1 flex items-center justify-center group/color-wrapper"
-                                                style={{...provided.draggableProps.style}}
-                                            >
+                <div className="overflow-x-auto sm:overflow-x-visible pb-2 -mb-2">
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable droppableId="palette-main" direction="horizontal">
+                            {(provided) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className="flex items-center rounded-md h-12 relative group"
+                                    style={{ minWidth: `${explorerPalette.length * 50}px` }}
+                                >
+                                    {explorerPalette.map((shade, index) => (
+                                        <Draggable key={"main-" + shade + index} draggableId={"main-" + shade + index} index={index}>
+                                            {(provided) => (
                                                 <div
-                                                    {...provided.dragHandleProps}
-                                                    className="relative group/item h-full w-full cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform duration-100 ease-in-out"
-                                                    style={{ backgroundColor: shade}}
-                                                    onClick={() => onShadeCopy(shade)}
-                                                    title={`Usar ${shade.toUpperCase()}`}
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    className="relative h-full flex-1 flex items-center justify-center group/color-wrapper"
+                                                    style={{...provided.draggableProps.style}}
                                                 >
-                                                    <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
-                                                        {shade.substring(1).toUpperCase()}
-                                                    </span>
-                                                   <button 
-                                                        onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}}
-                                                        className="absolute top-1 right-1 p-0.5 bg-black/30 rounded-full text-white opacity-0 group-hover/item:opacity-100 hover:bg-black/60 transition-opacity z-20"
-                                                        title="Quitar color"
+                                                    <div
+                                                        {...provided.dragHandleProps}
+                                                        className="relative group/item h-full w-full cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform duration-100 ease-in-out"
+                                                        style={{ backgroundColor: shade, minWidth: '50px' }}
+                                                        onClick={() => onShadeCopy(shade)}
+                                                        title={`Usar ${shade.toUpperCase()}`}
                                                     >
-                                                        <X size={12}/>
-                                                    </button>
-                                                </div>
+                                                        <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
+                                                            {shade.substring(1).toUpperCase()}
+                                                        </span>
+                                                       <button 
+                                                            onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}}
+                                                            className="absolute top-1 right-1 p-0.5 bg-black/30 rounded-full text-white opacity-0 group-hover/item:opacity-100 hover:bg-black/60 transition-opacity z-20"
+                                                            title="Quitar color"
+                                                        >
+                                                            <X size={12}/>
+                                                        </button>
+                                                    </div>
 
-                                                <div className="absolute top-0 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
-                                                        className="bg-white/90 backdrop-blur-sm rounded-full p-0.5 text-black shadow-lg hover:scale-110 transition-transform"
-                                                        title="Insertar color"
-                                                    >
-                                                        <Plus size={14}/>
-                                                    </button>
+                                                    <div className="absolute top-0 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                            className="bg-white/90 backdrop-blur-sm rounded-full p-0.5 text-black shadow-lg hover:scale-110 transition-transform"
+                                                            title="Insertar color"
+                                                        >
+                                                            <Plus size={14}/>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </Droppable>
-                </DragDropContext>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
+                </div>
                 
                 <div className="mt-6 pt-4 border-t" style={{ borderColor: tinycolor(colorModeBg).isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}>
                      <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-4">
                         <p className="text-sm font-semibold self-start sm:self-center" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Escala de Grises Sugerida</p>
                         <div className="flex items-center gap-2 self-start sm:self-center">
-                            <button onClick={onOpenAccessibilityModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                                <TestTube size={14} /> <span className="hidden sm:inline">Accesibilidad</span>
+                             <button onClick={onOpenAccessibilityModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                                <Accessibility size={14}/> <span className="hidden sm:inline">Accesibilidad</span>
                             </button>
                             <button onClick={onOpenComponentPreviewModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                                <TestTube2 size={14} /> <span className="hidden sm:inline">Componentes</span>
+                                <TestTube2 size={14}/> <span className="hidden sm:inline">Componentes</span>
                             </button>
-                            <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
+                             <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
                             <button onClick={() => setIsPaletteAdjusterVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <Settings size={14} /> <span className="hidden sm:inline">Ajustar</span>
                             </button>
@@ -227,22 +215,22 @@ const Explorer = ({
             </section>
             
             {isExpanded && (
-                <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}}>
-                    <div className="w-full h-full flex flex-col" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={(e) => { e.stopPropagation(); setIsExpanded(false); setActiveShadeIndex(null);}}>
+                    <div className="w-full h-full p-4 flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
                         <div className="absolute top-4 left-4 flex gap-2 z-30">
                             <button 
-                                onClick={(e) => { e.stopPropagation(); handlePaletteUndo(); }}
-                                disabled={historyIndex <= 0}
+                                onClick={(e) => { e.stopPropagation(); handleUndo(); }}
+                                disabled={!history || historyIndex <= 0}
                                 className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Deshacer"
+                                title="Deshacer cambio de paleta"
                             >
                                 <Undo2 size={24} />
                             </button>
                             <button 
-                                onClick={(e) => { e.stopPropagation(); handlePaletteRedo(); }}
-                                disabled={historyIndex >= history.length - 1}
+                                onClick={(e) => { e.stopPropagation(); handleRedo(); }}
+                                disabled={!history || historyIndex >= history.length - 1}
                                 className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Rehacer"
+                                title="Rehacer cambio de paleta"
                             >
                                 <Redo2 size={24} />
                             </button>
@@ -358,7 +346,7 @@ const Explorer = ({
                 />
             )}
             {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={onColorSelect} />}
-            {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(text, msg) => onCopy(text, msg)} />}
+            {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(text, msg) => alert(msg)} />}
             {isPaletteAdjusterVisible && <PaletteAdjusterModal adjustments={adjustments} onAdjust={onAdjust} onClose={() => setIsPaletteAdjusterVisible(false)} brandColor={brandColor} />}
         </>
     );
