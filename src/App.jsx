@@ -9,7 +9,6 @@ import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
 import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals/index.jsx';
-import AdBanner from './components/AdBanner.jsx';
 
 function App() {
   const hook = useThemeGenerator();
@@ -111,8 +110,6 @@ function App() {
         />
         
         <main>
-          <AdBanner />
-          
           <Explorer
             explorerPalette={hook.explorerPalette}
             reorderExplorerPalette={hook.reorderExplorerPalette}
