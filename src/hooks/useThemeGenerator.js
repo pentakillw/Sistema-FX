@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import tinycolor from 'tinycolor2';
-import { generateShades, generateExplorerPalette, applyColorMatrix, colorblindnessMatrices } from '../utils/colorUtils.js';
+// --- MODIFICACIÓN --- Importamos la nueva función de generación inteligente
+import { generateShades, generateExplorerPalette, applyColorMatrix, colorblindnessMatrices, generateAdvancedRandomPalette } from '../utils/colorUtils.js';
 
 const defaultState = {
     theme: 'light',
@@ -61,15 +62,14 @@ const useThemeGenerator = () => {
         if (!newColor || newColor === brandColor) return;
         setBrandColor(newColor);
         saveStateToHistory({ brandColor: newColor, grayColor, explorerPalette: originalExplorerPalette });
-    }, [brandColor, grayColor, originalExplorerPalette, history, historyIndex]);
+    }, [brandColor, grayColor, originalExplorerPalette]);
 
     const updatePaletteState = (newPalette) => {
         setOriginalExplorerPalette(newPalette);
+        setExplorerPalette(newPalette); // Actualiza la paleta visible también
         saveStateToHistory({ brandColor, grayColor, explorerPalette: newPalette });
     };
-
-    // --- NUEVA FUNCIÓN ---
-    // Aplica la transformación de color del modo daltónico a la paleta actual.
+    
     const applySimulationToPalette = () => {
         if (simulationMode === 'none') return;
         const matrix = colorblindnessMatrices[simulationMode];
@@ -122,7 +122,7 @@ const useThemeGenerator = () => {
             setHistoryIndex(newIndex);
             setBrandColor(previousState.brandColor);
             setGrayColor(previousState.grayColor);
-            setOriginalExplorerPalette(previousState.explorerPalette);
+            updatePaletteState(previousState.explorerPalette);
         }
     };
 
@@ -134,7 +134,7 @@ const useThemeGenerator = () => {
             setHistoryIndex(newIndex);
             setBrandColor(nextState.brandColor);
             setGrayColor(nextState.grayColor);
-            setOriginalExplorerPalette(nextState.explorerPalette);
+            updatePaletteState(nextState.explorerPalette);
         }
     };
     
@@ -201,8 +201,10 @@ const useThemeGenerator = () => {
     };
     
     useEffect(() => {
-        const { palette } = generateExplorerPalette(explorerMethod, brandColor, originalExplorerPalette.length || 5);
-        updatePaletteState(palette);
+        if (explorerMethod !== 'auto-coolors') { // Evita bucle con el aleatorio
+            const { palette } = generateExplorerPalette(explorerMethod, brandColor, originalExplorerPalette.length || 5);
+            updatePaletteState(palette);
+        }
     }, [explorerMethod]);
 
 
@@ -276,7 +278,7 @@ const useThemeGenerator = () => {
             { name: 'SecundarioPresionado', color: grayShades[5] }, { name: 'Critico', color: critical },
             { name: 'CriticoFlotante', color: tinycolor(critical).lighten(10).toHexString() }, { name: 'CriticoPresionado', color: tinycolor(critical).darken(10).toHexString() },
           ],
-          explorerColors: originalExplorerPalette.map((c, i) => ({ name: `Color ${i + 1}`, color: c })),
+          explorerColors: explorerPalette.map((c, i) => ({ name: `Color ${i + 1}`, color: c })),
         };
 
         if (theme === 'dark') {
@@ -357,7 +359,7 @@ const useThemeGenerator = () => {
         document.documentElement.style.setProperty('--bg-muted', theme === 'light' ? grayShades[17] : grayShades[2]);
         document.documentElement.style.setProperty('--action-primary-default', brandShades[4]);
 
-    }, [brandColor, grayColor, theme, originalExplorerPalette]);
+    }, [brandColor, grayColor, theme, explorerPalette]);
 
 
     const handleImport = (event) => {
@@ -374,13 +376,13 @@ const useThemeGenerator = () => {
                 setFont(imported.font);
                 setTheme(imported.theme);
                 setIsGrayAuto(imported.isGrayAuto);
-                setOriginalExplorerPalette(importedPalette);
                 
                 const newState = {
                     brandColor: imported.brandColor,
                     grayColor: imported.grayColor,
                     explorerPalette: importedPalette
                 };
+                updatePaletteState(importedPalette);
                 saveStateToHistory(newState);
                 
                 showNotification('¡Tema importado!');
@@ -398,8 +400,8 @@ const useThemeGenerator = () => {
         setIsGrayAuto(defaultState.isGrayAuto);
         setFont(defaultState.font);
         setGrayColor(defaultState.grayColor);
-        setOriginalExplorerPalette(palette);
         const initialState = { brandColor: defaultState.brandColor, grayColor: defaultState.grayColor, explorerPalette: palette };
+        updatePaletteState(palette);
         setHistory([initialState]);
         setHistoryIndex(0);
         showNotification("Tema reiniciado.");
@@ -407,11 +409,14 @@ const useThemeGenerator = () => {
 
     const handleThemeToggle = () => setTheme(t => t === 'light' ? 'dark' : 'light');
     
+    // --- MODIFICACIÓN --- Ahora usa el nuevo generador avanzado
     const handleRandomTheme = () => {
-        const newColor = tinycolor.random().toHexString();
-        const { palette } = generateExplorerPalette(explorerMethod, newColor, originalExplorerPalette.length || 5);
-        setBrandColor(newColor);
-        updatePaletteState(palette);
+        const count = originalExplorerPalette.length || 5;
+        const { palette, brandColor: newBrandColor } = generateAdvancedRandomPalette(count);
+        
+        setBrandColor(newBrandColor); // Elige el color más vibrante como principal
+        updatePaletteState(palette); // Actualiza la paleta del explorador
+        setExplorerMethod('auto-coolors'); // Identificador para evitar re-cálculos
     };
 
     return {
@@ -431,10 +436,8 @@ const useThemeGenerator = () => {
         history, historyIndex,
         generatePaletteWithAI,
         updatePaletteState,
-        // Se expone la nueva función
         applySimulationToPalette,
     };
 };
 
 export default useThemeGenerator;
-

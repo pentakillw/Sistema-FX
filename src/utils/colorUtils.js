@@ -20,8 +20,6 @@ export const generationMethods = [
     { id: 'tetrad', name: 'Tetrádico' }
 ];
 
-// --- NUEVO ---
-// Objeto que mapea los modos de simulación a sus matrices de transformación de color.
 export const colorblindnessMatrices = {
   protanopia: [0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0],
   deuteranopia: [0.625, 0.375, 0, 0, 0, 0.7, 0.3, 0, 0, 0, 0, 0.3, 0.7, 0, 0, 0, 0, 0, 1, 0],
@@ -33,8 +31,6 @@ export const colorblindnessMatrices = {
   achromatomaly: [0.618, 0.320, 0.062, 0, 0, 0.163, 0.775, 0.062, 0, 0, 0.163, 0.320, 0.516, 0, 0, 0, 0, 0, 1, 0],
 };
 
-// --- NUEVO ---
-// Función de utilidad que aplica una matriz de color a un color hexadecimal.
 export const applyColorMatrix = (hex, matrix) => {
     const rgb = tinycolor(hex).toRgb();
     const r = rgb.r / 255, g = rgb.g / 255, b = rgb.b / 255;
@@ -54,7 +50,6 @@ export const applyColorMatrix = (hex, matrix) => {
     return tinycolor(finalRgb).toHexString();
 };
 
-
 export const generateShades = (hex) => {
   if (!tinycolor(hex).isValid()) return Array(20).fill('#cccccc');
   const baseColor = tinycolor(hex);
@@ -68,6 +63,76 @@ export const generateShades = (hex) => {
     shades.push(tinycolor.mix(baseColor, '#fff', i * 9).toHexString());
   }
   return shades;
+};
+
+// --- ✨ FUNCIÓN DE GENERACIÓN INTELIGENTE Y ESCALABLE ✨ ---
+export const generateAdvancedRandomPalette = (count = 5) => {
+    // 1. El color base se elige aleatoriamente (pero con restricciones)
+    const baseColor = tinycolor({
+        h: Math.random() * 360,
+        s: 0.3 + Math.random() * 0.5, // Evita grises y neones (30% a 80% sat)
+        l: 0.4 + Math.random() * 0.3, // Evita blancos/negros (40% a 70% lum)
+    });
+
+    // 2. Aplica reglas de armonía cromática (aleatoriamente)
+    const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic'];
+    const randomMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
+    
+    let initialPalette = [];
+    switch (randomMethod) {
+        case 'analogous':
+            initialPalette = baseColor.analogous(count);
+            break;
+        case 'triad':
+            initialPalette = baseColor.triad();
+            break;
+        case 'splitcomplement':
+            initialPalette = baseColor.splitcomplement();
+            break;
+        case 'tetrad':
+            initialPalette = baseColor.tetrad();
+            break;
+        case 'monochromatic':
+        default:
+            initialPalette = baseColor.monochromatic(count);
+            break;
+    }
+
+    // Asegurarse de que tenemos 'count' colores
+    while (initialPalette.length < count) {
+        const newColor = initialPalette[0].clone().spin(30 * initialPalette.length);
+        initialPalette.push(newColor);
+    }
+    initialPalette = initialPalette.slice(0, count);
+
+    // 4. Motor de “paleta balanceada” (DINÁMICO PARA CUALQUIER 'count')
+    const targetLuminosities = Array.from({ length: count }, (_, i) => 
+        0.95 - (i * (0.8 / (count - 1 || 1)))
+    ); // Se extiende de 0.95 (claro) a 0.15 (oscuro)
+
+    const targetSaturations = Array.from({ length: count }, (_, i) =>
+        0.3 + (i * (0.6 / (count - 1 || 1)))
+    ); // Se extiende de 0.3 (apagado) a 0.9 (vibrante)
+    
+    // Ordena la paleta por luminosidad para aplicar el balance
+    initialPalette.sort((a, b) => a.getLuminance() - b.getLuminance());
+    
+    let balancedPalette = initialPalette.map((color, index) => {
+        let hsl = color.toHsl();
+        hsl.l = targetLuminosities[index];
+        hsl.s = targetSaturations[index] * (0.8 + Math.random() * 0.4);
+        return tinycolor(hsl);
+    });
+
+    // 6. Barajar la paleta para un orden aleatorio
+    balancedPalette.sort(() => 0.5 - Math.random());
+
+    const finalPalette = balancedPalette.map(c => c.toHexString());
+    
+    // El color de marca será el más saturado de la paleta generada
+    const brandColor = balancedPalette.sort((a,b) => b.toHsl().s - a.toHsl().s)[0].toHexString();
+
+    return { palette: finalPalette, brandColor: brandColor };
 };
 
 export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 20) => {
@@ -138,3 +203,4 @@ export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 2
 
     return { palette: finalPalette, gray: harmonicGrayShades };
 };
+

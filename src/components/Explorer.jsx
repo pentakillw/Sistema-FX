@@ -27,7 +27,6 @@ const getPreviewBgColor = (mode, shades, cardColor) => {
     }
 }
 
-
 const Explorer = ({ hook }) => {
     const {
         explorerPalette, reorderExplorerPalette, explorerGrayShades, 
@@ -114,7 +113,6 @@ const Explorer = ({ hook }) => {
                                 <option value="achromatomaly">Acromatomalía</option>
                             </select>
                         </div>
-                        {/* --- CORRECCIÓN --- Se añade el botón "Aplicar" que faltaba --- */}
                         <button 
                             onClick={applySimulationToPalette} 
                             disabled={simulationMode === 'none'}
@@ -161,7 +159,7 @@ const Explorer = ({ hook }) => {
                                                         onClick={() => handleExplorerColorPick(shade)}
                                                         title={`Usar ${shade.toUpperCase()}`}
                                                     >
-                                                        <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20 sm:group-hover/item:opacity-0" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
+                                                        <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
                                                             {shade.substring(1).toUpperCase()}
                                                         </span>
                                                        <button 
@@ -304,7 +302,7 @@ const Explorer = ({ hook }) => {
                                                         )}
 
                                                         {activeShadeIndex === index && (
-                                                            <div className="absolute inset-0 flex flex-col z-20 animate-fade-in" onMouseLeave={() => setHoveredShade(null)}>
+                                                            <div className="absolute inset-0 flex flex-col z-20 animate-fade-in">
                                                                 {generateShades(baseColorForShades).map((shade, shadeIndex) => (
                                                                     <div
                                                                         key={shadeIndex}
@@ -316,7 +314,6 @@ const Explorer = ({ hook }) => {
                                                                             setActiveShadeIndex(null);
                                                                         }}
                                                                         title={`Usar ${shade.toUpperCase()}`}
-                                                                        onMouseEnter={() => setHoveredShade({ text: shade.toUpperCase(), color: shade })}
                                                                     >
                                                                         {shade.toLowerCase() === color.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
                                                                         
