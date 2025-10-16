@@ -140,7 +140,7 @@ const Explorer = ({ hook }) => {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className="flex items-center rounded-md h-12 relative group"
+                                    className="flex items-center rounded-md h-48 relative group"
                                     style={{ minWidth: `${explorerPalette.length * 50}px` }}
                                 >
                                     {explorerPalette.map((shade, index) => (
