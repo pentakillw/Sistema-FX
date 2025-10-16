@@ -28,33 +28,28 @@ const ColorPalette = ({
   }
 
   useEffect(() => {
-    // Sincroniza el input cuando el color global cambie (ej. desde el picker)
     if (hex) {
       setInputValue(hex.toUpperCase())
     }
   }, [hex])
 
-  // Solo actualiza el estado local del input mientras escribes
   const handleInputChange = e => {
     setInputValue(e.target.value)
   }
 
-  // Valida y actualiza el color global al perder el foco (onBlur)
   const handleColorUpdate = () => {
     const newColor = tinycolor(inputValue)
     if (newColor.isValid()) {
       onColorChange(newColor.toHexString())
     } else {
-      // Si el valor no es válido, revierte al último color correcto
       setInputValue(hex ? hex.toUpperCase() : "")
     }
   }
 
-  // Valida y actualiza al presionar Enter
   const handleKeyDown = e => {
     if (e.key === "Enter") {
       handleColorUpdate()
-      e.target.blur() // Quita el foco del input
+      e.target.blur()
     }
   }
 
@@ -106,59 +101,60 @@ const ColorPalette = ({
           )}
         </div>
       )}
+      {/* --- MEJORA RESPONSIVE: Contenedor de scroll único --- */}
       <div className="overflow-x-auto pb-2 -mb-2">
-        <div
-          className="flex rounded-md overflow-hidden h-10 relative group"
-          style={{ minWidth: `${shades.length * 25}px` }}
-        >
-          {shades.map((shade, index) => (
-            <div
-              key={index}
-              className="flex-1 cursor-pointer transition-transform duration-100 ease-in-out group-hover:transform group-hover:scale-y-110 hover:!scale-125 hover:z-10 flex items-center justify-center"
-              style={{ backgroundColor: shade, minWidth: "25px" }}
-              onClick={() => onShadeCopy(shade)}
-              title={`Usar ${shade.toUpperCase()}`}
-            >
-              <span
-                className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-                style={{
-                  color: tinycolor(shade).isLight() ? "#000" : "#FFF",
-                }}
+        <div className="sm:min-w-0" style={{ minWidth: `${shades.length * 56}px` }}>
+          <div
+            className="flex rounded-md overflow-hidden h-12 sm:h-10 relative group"
+          >
+            {shades.map((shade, index) => (
+              <div
+                key={index}
+                className="w-14 flex-shrink-0 sm:flex-1 cursor-pointer transition-transform duration-100 ease-in-out sm:group-hover:transform sm:group-hover:scale-y-110 sm:hover:!scale-125 sm:hover:z-10 flex items-center justify-center"
+                style={{ backgroundColor: shade }}
+                onClick={() => onShadeCopy(shade)}
+                title={`Usar ${shade.toUpperCase()}`}
               >
-                {shade.substring(1).toUpperCase()}
-              </span>
+                <span
+                  className="text-[10px] font-mono sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                  style={{
+                    color: tinycolor(shade).isLight() ? "#000" : "#FFF",
+                  }}
+                >
+                  {shade.substring(1).toUpperCase()}
+                </span>
+              </div>
+            ))}
+          </div>
+           {!isExplorer && (
+            <div
+              className={`flex text-xs font-mono px-1 relative pt-2 mt-1 ${
+                themeOverride === "light" ? "text-gray-500" : "text-gray-400"
+              }`}
+            >
+              <div
+                className="absolute top-0 w-0 h-0 hidden sm:block"
+                style={{
+                  left: "calc(47.5% - 7px)",
+                  borderLeft: "7px solid transparent",
+                  borderRight: "7px solid transparent",
+                  borderTop: `10px solid ${
+                    themeOverride === "light" ? "#374151" : "#D1D5DB"
+                  }`,
+                }}
+                title="Color Base"
+              ></div>
+              {Array.from({ length: 20 }).map((_, index) => (
+                <div key={index} className="w-14 sm:flex-1 text-center text-[10px] flex-shrink-0">
+                  T{index * 50}
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </div>
-      {!isExplorer && (
-        <div
-          className={`hidden sm:flex text-xs font-mono px-1 relative pt-2 mt-1 ${
-            themeOverride === "light" ? "text-gray-500" : "text-gray-400"
-          }`}
-        >
-          <div
-            className="absolute top-0 w-0 h-0"
-            style={{
-              left: "calc(47.5% - 7px)",
-              borderLeft: "7px solid transparent",
-              borderRight: "7px solid transparent",
-              borderTop: `10px solid ${
-                themeOverride === "light" ? "#374151" : "#D1D5DB"
-              }`,
-            }}
-            title="Color Base"
-          ></div>
-          {Array.from({ length: 20 }).map((_, index) => (
-            <div key={index} className="flex-1 text-center text-[10px]">
-              T{index * 50}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
 
 export default ColorPalette
-

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import tinycolor from 'tinycolor2';
-import { generateShades, generateExplorerPalette, applyColorMatrix, colorblindnessMatrices, generateAdvancedRandomPalette } from '../utils/colorUtils.js';
+import { generateShades, generateAdvancedRandomPalette, applyColorMatrix, colorblindnessMatrices } from '../utils/colorUtils.js';
 
 const defaultState = {
     theme: 'light',
@@ -67,7 +67,7 @@ const useThemeGenerator = () => {
         setOriginalExplorerPalette(newPalette);
         saveStateToHistory({ brandColor, grayColor, explorerPalette: newPalette });
     };
-    
+
     const applySimulationToPalette = () => {
         if (simulationMode === 'none') return;
         const matrix = colorblindnessMatrices[simulationMode];
@@ -137,9 +137,9 @@ const useThemeGenerator = () => {
     };
     
      const generatePaletteWithAI = async (prompt) => {
-        // NOTE: This is a placeholder API key.
-        const apiKey = "YOUR_API_KEY";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+        const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss";
+        // --- CORRECCIÓN FINAL Y DEFINITIVA: Usar el modelo 'gemini-1.0-pro' ---
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
         const currentPaletteSize = originalExplorerPalette.length || 5;
         const fullPrompt = `You are an expert color palette generator. Based on the theme "${prompt}", generate an array of exactly ${currentPaletteSize} aesthetically pleasing and harmonious hex color codes.`;
         const payload = {
@@ -339,7 +339,8 @@ const useThemeGenerator = () => {
                 btn: { ratio: btnContrast.toFixed(2), level: btnContrast >= 4.5 ? 'AA' : 'Fail' },
                 text: { ratio: brandContrast.toFixed(2), level: brandContrast >= 4.5 ? 'AA' : 'Fail' }
             },
-            accessibilityColors: { btnBg: stylePalette.fullBackgroundColors[0].color, btnText: accentColor, textBg: stylePalette.fullBackgroundColors[0].color, textColor: brandColor }
+            accessibilityColors: { btnBg: stylePalette.fullBackgroundColors[0].color, btnText: accentColor, textBg: stylePalette.fullBackgroundColors[0].color, textColor: brandColor },
+            explorerPalette: originalExplorerPalette
         };
 
         setThemeData(data);
@@ -400,12 +401,9 @@ const useThemeGenerator = () => {
 
     const handleThemeToggle = () => setTheme(t => t === 'light' ? 'dark' : 'light');
     
-    // --- LÓGICA HÍBRIDA DE GENERACIÓN ---
     const handleRandomTheme = () => {
-        const { palette, brandColor: newBrandColor } = generateAdvancedRandomPalette(
-            originalExplorerPalette.length || 5, 
-            explorerMethod
-        );
+        const method = explorerMethod === 'auto' ? undefined : explorerMethod;
+        const { palette, brandColor: newBrandColor } = generateAdvancedRandomPalette(originalExplorerPalette.length || 5, method);
         setBrandColor(newBrandColor);
         updatePaletteState(palette);
     };

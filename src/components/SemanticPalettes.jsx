@@ -2,7 +2,7 @@ import React from 'react';
 import tinycolor from 'tinycolor2';
 import { Layers } from 'lucide-react';
 
-// Componente interno para una sola fila de paleta
+// --- MEJORA RESPONSIVE ---
 const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
     const titleColor = themeOverride === 'light' ? 'var(--text-default)' : '#FFF';
     const textColor = themeOverride === 'light' ? 'var(--text-muted)' : '#D1D5DB';
@@ -11,30 +11,29 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
         <div className="mb-4">
             <h3 className="text-sm font-medium mb-2" style={{ color: titleColor }}>{title}</h3>
             <div className="overflow-x-auto pb-2 -mb-2">
-                <div className="flex rounded-md overflow-hidden h-10 relative group" style={{ minWidth: `${colors.length * 30}px` }}>
-                    {(colors || []).map((item) => (
-                        <div
-                            key={item.name}
-                            className="flex-1 cursor-pointer transition-transform duration-100 ease-in-out group-hover:transform group-hover:scale-y-110 hover:!scale-125 hover:z-10 flex items-center justify-center"
-                            style={{ backgroundColor: item.color, minWidth: '30px' }}
-                            onClick={() => onColorCopy(item.color, `${title}: ${item.name} (${item.color.toUpperCase()}) copiado!`)}
-                            title={`${item.name} - ${item.color.toUpperCase()}`}
-                        >
-                            {/* --- CORRECCIÓN --- Se elimina sm:group-hover:opacity-0 para que el código sea visible en todas las pantallas --- */}
-                            <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" style={{ color: tinycolor(item.color).isLight() ? '#000' : '#FFF' }}>
-                                {item.color.substring(1).toUpperCase()}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div className={`hidden sm:block overflow-x-auto pb-2 -mb-2`}>
-                <div className="flex text-xs pt-2 mt-1" style={{ color: textColor, minWidth: `${colors.length * 60}px` }}>
-                    {(colors || []).map((item) => (
-                         <div key={item.name} className="flex-1 text-center text-wrap text-[10px] py-1" title={item.name} style={{ minWidth: '60px' }}>
-                            {item.name}
-                        </div>
-                    ))}
+                 <div className="sm:min-w-0" style={{ minWidth: `${colors.length * 64}px` }}>
+                    <div className="flex rounded-md overflow-hidden h-12 sm:h-10 relative group">
+                        {(colors || []).map((item) => (
+                            <div
+                                key={item.name}
+                                className="w-16 flex-shrink-0 sm:flex-1 cursor-pointer transition-transform duration-100 ease-in-out sm:group-hover:transform sm:group-hover:scale-y-110 sm:hover:!scale-125 sm:hover:z-10 flex items-center justify-center"
+                                style={{ backgroundColor: item.color }}
+                                onClick={() => onColorCopy(item.color, `${title}: ${item.name} (${item.color.toUpperCase()}) copiado!`)}
+                                title={`${item.name} - ${item.color.toUpperCase()}`}
+                            >
+                                <span className="text-[10px] font-mono sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" style={{ color: tinycolor(item.color).isLight() ? '#000' : '#FFF' }}>
+                                    {item.color.substring(1).toUpperCase()}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex text-xs pt-2 mt-1" style={{ color: textColor }}>
+                        {(colors || []).map((item) => (
+                             <div key={item.name} className="w-16 sm:flex-1 text-center text-wrap text-[10px] py-1 flex-shrink-0" title={item.name}>
+                                {item.name}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
@@ -103,3 +102,4 @@ const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCycl
 };
 
 export default SemanticPalettes;
+
