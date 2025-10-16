@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import tinycolor from "tinycolor2"
 import { HexColorPicker } from "react-colorful"
 
@@ -19,12 +19,7 @@ const ColorPalette = ({
   const hexColorClass =
     themeOverride === "light" ? "text-gray-500" : "text-gray-400"
 
-  // --- CORRECCIÓN ---
-  // Nos aseguramos de que 'hex' exista antes de llamar a toUpperCase().
-  // Si es undefined, usamos una cadena vacía como valor por defecto.
-  const [inputValue, setInputValue] = useState(
-    hex ? hex.toUpperCase() : ""
-  )
+  const [inputValue, setInputValue] = useState(hex ? hex.toUpperCase() : "")
 
   const handleHeaderClick = () => {
     if (!isDisabled && onColorChange) {
@@ -32,18 +27,34 @@ const ColorPalette = ({
     }
   }
 
-  React.useEffect(() => {
-    // También añadimos la comprobación aquí por seguridad.
+  useEffect(() => {
+    // Sincroniza el input cuando el color global cambie (ej. desde el picker)
     if (hex) {
       setInputValue(hex.toUpperCase())
     }
   }, [hex])
 
+  // Solo actualiza el estado local del input mientras escribes
   const handleInputChange = e => {
     setInputValue(e.target.value)
-    const newColor = tinycolor(e.target.value)
+  }
+
+  // Valida y actualiza el color global al perder el foco (onBlur)
+  const handleColorUpdate = () => {
+    const newColor = tinycolor(inputValue)
     if (newColor.isValid()) {
       onColorChange(newColor.toHexString())
+    } else {
+      // Si el valor no es válido, revierte al último color correcto
+      setInputValue(hex ? hex.toUpperCase() : "")
+    }
+  }
+
+  // Valida y actualiza al presionar Enter
+  const handleKeyDown = e => {
+    if (e.key === "Enter") {
+      handleColorUpdate()
+      e.target.blur() // Quita el foco del input
     }
   }
 
@@ -73,6 +84,8 @@ const ColorPalette = ({
                 type="text"
                 value={inputValue}
                 onChange={handleInputChange}
+                onBlur={handleColorUpdate}
+                onKeyDown={handleKeyDown}
                 onClick={e => e.stopPropagation()}
                 disabled={isDisabled}
                 className={`text-xs font-mono w-24 p-0 m-0 bg-transparent border-none focus:outline-none focus:ring-0 ${hexColorClass}`}
