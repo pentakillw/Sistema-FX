@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import tinycolor from 'tinycolor2';
-// --- MODIFICACIÓN --- Importamos la nueva función de generación inteligente
 import { generateShades, generateExplorerPalette, applyColorMatrix, colorblindnessMatrices, generateAdvancedRandomPalette } from '../utils/colorUtils.js';
 
 const defaultState = {
@@ -62,11 +61,10 @@ const useThemeGenerator = () => {
         if (!newColor || newColor === brandColor) return;
         setBrandColor(newColor);
         saveStateToHistory({ brandColor: newColor, grayColor, explorerPalette: originalExplorerPalette });
-    }, [brandColor, grayColor, originalExplorerPalette]);
+    }, [brandColor, grayColor, originalExplorerPalette, history, historyIndex]);
 
     const updatePaletteState = (newPalette) => {
         setOriginalExplorerPalette(newPalette);
-        setExplorerPalette(newPalette); // Actualiza la paleta visible también
         saveStateToHistory({ brandColor, grayColor, explorerPalette: newPalette });
     };
     
@@ -122,7 +120,7 @@ const useThemeGenerator = () => {
             setHistoryIndex(newIndex);
             setBrandColor(previousState.brandColor);
             setGrayColor(previousState.grayColor);
-            updatePaletteState(previousState.explorerPalette);
+            setOriginalExplorerPalette(previousState.explorerPalette);
         }
     };
 
@@ -134,13 +132,14 @@ const useThemeGenerator = () => {
             setHistoryIndex(newIndex);
             setBrandColor(nextState.brandColor);
             setGrayColor(nextState.grayColor);
-            updatePaletteState(nextState.explorerPalette);
+            setOriginalExplorerPalette(nextState.explorerPalette);
         }
     };
     
      const generatePaletteWithAI = async (prompt) => {
-        const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        // NOTE: This is a placeholder API key.
+        const apiKey = "YOUR_API_KEY";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
         const currentPaletteSize = originalExplorerPalette.length || 5;
         const fullPrompt = `You are an expert color palette generator. Based on the theme "${prompt}", generate an array of exactly ${currentPaletteSize} aesthetically pleasing and harmonious hex color codes.`;
         const payload = {
@@ -181,7 +180,7 @@ const useThemeGenerator = () => {
     
     useEffect(() => {
         if (originalExplorerPalette.length === 0 && brandColor) {
-            const { palette } = generateExplorerPalette('auto', brandColor, 5);
+            const { palette } = generateAdvancedRandomPalette(5);
             setOriginalExplorerPalette(palette);
             const initialState = { brandColor, grayColor, explorerPalette: palette };
             setHistory([initialState]);
@@ -199,14 +198,6 @@ const useThemeGenerator = () => {
         const nextIndex = (currentIndex + 1) % options.length;
         setMode(options[nextIndex]);
     };
-    
-    useEffect(() => {
-        if (explorerMethod !== 'auto-coolors') { // Evita bucle con el aleatorio
-            const { palette } = generateExplorerPalette(explorerMethod, brandColor, originalExplorerPalette.length || 5);
-            updatePaletteState(palette);
-        }
-    }, [explorerMethod]);
-
 
     const handleExplorerColorPick = (newColor) => {
         updateBrandColor(newColor);
@@ -278,7 +269,7 @@ const useThemeGenerator = () => {
             { name: 'SecundarioPresionado', color: grayShades[5] }, { name: 'Critico', color: critical },
             { name: 'CriticoFlotante', color: tinycolor(critical).lighten(10).toHexString() }, { name: 'CriticoPresionado', color: tinycolor(critical).darken(10).toHexString() },
           ],
-          explorerColors: explorerPalette.map((c, i) => ({ name: `Color ${i + 1}`, color: c })),
+          explorerColors: originalExplorerPalette.map((c, i) => ({ name: `Color ${i + 1}`, color: c })),
         };
 
         if (theme === 'dark') {
@@ -359,7 +350,7 @@ const useThemeGenerator = () => {
         document.documentElement.style.setProperty('--bg-muted', theme === 'light' ? grayShades[17] : grayShades[2]);
         document.documentElement.style.setProperty('--action-primary-default', brandShades[4]);
 
-    }, [brandColor, grayColor, theme, explorerPalette]);
+    }, [brandColor, grayColor, theme, originalExplorerPalette]);
 
 
     const handleImport = (event) => {
@@ -369,20 +360,20 @@ const useThemeGenerator = () => {
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                const importedPalette = imported.explorerPalette || generateExplorerPalette('auto', imported.brandColor, 5).palette;
+                const importedPalette = imported.explorerPalette || generateAdvancedRandomPalette(5).palette;
                 
                 setBrandColor(imported.brandColor);
                 setGrayColor(imported.grayColor);
                 setFont(imported.font);
                 setTheme(imported.theme);
                 setIsGrayAuto(imported.isGrayAuto);
+                setOriginalExplorerPalette(importedPalette);
                 
                 const newState = {
                     brandColor: imported.brandColor,
                     grayColor: imported.grayColor,
                     explorerPalette: importedPalette
                 };
-                updatePaletteState(importedPalette);
                 saveStateToHistory(newState);
                 
                 showNotification('¡Tema importado!');
@@ -394,14 +385,14 @@ const useThemeGenerator = () => {
     };
 
     const handleReset = () => {
-        const { palette } = generateExplorerPalette('auto', defaultState.brandColor, 5);
+        const { palette } = generateAdvancedRandomPalette(5);
         setTheme(defaultState.theme);
         setBrandColor(defaultState.brandColor);
         setIsGrayAuto(defaultState.isGrayAuto);
         setFont(defaultState.font);
         setGrayColor(defaultState.grayColor);
+        setOriginalExplorerPalette(palette);
         const initialState = { brandColor: defaultState.brandColor, grayColor: defaultState.grayColor, explorerPalette: palette };
-        updatePaletteState(palette);
         setHistory([initialState]);
         setHistoryIndex(0);
         showNotification("Tema reiniciado.");
@@ -409,14 +400,14 @@ const useThemeGenerator = () => {
 
     const handleThemeToggle = () => setTheme(t => t === 'light' ? 'dark' : 'light');
     
-    // --- MODIFICACIÓN --- Ahora usa el nuevo generador avanzado
+    // --- LÓGICA HÍBRIDA DE GENERACIÓN ---
     const handleRandomTheme = () => {
-        const count = originalExplorerPalette.length || 5;
-        const { palette, brandColor: newBrandColor } = generateAdvancedRandomPalette(count);
-        
-        setBrandColor(newBrandColor); // Elige el color más vibrante como principal
-        updatePaletteState(palette); // Actualiza la paleta del explorador
-        setExplorerMethod('auto-coolors'); // Identificador para evitar re-cálculos
+        const { palette, brandColor: newBrandColor } = generateAdvancedRandomPalette(
+            originalExplorerPalette.length || 5, 
+            explorerMethod
+        );
+        setBrandColor(newBrandColor);
+        updatePaletteState(palette);
     };
 
     return {
@@ -441,3 +432,4 @@ const useThemeGenerator = () => {
 };
 
 export default useThemeGenerator;
+

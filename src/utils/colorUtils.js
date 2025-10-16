@@ -65,21 +65,22 @@ export const generateShades = (hex) => {
   return shades;
 };
 
-// --- ✨ FUNCIÓN DE GENERACIÓN INTELIGENTE Y ESCALABLE ✨ ---
-export const generateAdvancedRandomPalette = (count = 5) => {
-    // 1. El color base se elige aleatoriamente (pero con restricciones)
+// --- ✨ FUNCIÓN DE GENERACIÓN INTELIGENTE Y FLEXIBLE ✨ ---
+export const generateAdvancedRandomPalette = (count = 5, method = 'auto') => {
     const baseColor = tinycolor({
         h: Math.random() * 360,
-        s: 0.3 + Math.random() * 0.5, // Evita grises y neones (30% a 80% sat)
-        l: 0.4 + Math.random() * 0.3, // Evita blancos/negros (40% a 70% lum)
+        s: 0.3 + Math.random() * 0.5,
+        l: 0.4 + Math.random() * 0.3,
     });
 
-    // 2. Aplica reglas de armonía cromática (aleatoriamente)
-    const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic'];
-    const randomMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
+    let harmonyMethod = method;
+    if (harmonyMethod === 'auto') {
+        const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic'];
+        harmonyMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
+    }
     
-    let initialPalette = [];
-    switch (randomMethod) {
+    let initialPalette;
+    switch (harmonyMethod) {
         case 'analogous':
             initialPalette = baseColor.analogous(count);
             break;
@@ -93,28 +94,32 @@ export const generateAdvancedRandomPalette = (count = 5) => {
             initialPalette = baseColor.tetrad();
             break;
         case 'monochromatic':
-        default:
-            initialPalette = baseColor.monochromatic(count);
+             initialPalette = baseColor.monochromatic(count);
+            break;
+        default: // 'complement' y otros casos
+             const complementColor = baseColor.complement();
+             initialPalette = [baseColor];
+             for (let i = 1; i < count; i++) {
+                 const mixAmount = (i / (count - 1)) * 100;
+                 initialPalette.push(tinycolor.mix(baseColor, complementColor, mixAmount));
+             }
             break;
     }
 
-    // Asegurarse de que tenemos 'count' colores
     while (initialPalette.length < count) {
         const newColor = initialPalette[0].clone().spin(30 * initialPalette.length);
         initialPalette.push(newColor);
     }
     initialPalette = initialPalette.slice(0, count);
 
-    // 4. Motor de “paleta balanceada” (DINÁMICO PARA CUALQUIER 'count')
     const targetLuminosities = Array.from({ length: count }, (_, i) => 
         0.95 - (i * (0.8 / (count - 1 || 1)))
-    ); // Se extiende de 0.95 (claro) a 0.15 (oscuro)
+    );
 
     const targetSaturations = Array.from({ length: count }, (_, i) =>
         0.3 + (i * (0.6 / (count - 1 || 1)))
-    ); // Se extiende de 0.3 (apagado) a 0.9 (vibrante)
+    );
     
-    // Ordena la paleta por luminosidad para aplicar el balance
     initialPalette.sort((a, b) => a.getLuminance() - b.getLuminance());
     
     let balancedPalette = initialPalette.map((color, index) => {
@@ -124,12 +129,10 @@ export const generateAdvancedRandomPalette = (count = 5) => {
         return tinycolor(hsl);
     });
 
-    // 6. Barajar la paleta para un orden aleatorio
     balancedPalette.sort(() => 0.5 - Math.random());
 
     const finalPalette = balancedPalette.map(c => c.toHexString());
     
-    // El color de marca será el más saturado de la paleta generada
     const brandColor = balancedPalette.sort((a,b) => b.toHsl().s - a.toHsl().s)[0].toHexString();
 
     return { palette: finalPalette, brandColor: brandColor };
@@ -140,9 +143,10 @@ export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 2
     const colorForExplorer = !baseColorHex ? tinycolor.random() : tinycolor(baseColorHex);
 
     if (method === 'auto') {
-      const harmonyMethods = ['analogous', 'complement', 'split-complement', 'triad'];
-      const randomMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
-      return generateExplorerPalette(randomMethod, colorForExplorer.toHexString(), count);
+      const { palette } = generateAdvancedRandomPalette(count);
+      const baseForGray = palette.length > 0 ? palette[Math.floor(palette.length / 2)] : tinycolor.random().toHexString();
+      const harmonicGrayShades = generateShades(tinycolor(baseForGray).desaturate(85).toHexString());
+      return { palette, gray: harmonicGrayShades };
     }
 
     switch (method) {

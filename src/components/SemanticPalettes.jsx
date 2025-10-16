@@ -20,7 +20,8 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
                             onClick={() => onColorCopy(item.color, `${title}: ${item.name} (${item.color.toUpperCase()}) copiado!`)}
                             title={`${item.name} - ${item.color.toUpperCase()}`}
                         >
-                            <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none sm:group-hover:opacity-0" style={{ color: tinycolor(item.color).isLight() ? '#000' : '#FFF' }}>
+                            {/* --- CORRECCIÓN --- Se elimina sm:group-hover:opacity-0 para que el código sea visible en todas las pantallas --- */}
+                            <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" style={{ color: tinycolor(item.color).isLight() ? '#000' : '#FFF' }}>
                                 {item.color.substring(1).toUpperCase()}
                             </span>
                         </div>
@@ -69,7 +70,6 @@ const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCycl
     const buttonBg = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)';
     const themeOverride = isLight ? 'light' : 'dark';
 
-    // --- CORRECCIÓN --- Se aplica el filtro de simulación directamente aquí.
     const simulationFilterStyle = {
         filter: simulationMode !== 'none' ? `url(#${simulationMode})` : 'none'
     };
@@ -103,4 +103,3 @@ const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCycl
 };
 
 export default SemanticPalettes;
-
