@@ -1,86 +1,151 @@
-import React, { useState } from 'react';
-import tinycolor from 'tinycolor2';
-import { HexColorPicker } from 'react-colorful';
+import React, { useState } from "react"
+import tinycolor from "tinycolor2"
+import { HexColorPicker } from "react-colorful"
 
-const ColorPalette = ({ 
-    title, 
-    color, 
-    hex, 
-    shades, 
-    onShadeCopy, 
-    themeOverride, 
-    isExplorer = false,
-    // --- NUEVO --- Props para hacer el control de color interactivo
-    onColorChange,
-    isDisabled = false
+const ColorPalette = ({
+  title,
+  color,
+  hex,
+  shades,
+  onShadeCopy,
+  themeOverride,
+  isExplorer = false,
+  onColorChange,
+  isDisabled = false,
 }) => {
-  const [isPickerVisible, setIsPickerVisible] = useState(false);
-  const titleColorClass = themeOverride === 'light' ? 'text-gray-900' : 'text-gray-50';
-  const hexColorClass = themeOverride === 'light' ? 'text-gray-500' : 'text-gray-400';
+  const [isPickerVisible, setIsPickerVisible] = useState(false)
+  const titleColorClass =
+    themeOverride === "light" ? "text-gray-900" : "text-gray-50"
+  const hexColorClass =
+    themeOverride === "light" ? "text-gray-500" : "text-gray-400"
+
+  // --- CORRECCIÓN ---
+  // Nos aseguramos de que 'hex' exista antes de llamar a toUpperCase().
+  // Si es undefined, usamos una cadena vacía como valor por defecto.
+  const [inputValue, setInputValue] = useState(
+    hex ? hex.toUpperCase() : ""
+  )
 
   const handleHeaderClick = () => {
-    // Solo abre el picker si no está deshabilitado y si tiene una función de cambio
     if (!isDisabled && onColorChange) {
-      setIsPickerVisible(prev => !prev);
+      setIsPickerVisible(prev => !prev)
     }
-  };
+  }
+
+  React.useEffect(() => {
+    // También añadimos la comprobación aquí por seguridad.
+    if (hex) {
+      setInputValue(hex.toUpperCase())
+    }
+  }, [hex])
+
+  const handleInputChange = e => {
+    setInputValue(e.target.value)
+    const newColor = tinycolor(e.target.value)
+    if (newColor.isValid()) {
+      onColorChange(newColor.toHexString())
+    }
+  }
 
   return (
     <div className="mb-4">
       {!isExplorer && (
         <div className="relative">
-          <div 
-            className={`flex items-center mb-2 ${onColorChange && !isDisabled ? 'cursor-pointer' : 'cursor-default'}`}
+          <div
+            className={`flex items-center mb-2 ${
+              onColorChange && !isDisabled ? "cursor-pointer" : "cursor-default"
+            }`}
             onClick={handleHeaderClick}
           >
-            <div 
-              className="w-10 h-10 rounded-md mr-3 border" 
-              style={{ 
-                backgroundColor: color, 
-                borderColor: themeOverride === 'light' ? '#E5E7EB' : '#4B5563' 
+            <div
+              className="w-10 h-10 rounded-md mr-3 border"
+              style={{
+                backgroundColor: color,
+                borderColor:
+                  themeOverride === "light" ? "#E5E7EB" : "#4B5563",
               }}
             ></div>
             <div>
-              <p className={`text-sm font-medium ${titleColorClass}`}>{title}</p>
-              <p className={`text-xs font-mono ${hexColorClass}`}>{hex.toUpperCase()}</p>
+              <p className={`text-sm font-medium ${titleColorClass}`}>
+                {title}
+              </p>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                onClick={e => e.stopPropagation()}
+                disabled={isDisabled}
+                className={`text-xs font-mono w-24 p-0 m-0 bg-transparent border-none focus:outline-none focus:ring-0 ${hexColorClass}`}
+                style={{
+                  cursor: isDisabled ? "default" : "text",
+                }}
+              />
             </div>
           </div>
-          {/* --- NUEVO --- Lógica para mostrar el selector de color */}
           {isPickerVisible && onColorChange && !isDisabled && (
             <div className="absolute z-20 top-full mt-2 left-0">
-                <div className="fixed inset-0 -z-10" onClick={() => setIsPickerVisible(false)} />
-                <HexColorPicker color={color} onChange={onColorChange} />
+              <div
+                className="fixed inset-0 -z-10"
+                onClick={() => setIsPickerVisible(false)}
+              />
+              <HexColorPicker color={color} onChange={onColorChange} />
             </div>
           )}
         </div>
       )}
       <div className="overflow-x-auto pb-2 -mb-2">
-        <div className="flex rounded-md overflow-hidden h-10 relative group" style={{ minWidth: `${shades.length * 25}px` }}>
+        <div
+          className="flex rounded-md overflow-hidden h-10 relative group"
+          style={{ minWidth: `${shades.length * 25}px` }}
+        >
           {shades.map((shade, index) => (
-            <div 
-                key={index} 
-                className="flex-1 cursor-pointer transition-transform duration-100 ease-in-out group-hover:transform group-hover:scale-y-110 hover:!scale-125 hover:z-10 flex items-center justify-center" 
-                style={{ backgroundColor: shade, minWidth: '25px' }}
-                onClick={() => onShadeCopy(shade)}
-                title={`Usar ${shade.toUpperCase()}`}
+            <div
+              key={index}
+              className="flex-1 cursor-pointer transition-transform duration-100 ease-in-out group-hover:transform group-hover:scale-y-110 hover:!scale-125 hover:z-10 flex items-center justify-center"
+              style={{ backgroundColor: shade, minWidth: "25px" }}
+              onClick={() => onShadeCopy(shade)}
+              title={`Usar ${shade.toUpperCase()}`}
             >
-              <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
+              <span
+                className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                style={{
+                  color: tinycolor(shade).isLight() ? "#000" : "#FFF",
+                }}
+              >
                 {shade.substring(1).toUpperCase()}
               </span>
             </div>
           ))}
         </div>
       </div>
-       {!isExplorer && (
-        <div className={`hidden sm:flex text-xs font-mono px-1 relative pt-2 mt-1 ${themeOverride === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>
-            <div className="absolute top-0 w-0 h-0" style={{ left: 'calc(47.5% - 7px)', borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: `10px solid ${themeOverride === 'light' ? '#374151' : '#D1D5DB'}`}} title="Color Base"></div>
-            {Array.from({ length: 20 }).map((_, index) => (
-                <div key={index} className="flex-1 text-center text-[10px]">T{index * 50}</div>
-            ))}
+      {!isExplorer && (
+        <div
+          className={`hidden sm:flex text-xs font-mono px-1 relative pt-2 mt-1 ${
+            themeOverride === "light" ? "text-gray-500" : "text-gray-400"
+          }`}
+        >
+          <div
+            className="absolute top-0 w-0 h-0"
+            style={{
+              left: "calc(47.5% - 7px)",
+              borderLeft: "7px solid transparent",
+              borderRight: "7px solid transparent",
+              borderTop: `10px solid ${
+                themeOverride === "light" ? "#374151" : "#D1D5DB"
+              }`,
+            }}
+            title="Color Base"
+          ></div>
+          {Array.from({ length: 20 }).map((_, index) => (
+            <div key={index} className="flex-1 text-center text-[10px]">
+              T{index * 50}
+            </div>
+          ))}
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default ColorPalette;
+export default ColorPalette
+

@@ -20,17 +20,16 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
                             onClick={() => onColorCopy(item.color, `${title}: ${item.name} (${item.color.toUpperCase()}) copiado!`)}
                             title={`${item.name} - ${item.color.toUpperCase()}`}
                         >
-                            <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" style={{ color: tinycolor(item.color).isLight() ? '#000' : '#FFF' }}>
+                            {/* --- CORRECCIÓN 2: Se oculta el código de color en móvil --- */}
+                            <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none hidden sm:inline-block" style={{ color: tinycolor(item.color).isLight() ? '#000' : '#FFF' }}>
                                 {item.color.substring(1).toUpperCase()}
                             </span>
                         </div>
                     ))}
                 </div>
             </div>
-             {/* --- MODIFICACIÓN --- Se cambia la forma de mostrar los títulos para evitar el desbordamiento y desalineación. */}
             <div className={`hidden sm:block overflow-x-auto pb-2 -mb-2`}>
                 <div className="flex text-xs pt-2 mt-1" style={{ color: textColor, minWidth: `${colors.length * 60}px` }}>
-                    {/* En lugar de mapear cada título, los unimos en un solo elemento para un mejor control del layout */}
                     {(colors || []).map((item) => (
                          <div key={item.name} className="flex-1 text-center text-wrap text-[10px] py-1" title={item.name} style={{ minWidth: '60px' }}>
                             {item.name}
@@ -64,15 +63,21 @@ const getPreviewBgColor = (mode, themeData) => {
     }
 };
 
-const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCyclePreviewMode }) => {
+const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCyclePreviewMode, simulationMode }) => {
     const bgColor = getPreviewBgColor(previewMode, themeData);
     const isLight = tinycolor(bgColor).isLight();
     const textColor = isLight ? 'var(--text-default)' : '#FFF';
     const buttonBg = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)';
     const themeOverride = isLight ? 'light' : 'dark';
 
+    // --- CORRECCIÓN 5: Se define el estilo del filtro aquí para aplicarlo localmente ---
+    const simulationFilterStyle = {
+        filter: simulationMode !== 'none' ? `url(#${simulationMode})` : 'none'
+    };
+
     return (
-        <section className="p-4 sm:p-6 rounded-xl border mb-8" style={{ backgroundColor: bgColor, borderColor: 'var(--border-default)' }}>
+        // --- CORRECCIÓN 5: El filtro se aplica solo a esta sección ---
+        <section className="p-4 sm:p-6 rounded-xl border mb-8" style={{ backgroundColor: bgColor, borderColor: 'var(--border-default)', ...simulationFilterStyle }}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <h2 className="font-bold text-lg" style={{ color: textColor }}>Paletas Semánticas</h2>
                 <div className="flex items-center gap-2 sm:gap-4">
@@ -100,4 +105,3 @@ const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCycl
 };
 
 export default SemanticPalettes;
-

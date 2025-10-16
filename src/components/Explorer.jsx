@@ -63,6 +63,7 @@ const Explorer = ({
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
     const [hoveredShade, setHoveredShade] = useState(null);
     const [isAIModalVisible, setIsAIModalVisible] = useState(false);
+    const [baseColorForShades, setBaseColorForShades] = useState(null);
 
     if (!themeData || !themeData.stylePalette || !themeData.grayShades) {
         return null;
@@ -84,7 +85,12 @@ const Explorer = ({
     };
 
     const toggleShades = (index) => {
-        setActiveShadeIndex(activeShadeIndex === index ? null : index);
+        const newActiveIndex = activeShadeIndex === index ? null : index;
+        setActiveShadeIndex(newActiveIndex);
+
+        if (newActiveIndex !== null) {
+            setBaseColorForShades(explorerPalette[newActiveIndex]);
+        }
     };
 
     return (
@@ -294,12 +300,18 @@ const Explorer = ({
 
                                                         {activeShadeIndex === index && (
                                                             <div className="absolute inset-0 flex flex-col z-20 animate-fade-in" onMouseLeave={() => setHoveredShade(null)}>
-                                                                {generateShades(color).map((shade, shadeIndex) => (
+                                                                {generateShades(baseColorForShades).map((shade, shadeIndex) => (
                                                                     <div
                                                                         key={shadeIndex}
                                                                         className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade"
                                                                         style={{ backgroundColor: shade }}
-                                                                        onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); }}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            replaceColorInPalette(index, shade);
+                                                                            // --- CORRECCIÓN CLAVE ---
+                                                                            // Oculta el selector de tonos después de elegir uno.
+                                                                            setActiveShadeIndex(null);
+                                                                        }}
                                                                         title={`Usar ${shade.toUpperCase()}`}
                                                                         onMouseEnter={() => setHoveredShade({ text: shade.toUpperCase(), color: shade })}
                                                                     >
@@ -311,7 +323,7 @@ const Explorer = ({
                                                                     </div>
                                                                 ))}
                                                                  <button 
-                                                                    onClick={(e) => { e.stopPropagation(); setActiveShadeIndex(null); }}
+                                                                    onClick={(e) => { e.stopPropagation(); toggleShades(null); }}
                                                                     className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50"
                                                                     title="Ocultar tonalidades"
                                                                 >

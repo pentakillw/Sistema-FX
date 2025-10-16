@@ -60,14 +60,9 @@ const useThemeGenerator = () => {
     const updateBrandColor = useCallback((newColor) => {
         if (!newColor || newColor === brandColor) return;
         setBrandColor(newColor);
-        // --- CORRECCIÓN ---
-        // Ahora se usa la longitud actual de la paleta en lugar de un número fijo.
-        // Si la paleta está vacía, por defecto se usan 5 colores.
-        const currentPaletteSize = originalExplorerPalette.length || 5;
-        const { palette } = generateExplorerPalette(explorerMethod, newColor, currentPaletteSize);
-        setOriginalExplorerPalette(palette);
-        saveStateToHistory({ brandColor: newColor, grayColor, explorerPalette: palette });
-    }, [brandColor, grayColor, explorerMethod, originalExplorerPalette.length, history, historyIndex]);
+        saveStateToHistory({ brandColor: newColor, grayColor, explorerPalette: originalExplorerPalette });
+    }, [brandColor, grayColor, originalExplorerPalette, history, historyIndex]);
+
 
     const updatePaletteState = (newPalette) => {
         setOriginalExplorerPalette(newPalette);
@@ -193,6 +188,12 @@ const useThemeGenerator = () => {
         const nextIndex = (currentIndex + 1) % options.length;
         setMode(options[nextIndex]);
     };
+
+    useEffect(() => {
+        const { palette } = generateExplorerPalette(explorerMethod, brandColor, originalExplorerPalette.length || 5);
+        updatePaletteState(palette);
+    }, [explorerMethod]);
+
 
     const handleExplorerColorPick = (newColor) => {
         updateBrandColor(newColor);
@@ -327,6 +328,8 @@ const useThemeGenerator = () => {
 
         const data = {
             theme, brandColor, grayColor, brandShades, grayShades,
+            // --- CORRECCIÓN 1: Se añade la paleta del explorador a los datos del tema ---
+            explorerPalette: originalExplorerPalette,
             stylePalette,
             harmonyPalettes,
             controlsThemeStyle,
@@ -346,7 +349,7 @@ const useThemeGenerator = () => {
         document.documentElement.style.setProperty('--bg-muted', theme === 'light' ? grayShades[17] : grayShades[2]);
         document.documentElement.style.setProperty('--action-primary-default', brandShades[4]);
 
-    }, [brandColor, grayColor, theme]);
+    }, [brandColor, grayColor, theme, originalExplorerPalette]);
 
 
     const handleImport = (event) => {
@@ -398,7 +401,9 @@ const useThemeGenerator = () => {
     
     const handleRandomTheme = () => {
         const newColor = tinycolor.random().toHexString();
-        updateBrandColor(newColor);
+        const { palette } = generateExplorerPalette(explorerMethod, newColor, originalExplorerPalette.length || 5);
+        setBrandColor(newColor);
+        updatePaletteState(palette);
     };
 
     return {
@@ -416,9 +421,9 @@ const useThemeGenerator = () => {
         replaceColorInPalette,
         originalExplorerPalette,
         history, historyIndex,
-        generatePaletteWithAI
+        generatePaletteWithAI,
+        updatePaletteState
     };
 };
 
 export default useThemeGenerator;
-

@@ -1,14 +1,14 @@
 import React, { useRef, useState } from 'react';
-// --- MODIFICACIÓN --- Añadimos el ícono de Texto (Type)
 import { RefreshCcw, Upload, Download, HelpCircle, FileCode, Type } from 'lucide-react';
 import { HelpModal } from './modals';
-// --- MODIFICACIÓN --- Importamos las fuentes disponibles
 import { availableFonts } from '../utils/colorUtils';
 
-// --- MODIFICACIÓN --- Añadimos 'font' y 'onFontChange' a las props
-const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, font, onFontChange }) => {
+// --- CORRECCIÓN 4: Se recibe 'setFont' en lugar de 'onFontChange' para que coincida con App.jsx ---
+const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, font, setFont }) => {
     const importFileRef = useRef(null);
     const [isHelpVisible, setIsHelpVisible] = useState(false);
+    // --- NUEVO ESTADO: Controla la visibilidad del menú de fuentes en móvil ---
+    const [isFontMenuVisible, setIsFontMenuVisible] = useState(false);
     
     const controlsThemeStyle = themeData.controlsThemeStyle;
     const pageTextColor = themeData.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color;
@@ -24,25 +24,39 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
                         <p className="text-sm md:text-md" style={{ color: mutedTextColor }}>al sistema de diseño FX</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-center">
+                {/* --- CORRECCIÓN 4: Se añade 'flex-wrap' para que los botones se ajusten en móvil --- */}
+                <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
                     <input type="file" ref={importFileRef} onChange={onImport} accept=".json" className="hidden"/>
                     
-                    {/* --- NUEVO --- Selector de fuentes como un menú desplegable con ícono */}
-                    <div className="relative group">
-                        <button title="Cambiar Fuente" className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}>
+                    {/* --- CORRECCIÓN 4: Menú de fuentes ahora funciona con 'onClick' --- */}
+                    <div className="relative">
+                        <button 
+                            title="Cambiar Fuente" 
+                            className="text-sm font-medium p-2 rounded-lg" 
+                            style={controlsThemeStyle}
+                            onClick={() => setIsFontMenuVisible(!isFontMenuVisible)}
+                        >
                             <Type size={16}/>
                         </button>
-                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
-                           {Object.keys(availableFonts).map(fontName => (
-                               <button
-                                 key={fontName}
-                                 onClick={() => onFontChange(fontName)}
-                                 className={`w-full text-left px-4 py-2 text-sm ${font === fontName ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}
-                               >
-                                   {fontName}
-                               </button>
-                           ))}
-                        </div>
+                        {isFontMenuVisible && (
+                            <div 
+                                className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg z-50"
+                                onMouseLeave={() => setIsFontMenuVisible(false)}
+                            >
+                               {Object.keys(availableFonts).map(fontName => (
+                                   <button
+                                     key={fontName}
+                                     onClick={() => {
+                                         setFont(fontName);
+                                         setIsFontMenuVisible(false);
+                                     }}
+                                     className={`w-full text-left px-4 py-2 text-sm ${font === fontName ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}
+                                   >
+                                       {fontName}
+                                   </button>
+                               ))}
+                            </div>
+                        )}
                     </div>
 
                     <button title="Importar Tema" onClick={() => importFileRef.current.click()} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Upload size={16}/></button>

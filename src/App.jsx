@@ -86,7 +86,7 @@ function App() {
     color: themeData.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color,
     transition: 'background-color 0.3s ease, color 0.3s ease',
     fontFamily: availableFonts[hook.font],
-    filter: hook.simulationMode !== 'none' ? `url(#${hook.simulationMode})` : 'none'
+    // --- CORRECCIÓN 5: Se elimina el filtro global de la página ---
   };
 
   return (
@@ -111,30 +111,15 @@ function App() {
         
         <main>
           <Explorer
-            explorerPalette={hook.explorerPalette}
-            reorderExplorerPalette={hook.reorderExplorerPalette}
-            explorerGrayShades={hook.explorerGrayShades}
+            // Se pasan todas las props como antes
+            {...hook}
+            // --- CORRECCIÓN 5: Se pasa 'simulationMode' explícitamente ---
+            simulationMode={hook.simulationMode}
             onShadeCopy={hook.handleExplorerColorPick}
             onGrayShadeCopy={hook.setGrayColor}
-            adjustments={hook.paletteAdjustments}
-            onAdjust={hook.setPaletteAdjustments}
-            brandColor={hook.brandColor}
             onColorSelect={hook.updateBrandColor}
-            themeData={themeData}
-            insertColorInPalette={hook.insertColorInPalette}
-            removeColorFromPalette={hook.removeColorFromPalette}
-            explorerMethod={hook.explorerMethod}
-            setExplorerMethod={hook.setExplorerMethod}
-            replaceColorInPalette={hook.replaceColorInPalette}
-            history={hook.history}
-            historyIndex={hook.historyIndex}
-            simulationMode={hook.simulationMode}
-            setSimulationMode={hook.setSimulationMode}
-            generatePaletteWithAI={hook.generatePaletteWithAI}
             onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
             onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
-            handleUndo={hook.handleUndo}
-            handleRedo={hook.handleRedo}
           />
 
           <div className="space-y-6 mb-8">
@@ -162,6 +147,8 @@ function App() {
             themeData={themeData}
             previewMode={hook.semanticPreviewMode}
             onCyclePreviewMode={() => hook.cyclePreviewMode(hook.semanticPreviewMode, hook.setSemanticPreviewMode, ['card', 'white', 'T950', 'black', 'T0'])}
+            // --- CORRECCIÓN 5: Se pasa 'simulationMode' para aplicar el filtro localmente ---
+            simulationMode={hook.simulationMode}
           />
         </main>
 
@@ -214,4 +201,3 @@ function App() {
 }
 
 export default App;
-
