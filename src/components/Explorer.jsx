@@ -3,7 +3,8 @@ import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as Ima
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from './ColorPalette.jsx';
-import { VariationsModal, PaletteContrastChecker, PaletteAdjusterModal, ImagePaletteModal, AIPaletteModal } from './modals/index.jsx';
+// --- CORRECCIÓN: Se añaden las importaciones que faltaban ---
+import { VariationsModal, PaletteContrastChecker, PaletteAdjusterModal, ImagePaletteModal, AIPaletteModal, AccessibilityModal, ComponentPreviewModal } from './modals/index.jsx';
 import { generationMethods, generateShades } from '../utils/colorUtils.js';
 
 const backgroundModeLabels = {
@@ -98,6 +99,7 @@ const Explorer = ({ hook }) => {
                                 <Wand2 size={16}/>
                             </button>
                              {isMethodMenuVisible && (
+                                // --- CORRECCIÓN: Se posiciona a la izquierda (right-0) ---
                                 <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg z-50" onMouseLeave={() => setIsMethodMenuVisible(false)}>
                                     {generationMethods.map(method => (
                                        <button key={method.id} onClick={() => { setExplorerMethod(method.id); setIsMethodMenuVisible(false); }} className={`w-full text-left px-4 py-2 text-sm ${explorerMethod === method.id ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>
@@ -124,6 +126,7 @@ const Explorer = ({ hook }) => {
                                 <Eye size={16}/>
                             </button>
                              {isSimulationMenuVisible && (
+                                // --- CORRECCIÓN: Se posiciona a la izquierda (right-0) ---
                                 <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg z-50" onMouseLeave={() => setIsSimulationMenuVisible(false)}>
                                     {simulationOptions.map(opt => (
                                        <button key={opt.value} onClick={() => { setSimulationMode(opt.value); setIsSimulationMenuVisible(false); }} className={`w-full text-left px-4 py-2 text-sm ${simulationMode === opt.value ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}>
