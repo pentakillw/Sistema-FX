@@ -3,11 +3,9 @@ import { RefreshCcw, Upload, Download, HelpCircle, FileCode, Type } from 'lucide
 import { HelpModal } from './modals';
 import { availableFonts } from '../utils/colorUtils';
 
-// --- CORRECCIÓN 4: Se recibe 'setFont' en lugar de 'onFontChange' para que coincida con App.jsx ---
 const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, font, setFont }) => {
     const importFileRef = useRef(null);
     const [isHelpVisible, setIsHelpVisible] = useState(false);
-    // --- NUEVO ESTADO: Controla la visibilidad del menú de fuentes en móvil ---
     const [isFontMenuVisible, setIsFontMenuVisible] = useState(false);
     
     const controlsThemeStyle = themeData.controlsThemeStyle;
@@ -24,11 +22,10 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
                         <p className="text-sm md:text-md" style={{ color: mutedTextColor }}>al sistema de diseño FX</p>
                     </div>
                 </div>
-                {/* --- CORRECCIÓN 4: Se añade 'flex-wrap' para que los botones se ajusten en móvil --- */}
-                <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+                {/* --- CORRECCIÓN: Se cambia 'self-start' por 'self-end' para alinear los botones a la derecha en móvil --- */}
+                <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
                     <input type="file" ref={importFileRef} onChange={onImport} accept=".json" className="hidden"/>
                     
-                    {/* --- CORRECCIÓN 4: Menú de fuentes ahora funciona con 'onClick' --- */}
                     <div className="relative">
                         <button 
                             title="Cambiar Fuente" 
