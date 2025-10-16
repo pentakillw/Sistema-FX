@@ -2,7 +2,6 @@ import React from 'react';
 import { Layers } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import ColorPalette from './ColorPalette';
-// --- CORRECCIÓN --- La ruta de importación ahora es la correcta.
 import Switch from './ui/Switch';
 
 const backgroundModeLabels = {
@@ -47,6 +46,7 @@ const ColorPreviewer = ({
     const textColor = isLight ? '#000' : '#FFF';
     const buttonBg = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)';
 
+    // --- CORRECCIÓN --- Se aplica el filtro de simulación directamente aquí.
     const simulationFilterStyle = {
         filter: simulationMode !== 'none' ? `url(#${simulationMode})` : 'none'
     };

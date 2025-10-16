@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import tinycolor from 'tinycolor2';
-import { generateShades, generateExplorerPalette } from '../utils/colorUtils.js';
+import { generateShades, generateExplorerPalette, applyColorMatrix, colorblindnessMatrices } from '../utils/colorUtils.js';
 
 const defaultState = {
     theme: 'light',
@@ -63,10 +63,21 @@ const useThemeGenerator = () => {
         saveStateToHistory({ brandColor: newColor, grayColor, explorerPalette: originalExplorerPalette });
     }, [brandColor, grayColor, originalExplorerPalette, history, historyIndex]);
 
-
     const updatePaletteState = (newPalette) => {
         setOriginalExplorerPalette(newPalette);
         saveStateToHistory({ brandColor, grayColor, explorerPalette: newPalette });
+    };
+
+    // --- NUEVA FUNCIÓN ---
+    // Aplica la transformación de color del modo daltónico a la paleta actual.
+    const applySimulationToPalette = () => {
+        if (simulationMode === 'none') return;
+        const matrix = colorblindnessMatrices[simulationMode];
+        if (!matrix) return;
+
+        const newPalette = originalExplorerPalette.map(color => applyColorMatrix(color, matrix));
+        updatePaletteState(newPalette);
+        showNotification(`Filtro ${simulationMode} aplicado a la paleta.`);
     };
 
     const reorderExplorerPalette = (sourceIndex, destinationIndex) => {
@@ -188,7 +199,7 @@ const useThemeGenerator = () => {
         const nextIndex = (currentIndex + 1) % options.length;
         setMode(options[nextIndex]);
     };
-
+    
     useEffect(() => {
         const { palette } = generateExplorerPalette(explorerMethod, brandColor, originalExplorerPalette.length || 5);
         updatePaletteState(palette);
@@ -231,13 +242,11 @@ const useThemeGenerator = () => {
         
         const accentColor = tinycolor(brandColor).complement().toHexString();
         const accentShades = generateShades(accentColor);
-        const harmonicGray = tinycolor(accentColor).desaturate(85).toHexString();
-        const harmonicGrayShades = generateShades(harmonicGray);
         const harmonyPalettes = {
             accentColor,
             accentShades,
-            gray: harmonicGray,
-            grayShades: harmonicGrayShades,
+            gray: tinycolor(accentColor).desaturate(85).toHexString(),
+            grayShades: generateShades(tinycolor(accentColor).desaturate(85).toHexString()),
         };
 
         const infoBase = '#0ea5e9', successBase = '#22c55e', attentionBase = '#f97316', criticalBase = '#ef4444',
@@ -267,6 +276,7 @@ const useThemeGenerator = () => {
             { name: 'SecundarioPresionado', color: grayShades[5] }, { name: 'Critico', color: critical },
             { name: 'CriticoFlotante', color: tinycolor(critical).lighten(10).toHexString() }, { name: 'CriticoPresionado', color: tinycolor(critical).darken(10).toHexString() },
           ],
+          explorerColors: originalExplorerPalette.map((c, i) => ({ name: `Color ${i + 1}`, color: c })),
         };
 
         if (theme === 'dark') {
@@ -328,8 +338,6 @@ const useThemeGenerator = () => {
 
         const data = {
             theme, brandColor, grayColor, brandShades, grayShades,
-            // --- CORRECCIÓN 1: Se añade la paleta del explorador a los datos del tema ---
-            explorerPalette: originalExplorerPalette,
             stylePalette,
             harmonyPalettes,
             controlsThemeStyle,
@@ -422,8 +430,11 @@ const useThemeGenerator = () => {
         originalExplorerPalette,
         history, historyIndex,
         generatePaletteWithAI,
-        updatePaletteState
+        updatePaletteState,
+        // Se expone la nueva función
+        applySimulationToPalette,
     };
 };
 
 export default useThemeGenerator;
+

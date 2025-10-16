@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, Accessibility, TestTube2 } from 'lucide-react';
+import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, Accessibility, TestTube2, Pipette } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from './ColorPalette.jsx';
@@ -28,32 +28,17 @@ const getPreviewBgColor = (mode, shades, cardColor) => {
 }
 
 
-const Explorer = ({
-    explorerPalette,
-    reorderExplorerPalette,
-    explorerGrayShades,
-    onShadeCopy,
-    onGrayShadeCopy,
-    adjustments,
-    onAdjust,
-    brandColor,
-    onColorSelect,
-    themeData,
-    insertColorInPalette,
-    removeColorFromPalette,
-    explorerMethod,
-    setExplorerMethod,
-    replaceColorInPalette,
-    handleUndo,
-    handleRedo,
-    history,
-    historyIndex,
-    simulationMode,
-    setSimulationMode,
-    generatePaletteWithAI,
-    onOpenAccessibilityModal,
-    onOpenComponentPreviewModal
-}) => {
+const Explorer = ({ hook }) => {
+    const {
+        explorerPalette, reorderExplorerPalette, explorerGrayShades, 
+        handleExplorerColorPick, setGrayColor, paletteAdjustments, setPaletteAdjustments,
+        brandColor, updateBrandColor, themeData, insertColorInPalette,
+        removeColorFromPalette, explorerMethod, setExplorerMethod, replaceColorInPalette,
+        handleUndo, handleRedo, history, historyIndex, simulationMode,
+        setSimulationMode, generatePaletteWithAI, showNotification,
+        applySimulationToPalette
+    } = hook;
+    
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
     const [isPaletteAdjusterVisible, setIsPaletteAdjusterVisible] = useState(false);
@@ -61,9 +46,10 @@ const Explorer = ({
     const [isExpanded, setIsExpanded] = useState(false);
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
-    const [hoveredShade, setHoveredShade] = useState(null);
     const [isAIModalVisible, setIsAIModalVisible] = useState(false);
     const [baseColorForShades, setBaseColorForShades] = useState(null);
+    const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
+    const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
 
     if (!themeData || !themeData.stylePalette || !themeData.grayShades) {
         return null;
@@ -87,15 +73,18 @@ const Explorer = ({
     const toggleShades = (index) => {
         const newActiveIndex = activeShadeIndex === index ? null : index;
         setActiveShadeIndex(newActiveIndex);
-
         if (newActiveIndex !== null) {
             setBaseColorForShades(explorerPalette[newActiveIndex]);
         }
     };
 
+    const simulationFilterStyle = {
+        filter: simulationMode !== 'none' ? `url(#${simulationMode})` : 'none'
+    };
+
     return (
         <>
-            <section className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}>
+            <section className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)', ...simulationFilterStyle }}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div className="flex-1 min-w-0">
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
@@ -111,15 +100,30 @@ const Explorer = ({
                         <button onClick={() => setIsImageModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                             <ImageIcon size={14} /> <span className="hidden sm:inline">Imagen</span>
                         </button>
-                        <div className="relative">
+                        <div className="relative group">
                             <Eye size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]"/>
                             <select value={simulationMode} onChange={(e) => setSimulationMode(e.target.value)} className="text-sm font-medium py-2 pl-9 pr-3 rounded-lg appearance-none bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Simulador de Daltonismo">
                                 <option value="none">Normal</option>
                                 <option value="protanopia">Protanopia</option>
                                 <option value="deuteranopia">Deuteranopia</option>
                                 <option value="tritanopia">Tritanopia</option>
+                                <option value="achromatopsia">Acromatopsia</option>
+                                <option value="protanomaly">Protanomalía</option>
+                                <option value="deuteranomaly">Deuteranomalía</option>
+                                <option value="tritanomaly">Tritanomalía</option>
+                                <option value="achromatomaly">Acromatomalía</option>
                             </select>
                         </div>
+                        {/* --- CORRECCIÓN --- Se añade el botón "Aplicar" que faltaba --- */}
+                        <button 
+                            onClick={applySimulationToPalette} 
+                            disabled={simulationMode === 'none'}
+                            className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" 
+                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                            title="Aplicar filtro a la paleta"
+                        >
+                            <Pipette size={14} /> <span className="hidden sm:inline">Aplicar</span>
+                        </button>
                         <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
                         <button onClick={cyclePreviewMode} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                             <Layers size={14} /> <span className="hidden sm:inline">Fondo</span>
@@ -154,10 +158,10 @@ const Explorer = ({
                                                         {...provided.dragHandleProps}
                                                         className="relative group/item h-full w-full cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform duration-100 ease-in-out"
                                                         style={{ backgroundColor: shade, minWidth: '50px' }}
-                                                        onClick={() => onShadeCopy(shade)}
+                                                        onClick={() => handleExplorerColorPick(shade)}
                                                         title={`Usar ${shade.toUpperCase()}`}
                                                     >
-                                                        <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
+                                                        <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20 sm:group-hover/item:opacity-0" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
                                                             {shade.substring(1).toUpperCase()}
                                                         </span>
                                                        <button 
@@ -193,10 +197,10 @@ const Explorer = ({
                      <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-4">
                         <p className="text-sm font-semibold self-start sm:self-center" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Escala de Grises Sugerida</p>
                         <div className="flex items-center gap-2 self-start sm:self-center">
-                             <button onClick={onOpenAccessibilityModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                             <button onClick={() => setIsAccessibilityModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <Accessibility size={14}/> <span className="hidden sm:inline">Accesibilidad</span>
                             </button>
-                            <button onClick={onOpenComponentPreviewModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                            <button onClick={() => setIsComponentPreviewModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <TestTube2 size={14}/> <span className="hidden sm:inline">Componentes</span>
                             </button>
                              <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
@@ -214,7 +218,7 @@ const Explorer = ({
                     <ColorPalette
                         isExplorer={true}
                         shades={explorerGrayShades}
-                        onShadeCopy={onGrayShadeCopy}
+                        onShadeCopy={setGrayColor}
                         themeOverride={tinycolor(colorModeBg).isLight() ? 'light' : 'dark'}
                     />
                 </div>
@@ -252,7 +256,8 @@ const Explorer = ({
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.droppableProps}
-                                        className="w-full h-full flex items-center"
+                                        className="w-full h-full flex items-center overflow-x-auto"
+                                        style={simulationFilterStyle}
                                     >
                                         {explorerPalette.map((color, index) => (
                                             <Draggable key={"expanded-" + color + index} draggableId={"expanded-" + color + index} index={index}>
@@ -260,15 +265,15 @@ const Explorer = ({
                                                     <div
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
-                                                        className="relative group h-full flex-1 flex flex-col items-center justify-end text-white font-bold text-lg" 
-                                                        style={{...provided.draggableProps.style }}
+                                                        className="relative group h-full flex flex-col items-center justify-end text-white font-bold text-lg" 
+                                                        style={{...provided.draggableProps.style, minWidth: '100px', flex: '1 1 0px' }}
                                                     >
                                                         <div {...provided.dragHandleProps} className="w-full h-full cursor-grab active:cursor-grabbing" style={{backgroundColor: color}}></div>
                                                         
                                                         {activeShadeIndex !== index && (
                                                             <>
                                                                 <div className="text-center transition-opacity duration-300 pointer-events-none absolute bottom-4">
-                                                                    <p className="font-mono text-sm" style={{ color: tinycolor(color).isLight() ? '#000' : '#FFF' }}>{color.toUpperCase()}</p>
+                                                                    <p className="font-mono text-sm hidden sm:block" style={{ color: tinycolor(color).isLight() ? '#000' : '#FFF' }}>{color.toUpperCase()}</p>
                                                                 </div>
                                                                 <button 
                                                                     onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}}
@@ -308,8 +313,6 @@ const Explorer = ({
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
                                                                             replaceColorInPalette(index, shade);
-                                                                            // --- CORRECCIÓN CLAVE ---
-                                                                            // Oculta el selector de tonos después de elegir uno.
                                                                             setActiveShadeIndex(null);
                                                                         }}
                                                                         title={`Usar ${shade.toUpperCase()}`}
@@ -353,13 +356,15 @@ const Explorer = ({
             
             {isImageModalVisible && (
                 <ImagePaletteModal 
-                    onColorSelect={onColorSelect}
+                    onColorSelect={updateBrandColor}
                     onClose={() => setIsImageModalVisible(false)}
                 />
             )}
-            {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={onColorSelect} />}
-            {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(text, msg) => alert(msg)} />}
-            {isPaletteAdjusterVisible && <PaletteAdjusterModal adjustments={adjustments} onAdjust={onAdjust} onClose={() => setIsPaletteAdjusterVisible(false)} brandColor={brandColor} />}
+            {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={updateBrandColor} />}
+            {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
+            {isPaletteAdjusterVisible && <PaletteAdjusterModal adjustments={paletteAdjustments} onAdjust={setPaletteAdjustments} onClose={() => setIsPaletteAdjusterVisible(false)} brandColor={brandColor} />}
+            {isAccessibilityModalVisible && <AccessibilityModal accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={(msg) => showNotification(msg)} onClose={() => setIsAccessibilityModalVisible(false)}/>}
+            {isComponentPreviewModalVisible && <ComponentPreviewModal primaryButtonTextColor={themeData.primaryButtonTextColor} onClose={() => setIsComponentPreviewModalVisible(false)}/>}
         </>
     );
 };

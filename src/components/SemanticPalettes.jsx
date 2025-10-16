@@ -20,8 +20,7 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
                             onClick={() => onColorCopy(item.color, `${title}: ${item.name} (${item.color.toUpperCase()}) copiado!`)}
                             title={`${item.name} - ${item.color.toUpperCase()}`}
                         >
-                            {/* --- CORRECCIÓN 2: Se oculta el código de color en móvil --- */}
-                            <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none hidden sm:inline-block" style={{ color: tinycolor(item.color).isLight() ? '#000' : '#FFF' }}>
+                            <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none sm:group-hover:opacity-0" style={{ color: tinycolor(item.color).isLight() ? '#000' : '#FFF' }}>
                                 {item.color.substring(1).toUpperCase()}
                             </span>
                         </div>
@@ -70,13 +69,12 @@ const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCycl
     const buttonBg = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)';
     const themeOverride = isLight ? 'light' : 'dark';
 
-    // --- CORRECCIÓN 5: Se define el estilo del filtro aquí para aplicarlo localmente ---
+    // --- CORRECCIÓN --- Se aplica el filtro de simulación directamente aquí.
     const simulationFilterStyle = {
         filter: simulationMode !== 'none' ? `url(#${simulationMode})` : 'none'
     };
 
     return (
-        // --- CORRECCIÓN 5: El filtro se aplica solo a esta sección ---
         <section className="p-4 sm:p-6 rounded-xl border mb-8" style={{ backgroundColor: bgColor, borderColor: 'var(--border-default)', ...simulationFilterStyle }}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <h2 className="font-bold text-lg" style={{ color: textColor }}>Paletas Semánticas</h2>
@@ -105,3 +103,4 @@ const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCycl
 };
 
 export default SemanticPalettes;
+
