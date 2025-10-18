@@ -48,7 +48,6 @@ const useThemeGenerator = () => {
 
     const saveStateToHistory = (newState) => {
         if (isUpdatingFromHistory.current) {
-            isUpdatingFromHistory.current = false;
             return;
         }
         const newHistory = history.slice(0, historyIndex + 1);
@@ -63,9 +62,9 @@ const useThemeGenerator = () => {
         saveStateToHistory({ brandColor: newColor, grayColor, explorerPalette: originalExplorerPalette });
     }, [brandColor, grayColor, originalExplorerPalette, history, historyIndex]);
 
-    const updatePaletteState = (newPalette) => {
+    const updatePaletteState = (newPalette, newBrandColor = brandColor) => {
         setOriginalExplorerPalette(newPalette);
-        saveStateToHistory({ brandColor, grayColor, explorerPalette: newPalette });
+        saveStateToHistory({ brandColor: newBrandColor, grayColor, explorerPalette: newPalette });
     };
 
     const applySimulationToPalette = () => {
@@ -135,10 +134,22 @@ const useThemeGenerator = () => {
             setOriginalExplorerPalette(nextState.explorerPalette);
         }
     };
+
+    // --- NUEVO --- Función para saltar a un estado específico del historial.
+    const goToHistoryState = (index) => {
+        if (index >= 0 && index < history.length) {
+            isUpdatingFromHistory.current = true;
+            const targetState = history[index];
+            setHistoryIndex(index);
+            setBrandColor(targetState.brandColor);
+            setGrayColor(targetState.grayColor);
+            setOriginalExplorerPalette(targetState.explorerPalette);
+            showNotification(`Paleta ${index} cargada.`);
+        }
+    };
     
      const generatePaletteWithAI = async (prompt) => {
         const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss";
-        // --- CORRECCIÓN FINAL Y DEFINITIVA: Usar el modelo 'gemini-1.0-pro' ---
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
         const currentPaletteSize = originalExplorerPalette.length || 5;
         const fullPrompt = `You are an expert color palette generator. Based on the theme "${prompt}", generate an array of exactly ${currentPaletteSize} aesthetically pleasing and harmonious hex color codes.`;
@@ -223,11 +234,15 @@ const useThemeGenerator = () => {
     }, [originalExplorerPalette, paletteAdjustments]);
 
     useEffect(() => {
-        if (isGrayAuto) {
+        if (isGrayAuto && !isUpdatingFromHistory.current) {
             const harmonicGray = tinycolor(brandColor).desaturate(85).toHexString();
             setGrayColor(harmonicGray);
         }
-    }, [brandColor, isGrayAuto]);
+
+        if (isUpdatingFromHistory.current) {
+            isUpdatingFromHistory.current = false;
+        }
+    }, [brandColor, isGrayAuto, originalExplorerPalette]);
 
     useEffect(() => {
         const brandShades = generateShades(brandColor);
@@ -404,8 +419,13 @@ const useThemeGenerator = () => {
     const handleRandomTheme = () => {
         const method = explorerMethod === 'auto' ? undefined : explorerMethod;
         const { palette, brandColor: newBrandColor } = generateAdvancedRandomPalette(originalExplorerPalette.length || 5, method);
+        
         setBrandColor(newBrandColor);
-        updatePaletteState(palette);
+        setOriginalExplorerPalette(palette);
+
+        const newGrayColor = isGrayAuto ? tinycolor(newBrandColor).desaturate(85).toHexString() : grayColor;
+        setGrayColor(newGrayColor);
+        saveStateToHistory({ brandColor: newBrandColor, grayColor: newGrayColor, explorerPalette: palette });
     };
 
     return {
@@ -426,6 +446,8 @@ const useThemeGenerator = () => {
         generatePaletteWithAI,
         updatePaletteState,
         applySimulationToPalette,
+        // --- NUEVO --- Se exporta la nueva función ---
+        goToHistoryState
     };
 };
 

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import useThemeGenerator from './hooks/useThemeGenerator.js';
-import { availableFonts } from './utils/colorUtils.js';
-import Header from './components/Header.jsx';
-import Explorer from './components/Explorer.jsx';
-import FloatingActionButtons from './components/FloatingActionButtons.jsx';
-import ColorPreviewer from './components/ColorPreviewer.jsx';
-import SemanticPalettes from './components/SemanticPalettes.jsx';
-import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals/index.jsx';
-import AuthPage from './components/AuthPage.jsx';
-import LandingPage from './components/LandingPage.jsx';
-import LoginBanner from './components/LoginBanner.jsx';
+import useThemeGenerator from './hooks/useThemeGenerator';
+import { availableFonts } from './utils/colorUtils';
+import Header from './components/Header';
+import Explorer from './components/Explorer';
+import FloatingActionButtons from './components/FloatingActionButtons';
+import ColorPreviewer from './components/ColorPreviewer';
+import SemanticPalettes from './components/SemanticPalettes';
+import { ExportModal, AccessibilityModal, ComponentPreviewModal, HistoryModal } from './components/modals';
+import AuthPage from './components/AuthPage';
+import LandingPage from './components/LandingPage';
+import LoginBanner from './components/LoginBanner';
 
 // --- Funciones simuladas para Capacitor ---
 const Capacitor = {
@@ -29,6 +29,30 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
   const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
+  const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
+
+
+  // --- Efecto para el atajo de teclado ---
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.code !== 'Space') return;
+      
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'BUTTON')) {
+        return;
+      }
+
+      e.preventDefault();
+      hook.handleRandomTheme();
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [hook]);
+
 
   const handleNativeExport = async () => {
     const data = { 
@@ -139,8 +163,21 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
         {isExportModalVisible && <ExportModal onClose={() => setIsExportModalVisible(false)} themeData={themeData} fxSeparator={hook.fxSeparator} setFxSeparator={hook.setFxSeparator} useFxQuotes={hook.useFxQuotes} setUseFxQuotes={hook.setUseFxQuotes} onCopy={hook.showNotification} />}
         {isAccessibilityModalVisible && <AccessibilityModal onClose={() => setIsAccessibilityModalVisible(false)} accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={hook.showNotification} />}
         {isComponentPreviewModalVisible && <ComponentPreviewModal onClose={() => setIsComponentPreviewModalVisible(false)} primaryButtonTextColor={themeData.primaryButtonTextColor} />}
+        
+        {isHistoryModalVisible && <HistoryModal history={hook.history} onSelect={hook.goToHistoryState} onClose={() => setIsHistoryModalVisible(false)} />}
 
-        <FloatingActionButtons onRandomClick={hook.handleRandomTheme} onThemeToggle={hook.handleThemeToggle} currentTheme={themeData.theme} onUndo={hook.handleUndo} onRedo={hook.handleRedo} canUndo={hook.historyIndex > 0} canRedo={hook.historyIndex < hook.history.length - 1} />
+
+        {/* --- MODIFICACIÓN --- Se pasa la función para abrir el modal al componente correcto --- */}
+        <FloatingActionButtons 
+          onRandomClick={hook.handleRandomTheme} 
+          onThemeToggle={hook.handleThemeToggle} 
+          currentTheme={themeData.theme} 
+          onUndo={hook.handleUndo} 
+          onRedo={hook.handleRedo} 
+          canUndo={hook.historyIndex > 0} 
+          canRedo={hook.historyIndex < hook.history.length - 1}
+          onOpenHistoryModal={() => setIsHistoryModalVisible(true)}
+        />
     </div>
   );
 }
@@ -190,7 +227,6 @@ function App() {
   }
 
   return (
-    // --- CORRECCIÓN CLAVE: Se añade min-h-screen y flex flex-col para que este div controle toda la altura ---
     <div className="w-full min-h-screen flex flex-col">
       <CurrentView />
     </div>

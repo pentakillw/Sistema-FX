@@ -6,8 +6,9 @@ import ImagePaletteModal from './ImagePaletteModal.jsx';
 import ExportModal from './ExportModal.jsx';
 import AccessibilityModal from './AccessibilityModal.jsx';
 import ComponentPreviewModal from './ComponentPreviewModal.jsx';
-// --- NUEVO --- Se exporta el nuevo modal de IA
 import AIPaletteModal from './AIPaletteModal.jsx';
+// --- NUEVO --- Se exporta el modal de historial
+import HistoryModal from './HistoryModal.jsx';
 
 export {
     HelpModal,
@@ -18,6 +19,7 @@ export {
     ExportModal,
     AccessibilityModal,
     ComponentPreviewModal,
+    AIPaletteModal,
     // --- NUEVO ---
-    AIPaletteModal
+    HistoryModal
 };
