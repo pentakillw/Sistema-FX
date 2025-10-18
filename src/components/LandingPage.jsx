@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Palette, Feather, Zap, LogIn, UserPlus, ArrowRight, Mouse, Code, CheckCircle } from 'lucide-react';
+import { Palette, Feather, Zap, LogIn, UserPlus, ArrowRight, Mouse, Code, CheckCircle, Image as ImageIcon, TestTube2, ShieldCheck } from 'lucide-react';
 
 // Componente para las formas abstractas del fondo con efecto parallax
 const ParallaxShape = ({ className, speed = 0.1 }) => {
@@ -21,26 +21,29 @@ const ParallaxShape = ({ className, speed = 0.1 }) => {
 
 // Componente de tarjeta de característica mejorado
 const FeatureCard = ({ icon, title, children }) => (
-    <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-lg p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
+    <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-lg p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full">
         <div className="flex items-center gap-4 mb-3">
             <div className="bg-purple-100 dark:bg-purple-900/50 p-3 rounded-xl text-purple-600 dark:text-purple-400">
                 {icon}
             </div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
         </div>
-        <p className="text-gray-600 dark:text-gray-400">{children}</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm">{children}</p>
     </div>
 );
 
 
 const LandingPage = ({ onNavigate }) => {
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans overflow-x-hidden flex flex-col min-h-screen">
-            {/* Fondos con Parallax */}
-            <ParallaxShape className="from-purple-400 to-pink-500 w-96 h-96 top-20 left-[-10rem]" speed={0.2} />
-            <ParallaxShape className="from-blue-400 to-teal-400 w-80 h-80 top-[30rem] right-[-10rem]" speed={0.15} />
-            <ParallaxShape className="from-yellow-400 to-orange-500 w-[30rem] h-[30rem] top-[70rem] left-[-15rem]" speed={0.1} />
-            <ParallaxShape className="from-green-400 to-cyan-500 w-80 h-80 top-[120rem] right-[-5rem]" speed={0.25} />
+        // --- CORRECCIÓN CLAVE: Se elimina min-h-screen y se deja que App.jsx controle la altura ---
+        <div className="w-full flex flex-col relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans overflow-hidden">
+            {/* Fondos con Parallax más coloridos y prominentes */}
+            <ParallaxShape className="from-purple-500 to-pink-500 w-96 h-96 top-20 left-[-15rem]" speed={0.2} />
+            <ParallaxShape className="from-blue-400 to-teal-400 w-80 h-80 top-[30rem] right-[-12rem]" speed={0.15} />
+            <ParallaxShape className="from-yellow-300 to-orange-500 w-[30rem] h-[30rem] top-[80rem] left-[-20rem]" speed={0.1} />
+            <ParallaxShape className="from-green-400 to-cyan-400 w-96 h-96 top-[130rem] right-[-15rem]" speed={0.25} />
+            <ParallaxShape className="from-red-400 to-rose-500 w-80 h-80 top-[180rem] left-[-10rem]" speed={0.18} />
+
 
             {/* Header */}
             <header className="sticky top-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg z-20 border-b border-gray-200 dark:border-gray-800">
@@ -79,28 +82,57 @@ const LandingPage = ({ onNavigate }) => {
                             <span>Comienza a generar paletas</span>
                             <ArrowRight size={20} />
                         </button>
-                        <a href="#features" className="text-lg font-semibold text-gray-700 dark:text-gray-300 px-8 py-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors flex items-center gap-3">
-                             <span>Saber más</span>
-                             <Mouse size={20} />
-                        </a>
                     </div>
                 </main>
 
-                {/* Features Section */}
+                {/* NUEVA SECCIÓN: Muestra de la Galería de Paletas */}
+                <section className="relative z-10 py-20">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-white">Infinitas Posibilidades de Color</h2>
+                        <p className="mt-4 max-w-2xl mx-auto text-gray-600 dark:text-gray-400">De tonos pastel suaves a neones vibrantes, encuentra la inspiración que necesitas.</p>
+                    </div>
+                    {/* Animación de scroll infinito con paletas de ejemplo */}
+                    <div className="relative h-48 [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)] group">
+                        <div className="absolute top-0 flex items-center animate-scroll group-hover:pause">
+                             {[...Array(2)].map((_, i) => (
+                                <div key={i} className="flex-shrink-0 flex items-center justify-around w-max mx-4">
+                                    <div className="w-48 h-32 rounded-xl flex overflow-hidden shadow-lg mx-4"><div className="w-full h-full bg-[#fecaca]"></div><div className="w-full h-full bg-[#fca5a5]"></div><div className="w-full h-full bg-[#ef4444]"></div><div className="w-full h-full bg-[#b91c1c]"></div></div>
+                                    <div className="w-48 h-32 rounded-xl flex overflow-hidden shadow-lg mx-4"><div className="w-full h-full bg-[#dbeafe]"></div><div className="w-full h-full bg-[#93c5fd]"></div><div className="w-full h-full bg-[#3b82f6]"></div><div className="w-full h-full bg-[#1e40af]"></div></div>
+                                    <div className="w-48 h-32 rounded-xl flex overflow-hidden shadow-lg mx-4"><div className="w-full h-full bg-[#d1fae5]"></div><div className="w-full h-full bg-[#6ee7b7]"></div><div className="w-full h-full bg-[#10b981]"></div><div className="w-full h-full bg-[#047857]"></div></div>
+                                    <div className="w-48 h-32 rounded-xl flex overflow-hidden shadow-lg mx-4"><div className="w-full h-full bg-[#f5d0fe]"></div><div className="w-full h-full bg-[#e879f9]"></div><div className="w-full h-full bg-[#c026d3]"></div><div className="w-full h-full bg-[#86198f]"></div></div>
+                                    <div className="w-48 h-32 rounded-xl flex overflow-hidden shadow-lg mx-4"><div className="w-full h-full bg-[#fef3c7]"></div><div className="w-full h-full bg-[#fcd34d]"></div><div className="w-full h-full bg-[#f59e0b]"></div><div className="w-full h-full bg-[#b45309]"></div></div>
+                                    <div className="w-48 h-32 rounded-xl flex overflow-hidden shadow-lg mx-4"><div className="w-full h-full bg-[#ccfbf1]"></div><div className="w-full h-full bg-[#5eead4]"></div><div className="w-full h-full bg-[#0d9488]"></div><div className="w-full h-full bg-[#0f766e]"></div></div>
+                                </div>
+                             ))}
+                        </div>
+                    </div>
+                </section>
+
+
+                {/* Features Section Ampliada */}
                 <section id="features" className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-20">
                      <div className="text-center mb-16">
-                         <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-white">Todo lo que necesitas en un solo lugar</h2>
-                         <p className="mt-4 max-w-3xl mx-auto text-gray-600 dark:text-gray-400">Sistema FX está diseñado para acelerar tu flujo de trabajo, desde la concepción de la idea hasta la implementación final del código.</p>
+                         <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-white">Un Conjunto de Herramientas de Diseño Completo</h2>
+                         <p className="mt-4 max-w-3xl mx-auto text-gray-600 dark:text-gray-400">Sistema FX está diseñado para acelerar tu flujo de trabajo, desde la concepción de la idea hasta la implementación final.</p>
                     </div>
-                     <div className="grid md:grid-cols-3 gap-8">
-                        <FeatureCard icon={<Zap size={24} />} title="Generación Inteligente">
-                            Usa la IA para crear paletas a partir de texto, extrae colores de imágenes o genera armonías matemáticas al instante.
+                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <FeatureCard icon={<Zap size={24} />} title="Generación con IA">
+                            Describe un concepto como "atardecer en el bosque" y deja que la IA cree una paleta de colores única para ti.
                         </FeatureCard>
-                        <FeatureCard icon={<Palette size={24} />} title="Personalización Total">
-                            Ajusta cada detalle. Modifica matiz, saturación y brillo de toda tu paleta. Arrastra, añade o quita colores con facilidad.
+                        <FeatureCard icon={<ImageIcon size={24} />} title="Extractor de Imágenes">
+                            Sube cualquier imagen y extrae automáticamente su paleta de colores para usarla como punto de partida.
+                        </FeatureCard>
+                        <FeatureCard icon={<Palette size={24} />} title="Armonías de Color">
+                            Genera paletas basadas en reglas de la teoría del color como análogas, complementarias, triádicas y más.
+                        </FeatureCard>
+                        <FeatureCard icon={<TestTube2 size={24} />} title="Previsualización en Vivo">
+                           Mira cómo se ven tus colores aplicados a componentes de UI reales antes de exportar, en modo claro y oscuro.
+                        </FeatureCard>
+                         <FeatureCard icon={<ShieldCheck size={24} />} title="Análisis de Accesibilidad">
+                            Comprueba al instante los ratios de contraste de tu paleta para asegurar que tu diseño sea legible para todos.
                         </FeatureCard>
                          <FeatureCard icon={<Feather size={24} />} title="Exportación Flexible">
-                            Obtén tu código listo para copiar y pegar en Power Fx, CSS con variables, o como una extensión de tu configuración de Tailwind.
+                            Obtén tu código listo para copiar y pegar en Power Fx, CSS con variables, o como una extensión de Tailwind.
                         </FeatureCard>
                     </div>
                 </section>
@@ -167,7 +199,7 @@ const LandingPage = ({ onNavigate }) => {
 
                 {/* Final CTA Section */}
                 <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-                     <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-white">Listo para Crear?</h2>
+                     <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-white">¿Listo para Crear?</h2>
                      <p className="mt-4 max-w-xl mx-auto text-gray-600 dark:text-gray-400">Únete a cientos de desarrolladores que ya están creando mejores interfaces, más rápido.</p>
                      <div className="mt-8">
                         <button 

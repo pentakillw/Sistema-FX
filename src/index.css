@@ -4,21 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* --- SOLUCIÓN DEFINITIVA --- */
+/* Estas reglas aseguran que la página nunca tenga scroll horizontal */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 /* Mejora de estilos para los menús desplegables en modo oscuro */
 .dark select option {
     background-color: var(--bg-card, #1f2937);
     color: var(--text-default, #f9fafb);
 }
 
-/* --- NUEVO ---
-  Estos estilos añaden un padding a tu aplicación para que el contenido no
-  quede debajo de la barra de estado o la barra de gestos en iOS y Android.
-*/
 body {
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
 }
-
-

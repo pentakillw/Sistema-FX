@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from 'react';
-// Imports de Capacitor eliminados para compatibilidad web
-// import { Capacitor } from '@capacitor/core';
-// import { Share } from '@capacitor/share';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import { availableFonts } from './utils/colorUtils.js';
 import Header from './components/Header.jsx';
@@ -15,7 +12,6 @@ import LandingPage from './components/LandingPage.jsx';
 import LoginBanner from './components/LoginBanner.jsx';
 
 // --- Funciones simuladas para Capacitor ---
-// Esto permite que el código se ejecute sin errores en un navegador.
 const Capacitor = {
   isNativePlatform: () => false
 };
@@ -27,7 +23,6 @@ const Share = {
 };
 // --- Fin de funciones simuladas ---
 
-// Componente para la aplicación principal de generación de paletas
 const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
   const { themeData } = hook;
 
@@ -35,7 +30,6 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
   const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
 
-  // Funciones de exportación específicas para este componente
   const handleNativeExport = async () => {
     const data = { 
       brandColor: hook.brandColor, 
@@ -48,7 +42,6 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
     
     try {
       const jsonString = JSON.stringify(data, null, 2);
-      // btoa() puede tener problemas con caracteres UTF-8, esta es una forma más segura
       const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
 
       await Share.share({
@@ -90,14 +83,14 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
   }
 
   const pageThemeStyle = {
-    backgroundColor: themeData.theme === 'light' ? '#FFFFFF' : '#000000',
+    backgroundColor: themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Predeterminado').color,
     color: themeData.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color,
     transition: 'background-color 0.3s ease, color 0.3s ease',
     fontFamily: availableFonts[hook.font],
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen w-full" style={pageThemeStyle}>
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
           <filter id="protanopia"><feColorMatrix in="SourceGraphic" type="matrix" values="0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0" /></filter>
@@ -113,7 +106,7 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
       
       {!user && <LoginBanner onLoginClick={() => onNavigate('auth')} />}
 
-      <div className={`flex-grow p-4 md:p-8`} style={pageThemeStyle}>
+      <div className="flex-grow p-4 md:p-8">
         <Header 
           hook={hook}
           onImport={hook.handleImport} 
@@ -137,7 +130,7 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
         </main>
       </div>
 
-        <footer className="text-center py-8 px-4 md:px-8 border-t" style={{...pageThemeStyle, borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
+        <footer className="text-center py-8 px-4 md:px-8 border-t" style={{ borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
             <p className="text-sm">Creado por JD_DM.</p>
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
         </footer>
@@ -182,20 +175,26 @@ function App() {
       setRoute('landing');
       hook.showNotification('Has cerrado sesión.');
   }
-
-  if (route === 'landing') {
-      return <LandingPage onNavigate={handleNavigate} />;
+  
+  const CurrentView = () => {
+    switch (route) {
+        case 'landing':
+            return <LandingPage onNavigate={handleNavigate} />;
+        case 'auth':
+            return <AuthPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        case 'generator':
+            return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>;
+        default:
+            return <LandingPage onNavigate={handleNavigate} />;
+    }
   }
 
-  if (route === 'auth') {
-    return <AuthPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-  }
-
-  if (route === 'generator') {
-      return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>
-  }
-
-  return <LandingPage onNavigate={handleNavigate} />;
+  return (
+    // --- CORRECCIÓN CLAVE: Se añade min-h-screen y flex flex-col para que este div controle toda la altura ---
+    <div className="w-full min-h-screen flex flex-col">
+      <CurrentView />
+    </div>
+  );
 }
 
 export default App;
