@@ -41,7 +41,7 @@ const Explorer = ({ hook }) => {
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
     const [isPaletteAdjusterVisible, setIsPaletteAdjusterVisible] = useState(false);
-    const [colorModePreview, setColorModePreview] = useState('white');
+    const [colorModePreview, setColorModePreview] = useState('card');
     const [isExpanded, setIsExpanded] = useState(false);
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
@@ -62,6 +62,24 @@ const Explorer = ({ hook }) => {
     const onDragEnd = (result) => {
         if (!result.destination) return;
         reorderExplorerPalette(result.source.index, result.destination.index);
+    };
+    
+    const toggleShades = (index) => {
+        if (activeShadeIndex === index) {
+            setActiveShadeIndex(null);
+            setBaseColorForShades(null);
+        } else {
+            setActiveShadeIndex(index);
+            setBaseColorForShades(explorerPalette[index]);
+        }
+    };
+    
+    // --- NUEVA FUNCIÓN ---
+    const handleCyclePreviewMode = () => {
+        const options = ['card', 'white', 'black', 'T0', 'T950'];
+        const currentIndex = options.indexOf(colorModePreview);
+        const nextIndex = (currentIndex + 1) % options.length;
+        setColorModePreview(options[nextIndex]);
     };
 
     const simulationFilterStyle = {
@@ -84,8 +102,17 @@ const Explorer = ({ hook }) => {
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
                         <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Arrastra, inserta o quita colores para crear tu paleta.</p>
                     </div>
-                    {/* --- CORRECCIÓN: Se añade 'self-end' para alinear los botones a la derecha en móvil --- */}
+                    {/* --- CONTROLES MODIFICADOS --- */}
                     <div className="flex items-center flex-wrap justify-end gap-2 self-end sm:self-auto">
+                        <button
+                            onClick={handleCyclePreviewMode}
+                            className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2"
+                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                            title="Alternar fondo de vista previa"
+                        >
+                            <Layers size={14} /> <span className="hidden sm:inline">{backgroundModeLabels[colorModePreview]}</span>
+                        </button>
+                        <div className="h-5 w-px bg-[var(--border-default)]"></div>
                         <button onClick={() => setIsAIModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" title="Generar con IA">
                             <Sparkles size={14} /> <span className="hidden sm:inline">IA</span>
                         </button>
@@ -143,6 +170,16 @@ const Explorer = ({ hook }) => {
                             title="Aplicar filtro a la paleta"
                         >
                             <Pipette size={14} /> <span className="hidden sm:inline">Aplicar</span>
+                        </button>
+                        
+                        <button 
+                            onClick={() => setIsExpanded(true)} 
+                            className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" 
+                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                            title="Expandir Paleta"
+                        >
+                            <Maximize size={14} /> 
+                            <span className="hidden sm:inline">Expandir</span>
                         </button>
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { Share } from '@capacitor/share';
+// Imports de Capacitor eliminados para compatibilidad web
+// import { Capacitor } from '@capacitor/core';
+// import { Share } from '@capacitor/share';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import { availableFonts } from './utils/colorUtils.js';
 import Header from './components/Header.jsx';
@@ -9,26 +10,32 @@ import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
 import { ExportModal, AccessibilityModal, ComponentPreviewModal } from './components/modals/index.jsx';
+import AuthPage from './components/AuthPage.jsx';
+import LandingPage from './components/LandingPage.jsx';
+import LoginBanner from './components/LoginBanner.jsx';
 
-function App() {
-  const hook = useThemeGenerator();
+// --- Funciones simuladas para Capacitor ---
+// Esto permite que el código se ejecute sin errores en un navegador.
+const Capacitor = {
+  isNativePlatform: () => false
+};
+const Share = {
+  share: async () => {
+    console.warn("La función de compartir nativa solo está disponible en dispositivos móviles.");
+    return Promise.resolve();
+  }
+};
+// --- Fin de funciones simuladas ---
+
+// Componente para la aplicación principal de generación de paletas
+const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
   const { themeData } = hook;
-  
+
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
   const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
-  const [isNative, setIsNative] = useState(false);
 
-  useEffect(() => {
-    setIsNative(Capacitor.isNativePlatform());
-    
-    if (themeData?.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [themeData?.theme]);
-
+  // Funciones de exportación específicas para este componente
   const handleNativeExport = async () => {
     const data = { 
       brandColor: hook.brandColor, 
@@ -41,6 +48,7 @@ function App() {
     
     try {
       const jsonString = JSON.stringify(data, null, 2);
+      // btoa() puede tener problemas con caracteres UTF-8, esta es una forma más segura
       const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
 
       await Share.share({
@@ -51,7 +59,7 @@ function App() {
       });
     } catch (error) {
        console.log('Share API no disponible o cancelado', error);
-       hook.showNotification('La exportación nativa no está disponible.', 'error');
+       hook.showNotification('La exportación nativa no está disponible en la web.', 'error');
     }
   };
 
@@ -86,13 +94,10 @@ function App() {
     color: themeData.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color,
     transition: 'background-color 0.3s ease, color 0.3s ease',
     fontFamily: availableFonts[hook.font],
-    // --- CORRECCIÓN --- Se elimina el filtro de simulación de daltonismo de aquí.
-    // Ahora se aplicará individualmente en cada componente de paleta.
   };
 
   return (
-    <>
-      {/* --- MODIFICACIÓN --- Añadidos nuevos filtros SVG para más tipos de daltonismo --- */}
+    <div className="flex flex-col min-h-screen">
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
           <filter id="protanopia"><feColorMatrix in="SourceGraphic" type="matrix" values="0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0" /></filter>
@@ -105,7 +110,10 @@ function App() {
           <filter id="achromatomaly"><feColorMatrix in="SourceGraphic" type="matrix" values="0.618, 0.320, 0.062, 0, 0, 0.163, 0.775, 0.062, 0, 0, 0.163, 0.320, 0.516, 0, 0, 0, 0, 0, 1, 0" /></filter>
         </defs>
       </svg>
-      <div className={`min-h-screen p-4 md:p-8`} style={pageThemeStyle}>
+      
+      {!user && <LoginBanner onLoginClick={() => onNavigate('auth')} />}
+
+      <div className={`flex-grow p-4 md:p-8`} style={pageThemeStyle}>
         <Header 
           hook={hook}
           onImport={hook.handleImport} 
@@ -115,88 +123,79 @@ function App() {
           themeData={themeData} 
           font={hook.font}
           setFont={hook.setFont}
+          user={user}
+          onLogout={onLogout}
         />
         
         <main>
-          {/* Se pasa el hook completo que contiene el estado de simulación */}
           <Explorer hook={hook} />
-
           <div className="space-y-6 mb-8">
-            <ColorPreviewer
-              title="Modo Claro"
-              themeOverride="light"
-              previewMode={hook.lightPreviewMode}
-              onCyclePreviewMode={() => hook.cyclePreviewMode(hook.lightPreviewMode, hook.setLightPreviewMode, ['white', 'T950'])}
-              hook={hook}
-              onShadeCopy={hook.showNotification}
-            />
-            <ColorPreviewer
-              title="Modo Oscuro"
-              themeOverride="dark"
-              previewMode={hook.darkPreviewMode}
-              onCyclePreviewMode={() => hook.cyclePreviewMode(hook.darkPreviewMode, hook.setDarkPreviewMode, ['black', 'T0'])}
-              hook={hook}
-              onShadeCopy={hook.showNotification}
-            />
+            <ColorPreviewer title="Modo Claro" themeOverride="light" previewMode={hook.lightPreviewMode} onCyclePreviewMode={() => hook.cyclePreviewMode(hook.lightPreviewMode, hook.setLightPreviewMode, ['white', 'T950'])} hook={hook} onShadeCopy={hook.showNotification} />
+            <ColorPreviewer title="Modo Oscuro" themeOverride="dark" previewMode={hook.darkPreviewMode} onCyclePreviewMode={() => hook.cyclePreviewMode(hook.darkPreviewMode, hook.setDarkPreviewMode, ['black', 'T0'])} hook={hook} onShadeCopy={hook.showNotification} />
           </div>
-
-          <SemanticPalettes
-            stylePalette={themeData.stylePalette}
-            onCopy={hook.showNotification}
-            themeData={themeData}
-            previewMode={hook.semanticPreviewMode}
-            onCyclePreviewMode={() => hook.cyclePreviewMode(hook.semanticPreviewMode, hook.setSemanticPreviewMode, ['card', 'white', 'T950', 'black', 'T0'])}
-            // Se pasa el modo de simulación para que el componente lo aplique internamente
-            simulationMode={hook.simulationMode}
-          />
+          <SemanticPalettes stylePalette={themeData.stylePalette} onCopy={hook.showNotification} themeData={themeData} previewMode={hook.semanticPreviewMode} onCyclePreviewMode={() => hook.cyclePreviewMode(hook.semanticPreviewMode, hook.setSemanticPreviewMode, ['card', 'white', 'T950', 'black', 'T0'])} simulationMode={hook.simulationMode} />
         </main>
+      </div>
 
-        <footer className="text-center mt-12 pt-8 border-t" style={{ borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
+        <footer className="text-center py-8 px-4 md:px-8 border-t" style={{...pageThemeStyle, borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
             <p className="text-sm">Creado por JD_DM.</p>
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
         </footer>
 
         {hook.notification.message && (<div className="fixed bottom-5 right-5 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-lg flex items-center gap-2" style={{ backgroundColor: hook.notification.type === 'error' ? '#EF4444' : '#10B981'}}>{hook.notification.message}</div>)}
-        
-        {isExportModalVisible && (
-            <ExportModal 
-                onClose={() => setIsExportModalVisible(false)}
-                themeData={themeData}
-                fxSeparator={hook.fxSeparator}
-                setFxSeparator={hook.setFxSeparator}
-                useFxQuotes={hook.useFxQuotes}
-                setUseFxQuotes={hook.setUseFxQuotes}
-                onCopy={hook.showNotification}
-            />
-        )}
-        
-        {isAccessibilityModalVisible && (
-            <AccessibilityModal 
-                onClose={() => setIsAccessibilityModalVisible(false)}
-                accessibility={themeData.accessibility} 
-                colors={themeData.accessibilityColors} 
-                onCopy={hook.showNotification}
-            />
-        )}
-        {isComponentPreviewModalVisible && (
-            <ComponentPreviewModal 
-                onClose={() => setIsComponentPreviewModalVisible(false)}
-                primaryButtonTextColor={themeData.primaryButtonTextColor}
-            />
-        )}
+        {isExportModalVisible && <ExportModal onClose={() => setIsExportModalVisible(false)} themeData={themeData} fxSeparator={hook.fxSeparator} setFxSeparator={hook.setFxSeparator} useFxQuotes={hook.useFxQuotes} setUseFxQuotes={hook.setUseFxQuotes} onCopy={hook.showNotification} />}
+        {isAccessibilityModalVisible && <AccessibilityModal onClose={() => setIsAccessibilityModalVisible(false)} accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={hook.showNotification} />}
+        {isComponentPreviewModalVisible && <ComponentPreviewModal onClose={() => setIsComponentPreviewModalVisible(false)} primaryButtonTextColor={themeData.primaryButtonTextColor} />}
 
-        <FloatingActionButtons 
-            onRandomClick={hook.handleRandomTheme}
-            onThemeToggle={hook.handleThemeToggle}
-            currentTheme={themeData.theme}
-            onUndo={hook.handleUndo}
-            onRedo={hook.handleRedo}
-            canUndo={hook.historyIndex > 0}
-            canRedo={hook.historyIndex < hook.history.length - 1}
-        />
-      </div>
-    </>
+        <FloatingActionButtons onRandomClick={hook.handleRandomTheme} onThemeToggle={hook.handleThemeToggle} currentTheme={themeData.theme} onUndo={hook.handleUndo} onRedo={hook.handleRedo} canUndo={hook.historyIndex > 0} canRedo={hook.historyIndex < hook.history.length - 1} />
+    </div>
   );
+}
+
+
+function App() {
+  const hook = useThemeGenerator();
+  const [isNative, setIsNative] = useState(false);
+  const [user, setUser] = useState(null);
+  const [route, setRoute] = useState('landing'); 
+
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+    if (hook.themeData?.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [hook.themeData?.theme]);
+  
+  const handleNavigate = (newRoute) => {
+      setRoute(newRoute);
+  }
+
+  const handleLoginSuccess = (userData) => {
+      setUser(userData);
+      setRoute('generator');
+  }
+
+  const handleLogout = () => {
+      setUser(null);
+      setRoute('landing');
+      hook.showNotification('Has cerrado sesión.');
+  }
+
+  if (route === 'landing') {
+      return <LandingPage onNavigate={handleNavigate} />;
+  }
+
+  if (route === 'auth') {
+    return <AuthPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+  }
+
+  if (route === 'generator') {
+      return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>
+  }
+
+  return <LandingPage onNavigate={handleNavigate} />;
 }
 
 export default App;

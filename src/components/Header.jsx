@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { RefreshCcw, Upload, Download, HelpCircle, FileCode, Type } from 'lucide-react';
-import { HelpModal } from './modals';
-import { availableFonts } from '../utils/colorUtils';
+import { RefreshCcw, Upload, Download, HelpCircle, FileCode, Type, User, LogOut } from 'lucide-react';
+import { HelpModal } from './modals/index.jsx';
+import { availableFonts } from '../utils/colorUtils.js';
 
-const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, font, setFont }) => {
+const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, font, setFont, user, onLogout }) => {
     const importFileRef = useRef(null);
     const [isHelpVisible, setIsHelpVisible] = useState(false);
     const [isFontMenuVisible, setIsFontMenuVisible] = useState(false);
@@ -18,50 +18,62 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
                  <div className="flex items-center gap-4">
                     <img src="https://raw.githubusercontent.com/pentakillw/sistema-de-diseno-react/main/Icono_FX.png" alt="Sistema FX Logo" className="h-16 w-16 md:h-20 md:w-20 rounded-2xl shadow-md"/>
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: pageTextColor }}>BIENVENIDOS</h1>
-                        <p className="text-sm md:text-md" style={{ color: mutedTextColor }}>al sistema de diseño FX</p>
+                        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: pageTextColor }}>Sistema de Diseño FX</h1>
+                        <p className="text-sm md:text-md" style={{ color: mutedTextColor }}>{user ? `Bienvenido, ${user.name || user.email}` : 'Crea, ajusta y exporta tus temas'}</p>
                     </div>
                 </div>
-                {/* --- CORRECCIÓN: Se cambia 'self-start' por 'self-end' para alinear los botones a la derecha en móvil --- */}
-                <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
-                    <input type="file" ref={importFileRef} onChange={onImport} accept=".json" className="hidden"/>
-                    
-                    <div className="relative">
-                        <button 
-                            title="Cambiar Fuente" 
-                            className="text-sm font-medium p-2 rounded-lg" 
-                            style={controlsThemeStyle}
-                            onClick={() => setIsFontMenuVisible(!isFontMenuVisible)}
-                        >
-                            <Type size={16}/>
-                        </button>
-                        {isFontMenuVisible && (
-                            <div 
-                                className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg z-50"
-                                onMouseLeave={() => setIsFontMenuVisible(false)}
-                            >
-                               {Object.keys(availableFonts).map(fontName => (
-                                   <button
-                                     key={fontName}
-                                     onClick={() => {
-                                         setFont(fontName);
-                                         setIsFontMenuVisible(false);
-                                     }}
-                                     className={`w-full text-left px-4 py-2 text-sm ${font === fontName ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}
-                                   >
-                                       {fontName}
-                                   </button>
-                               ))}
-                            </div>
-                        )}
-                    </div>
 
-                    <button title="Importar Tema" onClick={() => importFileRef.current.click()} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Upload size={16}/></button>
-                    <button title="Exportar Tema" onClick={onExport} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Download size={16}/></button>
-                    <button title="Exportar Código" onClick={onOpenExportModal} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><FileCode size={16}/></button>
-                    <div className="h-6 w-px" style={{backgroundColor: 'var(--border-default)'}}></div>
-                    <button title="Reiniciar Tema" onClick={onReset} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><RefreshCcw size={16}/></button>
-                    <button title="Ayuda" onClick={() => setIsHelpVisible(true)} className="text-sm font-medium p-2 rounded-lg flex items-center" style={controlsThemeStyle}><HelpCircle size={16}/></button>
+                <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
+                    {user ? (
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}>
+                                <User size={16} />
+                                <span className="hidden sm:inline">{user.name || user.email}</span>
+                            </div>
+                            <button title="Cerrar Sesión" onClick={onLogout} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}>
+                                <LogOut size={16} />
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <input type="file" ref={importFileRef} onChange={onImport} accept=".json" className="hidden"/>
+                            <div className="relative">
+                                <button 
+                                    title="Cambiar Fuente" 
+                                    className="text-sm font-medium p-2 rounded-lg" 
+                                    style={controlsThemeStyle}
+                                    onClick={() => setIsFontMenuVisible(!isFontMenuVisible)}
+                                >
+                                    <Type size={16}/>
+                                </button>
+                                {isFontMenuVisible && (
+                                    <div 
+                                        className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-lg z-50"
+                                        onMouseLeave={() => setIsFontMenuVisible(false)}
+                                    >
+                                       {Object.keys(availableFonts).map(fontName => (
+                                           <button
+                                             key={fontName}
+                                             onClick={() => {
+                                                 setFont(fontName);
+                                                 setIsFontMenuVisible(false);
+                                             }}
+                                             className={`w-full text-left px-4 py-2 text-sm ${font === fontName ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)]`}
+                                           >
+                                               {fontName}
+                                           </button>
+                                       ))}
+                                    </div>
+                                )}
+                            </div>
+                            <button title="Importar Tema" onClick={() => importFileRef.current.click()} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Upload size={16}/></button>
+                            <button title="Exportar Tema" onClick={onExport} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Download size={16}/></button>
+                            <button title="Exportar Código" onClick={onOpenExportModal} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><FileCode size={16}/></button>
+                            <div className="h-6 w-px" style={{backgroundColor: 'var(--border-default)'}}></div>
+                            <button title="Reiniciar Tema" onClick={onReset} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><RefreshCcw size={16}/></button>
+                            <button title="Ayuda" onClick={() => setIsHelpVisible(true)} className="text-sm font-medium p-2 rounded-lg flex items-center" style={controlsThemeStyle}><HelpCircle size={16}/></button>
+                        </>
+                    )}
                 </div>
             </header>
             {isHelpVisible && <HelpModal onClose={() => setIsHelpVisible(false)} />}
@@ -70,3 +82,4 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
 };
 
 export default Header;
+
