@@ -30,18 +30,24 @@ const PaletteAdjusterModal = ({ adjustments, onAdjust, onClose, brandColor }) =>
     brightness: `linear-gradient(to right, #000, ${brandColor}, #fff)`,
     temperature: 'linear-gradient(to right, #66b3ff, #fff, #ffc966)'
   };
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
   
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={handleBackdropClick}>
       <div 
         className="p-6 rounded-xl border max-w-sm w-full relative" 
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold" style={{ color: 'var(--text-default)' }}>Ajustar Paleta</h2>
           <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
         </div>
+        
         <div className="space-y-6">
           <SliderControl label="Matiz" value={adjustments.hue} min="-180" max="180" onChange={(v) => onAdjust({...adjustments, hue: v})} gradient={gradients.hue} />
           <SliderControl label="Saturación" value={adjustments.saturation} min="-100" max="100" onChange={(v) => onAdjust({...adjustments, saturation: v})} gradient={gradients.saturation} />
@@ -54,3 +60,4 @@ const PaletteAdjusterModal = ({ adjustments, onAdjust, onClose, brandColor }) =>
 };
 
 export default PaletteAdjusterModal;
+

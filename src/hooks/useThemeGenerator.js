@@ -1,37 +1,48 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import tinycolor from 'tinycolor2';
+// --- MODIFICADO --- Se importa `generateAdvancedRandomPalette` desde colorUtils
 import { generateShades, generateAdvancedRandomPalette, applyColorMatrix, colorblindnessMatrices } from '../utils/colorUtils.js';
 
 const defaultState = {
     theme: 'light',
     brandColor: '#009fdb',
-    isGrayAuto: true,
-    grayColor: '#5d5d5d',
+    // --- ELIMINADO --- El estado 'isGrayAuto' ya no es necesario
+    // isGrayAuto: true, 
+    grayColor: '#5d5d5d', // Ahora este es un color de inicio independiente
     font: 'Segoe UI',
     fxSeparator: ';',
     useFxQuotes: true,
     explorerPalette: [],
+    lockedColors: [], 
 };
+
+const defaultPaletteAdjustments = { hue: 0, saturation: 0, brightness: 0, temperature: 0 };
 
 const useThemeGenerator = () => {
     const [theme, setTheme] = useState(defaultState.theme);
     const [brandColor, setBrandColor] = useState(defaultState.brandColor);
     const [grayColor, setGrayColor] = useState(defaultState.grayColor);
-    const [isGrayAuto, setIsGrayAuto] = useState(defaultState.isGrayAuto);
+    // --- ELIMINADO ---
+    // const [isGrayAuto, setIsGrayAuto] = useState(defaultState.isGrayAuto);
     const [font, setFont] = useState(defaultState.font);
+    const [lockedColors, setLockedColors] = useState(defaultState.lockedColors);
 
     const [history, setHistory] = useState([{
         brandColor: defaultState.brandColor,
         grayColor: defaultState.grayColor,
-        explorerPalette: defaultState.explorerPalette
+        explorerPalette: defaultState.explorerPalette,
+        lockedColors: defaultState.lockedColors, 
     }]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
+    // --- MODIFICADO --- El método por defecto vuelve a ser 'auto'
     const [explorerMethod, setExplorerMethod] = useState('auto');
-    const [explorerPalette, setExplorerPalette] = useState(defaultState.explorerPalette);
-    const [originalExplorerPalette, setOriginalExplorerPalette] = useState([]);
+    const [explorerPalette, setExplorerPalette] = useState(defaultState.explorerPalette); 
+    const [originalExplorerPalette, setOriginalExplorerPalette] = useState([]); 
+    
     const [explorerGrayShades, setExplorerGrayShades] = useState([]);
-    const [paletteAdjustments, setPaletteAdjustments] = useState({ hue: 0, saturation: 0, brightness: 0, temperature: 0 });
+    
+    const [paletteAdjustments, setPaletteAdjustments] = useState(defaultPaletteAdjustments);
 
     const isUpdatingFromHistory = useRef(false);
 
@@ -55,16 +66,66 @@ const useThemeGenerator = () => {
         setHistory(newHistory);
         setHistoryIndex(newHistory.length - 1);
     };
+    
+    const toggleLockColor = (colorToToggle) => {
+        let newLockedColors;
+        if (lockedColors.includes(colorToToggle)) {
+            newLockedColors = lockedColors.filter(c => c !== colorToToggle);
+        } else {
+            newLockedColors = [...lockedColors, colorToToggle];
+        }
+        setLockedColors(newLockedColors);
+
+        const currentState = history[historyIndex];
+        if (currentState) {
+            const newState = { ...currentState, lockedColors: newLockedColors };
+            const newHistory = [...history.slice(0, historyIndex), newState, ...history.slice(historyIndex + 1)];
+            setHistory(newHistory);
+        }
+    };
 
     const updateBrandColor = useCallback((newColor) => {
         if (!newColor || newColor === brandColor) return;
+
+        // --- MODIFICADO --- La lógica de 'isGrayAuto' se ha eliminado
         setBrandColor(newColor);
-        saveStateToHistory({ brandColor: newColor, grayColor, explorerPalette: originalExplorerPalette });
-    }, [brandColor, grayColor, originalExplorerPalette, history, historyIndex]);
+
+        saveStateToHistory({ 
+            brandColor: newColor, 
+            grayColor: grayColor, // Simplemente pasa el color gris actual
+            explorerPalette: originalExplorerPalette,
+            lockedColors: lockedColors,
+        });
+
+    }, [brandColor, grayColor, originalExplorerPalette, history, historyIndex, lockedColors]); // 'isGrayAuto' eliminado de las dependencias
+
+    // --- ELIMINADO ---
+    // El 'useEffect' que vinculaba 'grayColor' a 'brandColor' se ha eliminado por completo.
+    /*
+    useEffect(() => {
+        if (isGrayAuto) {
+            ...
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isGrayAuto, brandColor, lockedColors]);
+    */
+   
+    // --- ELIMINADO ---
+    // El 'useEffect' que sincronizaba 'isGrayAuto' al inicio ya no es necesario.
+    /*
+    useEffect(() => {
+        if (isGrayAuto) {
+            ...
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    */
 
     const updatePaletteState = (newPalette, newBrandColor = brandColor) => {
         setOriginalExplorerPalette(newPalette);
-        saveStateToHistory({ brandColor: newBrandColor, grayColor, explorerPalette: newPalette });
+        
+        // --- MODIFICADO --- La lógica de 'isGrayAuto' se ha eliminado
+        saveStateToHistory({ brandColor: newBrandColor, grayColor: grayColor, explorerPalette: newPalette, lockedColors: lockedColors });
     };
 
     const applySimulationToPalette = () => {
@@ -72,7 +133,12 @@ const useThemeGenerator = () => {
         const matrix = colorblindnessMatrices[simulationMode];
         if (!matrix) return;
 
-        const newPalette = originalExplorerPalette.map(color => applyColorMatrix(color, matrix));
+        const newPalette = originalExplorerPalette.map(color => {
+            if (lockedColors.includes(color)) {
+                return color;
+            }
+            return applyColorMatrix(color, matrix);
+        });
         updatePaletteState(newPalette);
         showNotification(`Filtro ${simulationMode} aplicado a la paleta.`);
     };
@@ -101,13 +167,25 @@ const useThemeGenerator = () => {
             showNotification("La paleta debe tener al menos 2 colores.", "error");
             return;
         }
+        const colorToRemove = originalExplorerPalette[index];
         const newPalette = originalExplorerPalette.filter((_, i) => i !== index);
+        
+        if (lockedColors.includes(colorToRemove)) {
+            setLockedColors(lockedColors.filter(c => c !== colorToRemove));
+        }
+
         updatePaletteState(newPalette);
     };
 
     const replaceColorInPalette = (index, newColor) => {
+        const oldColor = originalExplorerPalette[index];
         const newPalette = [...originalExplorerPalette];
         newPalette[index] = newColor;
+
+        if (lockedColors.includes(oldColor)) {
+            setLockedColors(lockedColors.map(c => (c === oldColor ? newColor : c)));
+        }
+        
         updatePaletteState(newPalette);
     };
     
@@ -120,6 +198,8 @@ const useThemeGenerator = () => {
             setBrandColor(previousState.brandColor);
             setGrayColor(previousState.grayColor);
             setOriginalExplorerPalette(previousState.explorerPalette);
+            setLockedColors(previousState.lockedColors || []);
+            setPaletteAdjustments(defaultPaletteAdjustments);
         }
     };
 
@@ -132,10 +212,11 @@ const useThemeGenerator = () => {
             setBrandColor(nextState.brandColor);
             setGrayColor(nextState.grayColor);
             setOriginalExplorerPalette(nextState.explorerPalette);
+            setLockedColors(nextState.lockedColors || []);
+            setPaletteAdjustments(defaultPaletteAdjustments);
         }
     };
 
-    // --- NUEVO --- Función para saltar a un estado específico del historial.
     const goToHistoryState = (index) => {
         if (index >= 0 && index < history.length) {
             isUpdatingFromHistory.current = true;
@@ -144,12 +225,14 @@ const useThemeGenerator = () => {
             setBrandColor(targetState.brandColor);
             setGrayColor(targetState.grayColor);
             setOriginalExplorerPalette(targetState.explorerPalette);
+            setLockedColors(targetState.lockedColors || []);
+            setPaletteAdjustments(defaultPaletteAdjustments);
             showNotification(`Paleta ${index} cargada.`);
         }
     };
     
      const generatePaletteWithAI = async (prompt) => {
-        const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss";
+        const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
         const currentPaletteSize = originalExplorerPalette.length || 5;
         const fullPrompt = `You are an expert color palette generator. Based on the theme "${prompt}", generate an array of exactly ${currentPaletteSize} aesthetically pleasing and harmonious hex color codes.`;
@@ -175,9 +258,17 @@ const useThemeGenerator = () => {
             const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
             
             if (jsonText) {
-                const newPalette = JSON.parse(jsonText);
-                if (Array.isArray(newPalette) && newPalette.every(c => tinycolor(c).isValid())) {
-                    updatePaletteState(newPalette);
+                const newPaletteFromAI = JSON.parse(jsonText);
+                if (Array.isArray(newPaletteFromAI) && newPaletteFromAI.every(c => tinycolor(c).isValid())) {
+                    
+                    const finalPalette = originalExplorerPalette.map((oldColor, index) => {
+                        if (lockedColors.includes(oldColor)) {
+                            return oldColor;
+                        }
+                        return newPaletteFromAI[index] || tinycolor.random().toHexString();
+                    });
+
+                    updatePaletteState(finalPalette);
                     return true;
                 }
             }
@@ -191,13 +282,18 @@ const useThemeGenerator = () => {
     
     useEffect(() => {
         if (originalExplorerPalette.length === 0 && brandColor) {
+            // --- MODIFICADO --- 'isGrayAuto' ya no se evalúa
             const { palette } = generateAdvancedRandomPalette(5);
             setOriginalExplorerPalette(palette);
-            const initialState = { brandColor, grayColor, explorerPalette: palette };
+            
+            const initialGray = defaultState.grayColor; // Usa el gris por defecto
+
+            const initialState = { brandColor, grayColor: initialGray, explorerPalette: palette, lockedColors: [] };
             setHistory([initialState]);
             setHistoryIndex(0);
         }
-    }, [brandColor, grayColor]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [brandColor]);
 
     const showNotification = (message, type = 'success') => {
         setNotification({ message, type });
@@ -216,7 +312,12 @@ const useThemeGenerator = () => {
     
     useEffect(() => {
         if (!originalExplorerPalette || originalExplorerPalette.length === 0) return;
+        
         const adjusted = originalExplorerPalette.map(hex => {
+            if (lockedColors.includes(hex)) {
+                return hex;
+            }
+            
             let color = tinycolor(hex);
             const { hue, saturation, brightness, temperature } = paletteAdjustments;
             if (hue !== 0) color = color.spin(hue);
@@ -228,22 +329,22 @@ const useThemeGenerator = () => {
             if (temperature < 0) color = tinycolor.mix(color, '#66b3ff', Math.abs(temperature));
             return color.toHexString();
         });
+        
         setExplorerPalette(adjusted);
+        
         const grayBase = adjusted.length > 0 ? adjusted[Math.floor(adjusted.length / 2)] : tinycolor.random().toHexString();
         setExplorerGrayShades(generateShades(tinycolor(grayBase).desaturate(85).toHexString()));
-    }, [originalExplorerPalette, paletteAdjustments]);
+
+    }, [originalExplorerPalette, paletteAdjustments, lockedColors]);
+
 
     useEffect(() => {
-        if (isGrayAuto && !isUpdatingFromHistory.current) {
-            const harmonicGray = tinycolor(brandColor).desaturate(85).toHexString();
-            setGrayColor(harmonicGray);
-        }
-
         if (isUpdatingFromHistory.current) {
             isUpdatingFromHistory.current = false;
         }
-    }, [brandColor, isGrayAuto, originalExplorerPalette]);
+    }, [brandColor, grayColor, originalExplorerPalette, lockedColors]);
 
+    
     useEffect(() => {
         const brandShades = generateShades(brandColor);
         const grayShades = generateShades(grayColor);
@@ -285,6 +386,7 @@ const useThemeGenerator = () => {
             { name: 'CriticoFlotante', color: tinycolor(critical).lighten(10).toHexString() }, { name: 'CriticoPresionado', color: tinycolor(critical).darken(10).toHexString() },
           ],
           explorerColors: originalExplorerPalette.map((c, i) => ({ name: `Color ${i + 1}`, color: c })),
+          lockedExplorerColors: lockedColors,
         };
 
         if (theme === 'dark') {
@@ -355,7 +457,8 @@ const useThemeGenerator = () => {
                 text: { ratio: brandContrast.toFixed(2), level: brandContrast >= 4.5 ? 'AA' : 'Fail' }
             },
             accessibilityColors: { btnBg: stylePalette.fullBackgroundColors[0].color, btnText: accentColor, textBg: stylePalette.fullBackgroundColors[0].color, textColor: brandColor },
-            explorerPalette: originalExplorerPalette
+            explorerPalette: originalExplorerPalette,
+            lockedColors: lockedColors,
         };
 
         setThemeData(data);
@@ -366,7 +469,7 @@ const useThemeGenerator = () => {
         document.documentElement.style.setProperty('--bg-muted', theme === 'light' ? grayShades[17] : grayShades[2]);
         document.documentElement.style.setProperty('--action-primary-default', brandShades[4]);
 
-    }, [brandColor, grayColor, theme, originalExplorerPalette]);
+    }, [brandColor, grayColor, theme, originalExplorerPalette, lockedColors]);
 
 
     const handleImport = (event) => {
@@ -377,18 +480,23 @@ const useThemeGenerator = () => {
             try {
                 const imported = JSON.parse(e.target.result);
                 const importedPalette = imported.explorerPalette || generateAdvancedRandomPalette(5).palette;
+                const importedLockedColors = imported.lockedColors || [];
                 
                 setBrandColor(imported.brandColor);
                 setGrayColor(imported.grayColor);
                 setFont(imported.font);
                 setTheme(imported.theme);
-                setIsGrayAuto(imported.isGrayAuto);
+                // --- ELIMINADO --- 'isGrayAuto' ya no se importa
+                // setIsGrayAuto(imported.isGrayAuto);
                 setOriginalExplorerPalette(importedPalette);
+                setLockedColors(importedLockedColors);
+                setPaletteAdjustments(defaultPaletteAdjustments); 
                 
                 const newState = {
                     brandColor: imported.brandColor,
                     grayColor: imported.grayColor,
-                    explorerPalette: importedPalette
+                    explorerPalette: importedPalette,
+                    lockedColors: importedLockedColors,
                 };
                 saveStateToHistory(newState);
                 
@@ -404,11 +512,18 @@ const useThemeGenerator = () => {
         const { palette } = generateAdvancedRandomPalette(5);
         setTheme(defaultState.theme);
         setBrandColor(defaultState.brandColor);
-        setIsGrayAuto(defaultState.isGrayAuto);
+        // --- ELIMINADO ---
+        // setIsGrayAuto(defaultState.isGrayAuto);
         setFont(defaultState.font);
-        setGrayColor(defaultState.grayColor);
+        
+        // --- MODIFICADO ---
+        const newGrayColor = defaultState.grayColor; // Simplemente usa el gris por defecto
+        setGrayColor(newGrayColor);
+        
         setOriginalExplorerPalette(palette);
-        const initialState = { brandColor: defaultState.brandColor, grayColor: defaultState.grayColor, explorerPalette: palette };
+        setLockedColors([]);
+        setPaletteAdjustments(defaultPaletteAdjustments);
+        const initialState = { brandColor: defaultState.brandColor, grayColor: newGrayColor, explorerPalette: palette, lockedColors: [] };
         setHistory([initialState]);
         setHistoryIndex(0);
         showNotification("Tema reiniciado.");
@@ -416,23 +531,90 @@ const useThemeGenerator = () => {
 
     const handleThemeToggle = () => setTheme(t => t === 'light' ? 'dark' : 'light');
     
-    const handleRandomTheme = () => {
-        const method = explorerMethod === 'auto' ? undefined : explorerMethod;
-        const { palette, brandColor: newBrandColor } = generateAdvancedRandomPalette(originalExplorerPalette.length || 5, method);
+    const handleRandomTheme = (baseColorHex = null) => {
+        // --- MODIFICADO --- Si el método es 'auto', elige uno aleatorio. Si no, usa el método seleccionado.
+        let methodToUse = explorerMethod;
+        if (explorerMethod === 'auto') {
+            const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic'];
+            methodToUse = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
+        }
+        
+        // 1. Genera una paleta nueva
+        const { palette: newRandomPalette, brandColor: newBrandColorSuggestion } = 
+            generateAdvancedRandomPalette(originalExplorerPalette.length || 5, methodToUse, baseColorHex); // <-- Pasa el método a usar
+
+        // 2. Combina la paleta nueva con la antigua, respetando los bloqueos
+        let randomColorsUsed = 0;
+        let baseColorPlaced = false;
+        const finalPalette = originalExplorerPalette.map((oldColor) => {
+            // Si está bloqueado, mantenerlo
+            if (lockedColors.includes(oldColor)) {
+                return oldColor;
+            }
+            // Si se proveyó un color base y aún no se ha colocado, ponerlo en la primera ranura libre
+            if (baseColorHex && !baseColorPlaced) {
+                baseColorPlaced = true;
+                return baseColorHex;
+            }
+            // Asigna un color aleatorio nuevo
+            const newColor = newRandomPalette[randomColorsUsed % newRandomPalette.length];
+            randomColorsUsed++;
+            return newColor;
+        });
+
+        // 3. Elige un nuevo color de marca
+        let newBrandColor;
+        if (baseColorHex) {
+            newBrandColor = baseColorHex; // Si se proveyó un color base, usarlo
+        } else {
+            const unLockedColors = finalPalette.filter(c => !lockedColors.includes(c));
+            newBrandColor = unLockedColors.length > 0 ? unLockedColors[0] : (lockedColors.length > 0 ? lockedColors[0] : newBrandColorSuggestion);
+        }
         
         setBrandColor(newBrandColor);
-        setOriginalExplorerPalette(palette);
+        setOriginalExplorerPalette(finalPalette); // Guarda la nueva paleta combinada
 
-        const newGrayColor = isGrayAuto ? tinycolor(newBrandColor).desaturate(85).toHexString() : grayColor;
-        setGrayColor(newGrayColor);
-        saveStateToHistory({ brandColor: newBrandColor, grayColor: newGrayColor, explorerPalette: palette });
+        // --- MODIFICADO --- 'isGrayAuto' ya no se evalúa
+        const newGrayColor = grayColor; // Mantiene el color gris actual
+        // setGrayColor(newGrayColor); // No es necesario establecerlo si no cambia
+        
+        setPaletteAdjustments(defaultPaletteAdjustments);
+        saveStateToHistory({ brandColor: newBrandColor, grayColor: newGrayColor, explorerPalette: finalPalette, lockedColors: lockedColors });
+    };
+
+    const commitPaletteAdjustments = () => {
+        const newLockedColors = lockedColors.map(oldLockedColor => {
+            const index = originalExplorerPalette.indexOf(oldLockedColor);
+            if (index !== -1 && explorerPalette[index]) {
+                return explorerPalette[index];
+            }
+            return null;
+        }).filter(Boolean);
+
+        setOriginalExplorerPalette(explorerPalette);
+        setLockedColors(newLockedColors);
+        setPaletteAdjustments(defaultPaletteAdjustments);
+        
+        saveStateToHistory({
+            brandColor,
+            grayColor,
+            explorerPalette: explorerPalette,
+            lockedColors: newLockedColors
+        });
+        showNotification('Ajustes de paleta aplicados.');
+    };
+
+    const cancelPaletteAdjustments = () => {
+        setPaletteAdjustments(defaultPaletteAdjustments);
     };
 
     return {
-        themeData, font, brandColor, grayColor, isGrayAuto, explorerMethod, simulationMode,
-        explorerPalette, explorerGrayShades, paletteAdjustments, notification, fxSeparator, useFxQuotes,
-        lightPreviewMode, darkPreviewMode, semanticPreviewMode, 
-        setFont, updateBrandColor, setGrayColor, setIsGrayAuto, setExplorerMethod, setSimulationMode, 
+        // --- MODIFICADO --- 'isGrayAuto' ya no se exporta
+        themeData, font, brandColor, grayColor, explorerMethod, simulationMode,
+        explorerPalette,
+        explorerGrayShades, paletteAdjustments, notification, fxSeparator, useFxQuotes,
+        // 'setIsGrayAuto' ya no se exporta
+        setFont, updateBrandColor, setGrayColor, setExplorerMethod, setSimulationMode, 
         handleUndo, handleRedo, 
         handleImport, 
         handleReset, showNotification, setPaletteAdjustments, handleExplorerColorPick, 
@@ -446,8 +628,13 @@ const useThemeGenerator = () => {
         generatePaletteWithAI,
         updatePaletteState,
         applySimulationToPalette,
-        // --- NUEVO --- Se exporta la nueva función ---
-        goToHistoryState
+        goToHistoryState,
+
+        lockedColors,
+        toggleLockColor,
+
+        commitPaletteAdjustments,
+        cancelPaletteAdjustments,
     };
 };
 

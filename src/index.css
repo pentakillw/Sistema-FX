@@ -23,3 +23,7 @@ body {
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* --- ESTILOS DE SLIDER ANTIGUOS ELIMINADOS --- */
+/* Ya no se necesitan las clases .custom-slider-* las hemos borrado para limpiar el código.
+*/

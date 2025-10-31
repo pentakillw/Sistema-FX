@@ -1,56 +1,72 @@
 import React, { useState, useEffect } from "react"
 import tinycolor from "tinycolor2"
 import { HexColorPicker } from "react-colorful"
+// --- NUEVO --- Importamos el icono de chispas
+import { Sparkles } from "lucide-react"
 
 const ColorPalette = ({
   title,
   color,
-  hex,
+  hex,  
   shades,
   onShadeCopy,
   themeOverride,
   isExplorer = false,
-  onColorChange,
+  onColorChange, 
   isDisabled = false,
+  // --- NUEVO --- Se recibe la nueva prop
+  onGenerateFromShade 
 }) => {
   const [isPickerVisible, setIsPickerVisible] = useState(false)
+  const [localColor, setLocalColor] = useState(hex ? hex.toUpperCase() : "")
+
   const titleColorClass =
     themeOverride === "light" ? "text-gray-900" : "text-gray-50"
   const hexColorClass =
     themeOverride === "light" ? "text-gray-500" : "text-gray-400"
 
-  const [inputValue, setInputValue] = useState(hex ? hex.toUpperCase() : "")
+  useEffect(() => {
+    if (hex) {
+      setLocalColor(hex.toUpperCase())
+    }
+  }, [hex])
 
   const handleHeaderClick = () => {
     if (!isDisabled && onColorChange) {
+      setLocalColor(hex ? hex.toUpperCase() : "")
       setIsPickerVisible(prev => !prev)
     }
   }
 
-  useEffect(() => {
-    if (hex) {
-      setInputValue(hex.toUpperCase())
+  const commitColorChange = () => {
+    const newColor = tinycolor(localColor)
+    if (newColor.isValid()) {
+      const newHex = newColor.toHexString()
+      onColorChange(newHex)
+      setLocalColor(newHex.toUpperCase()) 
+    } else {
+      setLocalColor(hex ? hex.toUpperCase() : "")
     }
-  }, [hex])
-
-  const handleInputChange = e => {
-    setInputValue(e.target.value)
   }
 
-  const handleColorUpdate = () => {
-    const newColor = tinycolor(inputValue)
-    if (newColor.isValid()) {
-      onColorChange(newColor.toHexString())
-    } else {
-      setInputValue(hex ? hex.toUpperCase() : "")
-    }
+  const handleInputChange = e => {
+    setLocalColor(e.target.value)
   }
 
   const handleKeyDown = e => {
     if (e.key === "Enter") {
-      handleColorUpdate()
-      e.target.blur()
+      commitColorChange()
+      e.target.blur() 
     }
+  }
+
+  const handleInputBlur = () => {
+    commitColorChange()
+  }
+
+  const handlePickerClose = () => {
+    commitColorChange()
+    setIsPickerVisible(false)
   }
 
   return (
@@ -77,11 +93,11 @@ const ColorPalette = ({
               </p>
               <input
                 type="text"
-                value={inputValue}
+                value={localColor}
                 onChange={handleInputChange}
-                onBlur={handleColorUpdate}
+                onBlur={handleInputBlur}
                 onKeyDown={handleKeyDown}
-                onClick={e => e.stopPropagation()}
+                onClick={e => e.stopPropagation()} 
                 disabled={isDisabled}
                 className={`text-xs font-mono w-24 p-0 m-0 bg-transparent border-none focus:outline-none focus:ring-0 ${hexColorClass}`}
                 style={{
@@ -94,14 +110,16 @@ const ColorPalette = ({
             <div className="absolute z-20 top-full mt-2 left-0">
               <div
                 className="fixed inset-0 -z-10"
-                onClick={() => setIsPickerVisible(false)}
+                onClick={handlePickerClose} 
               />
-              <HexColorPicker color={color} onChange={onColorChange} />
+              <HexColorPicker 
+                color={localColor} 
+                onChange={setLocalColor} 
+              />
             </div>
           )}
         </div>
       )}
-      {/* --- MEJORA RESPONSIVE: Contenedor de scroll único --- */}
       <div className="overflow-x-auto pb-2 -mb-2">
         <div className="sm:min-w-0" style={{ minWidth: `${shades.length * 56}px` }}>
           <div
@@ -110,10 +128,10 @@ const ColorPalette = ({
             {shades.map((shade, index) => (
               <div
                 key={index}
-                className="w-14 flex-shrink-0 sm:flex-1 cursor-pointer transition-transform duration-100 ease-in-out sm:group-hover:transform sm:group-hover:scale-y-110 sm:hover:!scale-125 sm:hover:z-10 flex items-center justify-center"
+                className="w-14 flex-shrink-0 sm:flex-1 cursor-pointer transition-transform duration-100 ease-in-out sm:group-hover:transform sm:group-hover:scale-y-110 sm:hover:!scale-125 sm:hover:z-10 flex items-center justify-center relative group/shade" // --- Se añade group/shade
                 style={{ backgroundColor: shade }}
-                onClick={() => onShadeCopy(shade)}
-                title={`Usar ${shade.toUpperCase()}`}
+                onClick={() => onShadeCopy(shade)} // --- El clic principal sigue copiando
+                title={`Copiar ${shade.toUpperCase()}`}
               >
                 <span
                   className="text-[10px] font-mono sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
@@ -123,6 +141,20 @@ const ColorPalette = ({
                 >
                   {shade.substring(1).toUpperCase()}
                 </span>
+                
+                {/* --- NUEVO --- Botón para generar tema aleatorio desde este tono */}
+                {onGenerateFromShade && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Evita que el clic se propague y copie el color
+                      onGenerateFromShade(shade); // Llama a handleRandomTheme con este color
+                    }}
+                    className="absolute top-1 right-1 p-0.5 bg-black/30 rounded-full text-white opacity-0 group-hover/shade:opacity-100 hover:bg-black/60 transition-all z-20"
+                    title={`Generar paleta desde ${shade.toUpperCase()}`}
+                  >
+                    <Sparkles size={10} />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -135,7 +167,7 @@ const ColorPalette = ({
               <div
                 className="absolute top-0 w-0 h-0 hidden sm:block"
                 style={{
-                  left: "calc(47.5% - 7px)",
+                  left: "calc(47.5% - 7px)", // Centrado en el tono T450 (índice 9.5 de 20)
                   borderLeft: "7px solid transparent",
                   borderRight: "7px solid transparent",
                   borderTop: `10px solid ${

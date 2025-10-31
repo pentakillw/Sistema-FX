@@ -55,7 +55,10 @@ const ImagePreview = ({ imageUrl, onColorSelect, onIndicatorPositionChange, sele
         const loupe = loupeRef.current;
         if (loupe) {
             // Posicionar la lupa relativa al contenedor de la imagen, no a la ventana
-            loupe.style.transform = `translate(${x - 50}px, ${y - 50}px)`;
+            const loupeX = x - 50;
+            const loupeY = y - 50;
+            console.log(`Loupe position: x=${loupeX}, y=${loupeY}`);
+            loupe.style.transform = `translate(${loupeX}px, ${loupeY}px)`;
             const zoom = 3;
             loupe.style.backgroundSize = `${rect.width * zoom}px ${rect.height * zoom}px`;
             loupe.style.backgroundPosition = `-${x * zoom - 50}px -${y * zoom - 50}px`;

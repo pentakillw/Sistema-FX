@@ -10,8 +10,9 @@ export const availableFonts = {
   'Lato': '"Lato", sans-serif',
 };
 
+// --- MODIFICADO --- Se re-introduce el método 'Auto'
 export const generationMethods = [
-    { id: 'auto', name: 'Auto' },
+    { id: 'auto', name: 'Auto (Aleatorio)' }, // Vuelve a añadir 'auto'
     { id: 'mono', name: 'Monocromo' },
     { id: 'analogous', name: 'Análogo' },
     { id: 'complement', name: 'Complementario' },
@@ -65,17 +66,21 @@ export const generateShades = (hex) => {
   return shades;
 };
 
-// --- ✨ FUNCIÓN DE GENERACIÓN INTELIGENTE Y FLEXIBLE ✨ ---
-export const generateAdvancedRandomPalette = (count = 5, method = 'auto') => {
-    const baseColor = tinycolor({
-        h: Math.random() * 360,
-        s: 0.3 + Math.random() * 0.5,
-        l: 0.4 + Math.random() * 0.3,
-    });
+// --- MODIFICADO --- Se actualiza la firma de la función
+export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseColorHex = null) => {
+    
+    const baseColor = baseColorHex 
+        ? tinycolor(baseColorHex)
+        : tinycolor({
+            h: Math.random() * 360,
+            s: 0.3 + Math.random() * 0.5,
+            l: 0.4 + Math.random() * 0.3,
+          });
 
+    // --- MODIFICADO --- Si el método es 'auto', elige uno aleatorio. Si no, usa el método.
     let harmonyMethod = method;
     if (harmonyMethod === 'auto') {
-        const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic'];
+        const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic', 'complement'];
         harmonyMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
     }
     
@@ -133,7 +138,9 @@ export const generateAdvancedRandomPalette = (count = 5, method = 'auto') => {
 
     const finalPalette = balancedPalette.map(c => c.toHexString());
     
-    const brandColor = balancedPalette.sort((a,b) => b.toHsl().s - a.toHsl().s)[0].toHexString();
+    const brandColor = baseColorHex 
+        ? baseColorHex
+        : balancedPalette.sort((a,b) => b.toHsl().s - a.toHsl().s)[0].toHexString();
 
     return { palette: finalPalette, brandColor: brandColor };
 };
@@ -142,8 +149,12 @@ export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 2
     let newPalette = [];
     const colorForExplorer = !baseColorHex ? tinycolor.random() : tinycolor(baseColorHex);
 
+    // --- MODIFICADO --- 'auto' ahora llama a 'generateAdvancedRandomPalette' con un método aleatorio
     if (method === 'auto') {
-      const { palette } = generateAdvancedRandomPalette(count);
+      const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic', 'complement'];
+      const randomMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
+      
+      const { palette } = generateAdvancedRandomPalette(count, randomMethod, colorForExplorer.toHexString());
       const baseForGray = palette.length > 0 ? palette[Math.floor(palette.length / 2)] : tinycolor.random().toHexString();
       const harmonicGrayShades = generateShades(tinycolor(baseForGray).desaturate(85).toHexString());
       return { palette, gray: harmonicGrayShades };
@@ -206,5 +217,30 @@ export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 2
     const harmonicGrayShades = generateShades(tinycolor(baseForGray).desaturate(85).toHexString());
 
     return { palette: finalPalette, gray: harmonicGrayShades };
+};
+
+export const applyAdjustments = (hex, adjustments) => {
+  let color = tinycolor(hex);
+
+  if (adjustments.hue !== 0) {
+    color = color.spin(adjustments.hue);
+  }
+  if (adjustments.saturation > 0) {
+    color = color.saturate(adjustments.saturation);
+  } else if (adjustments.saturation < 0) {
+    color = color.desaturate(Math.abs(adjustments.saturation));
+  }
+  if (adjustments.brightness > 0) {
+    color = color.lighten(adjustments.brightness);
+  } else if (adjustments.brightness < 0) {
+    color = color.darken(Math.abs(adjustments.brightness));
+  }
+  if (adjustments.temperature !== 0) {
+    const tempValue = Math.abs(adjustments.temperature);
+    const mixColor = adjustments.temperature > 0 ? '#ff8c00' : '#0077ff';
+    color = tinycolor.mix(color, mixColor, tempValue / 2);
+  }
+
+  return color.toHexString();
 };
 

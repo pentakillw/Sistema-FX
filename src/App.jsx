@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo, useCallback } from 'react';
 import useThemeGenerator from './hooks/useThemeGenerator';
 import { availableFonts } from './utils/colorUtils';
 import Header from './components/Header';
-import Explorer from './components/Explorer';
+import Explorer from './components/ui/Explorer';
 import FloatingActionButtons from './components/FloatingActionButtons';
 import ColorPreviewer from './components/ColorPreviewer';
 import SemanticPalettes from './components/SemanticPalettes';
 import { ExportModal, AccessibilityModal, ComponentPreviewModal, HistoryModal } from './components/modals';
+import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar';
 import AuthPage from './components/AuthPage';
 import LandingPage from './components/LandingPage';
 import LoginBanner from './components/LoginBanner';
@@ -23,16 +24,36 @@ const Share = {
 };
 // --- Fin de funciones simuladas ---
 
-const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
-  const { themeData } = hook;
+const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
+  const { 
+    themeData, font, setFont, brandColor, grayColor, isGrayAuto,
+    updateBrandColor, setGrayColor, setIsGrayAuto,
+    handleImport, handleReset, showNotification, 
+    handleRandomTheme, handleThemeToggle, 
+    handleUndo, handleRedo, history, historyIndex, goToHistoryState,
+    lightPreviewMode, setLightPreviewMode, 
+    darkPreviewMode, setDarkPreviewMode,
+    semanticPreviewMode, setSemanticPreviewMode,
+    fxSeparator, setFxSeparator, useFxQuotes, setUseFxQuotes,
+    simulationMode, cyclePreviewMode, 
+    explorerPalette, reorderExplorerPalette, explorerGrayShades, 
+    handleExplorerColorPick, paletteAdjustments, 
+    insertColorInPalette, removeColorFromPalette, explorerMethod, 
+    setExplorerMethod, replaceColorInPalette, setSimulationMode, 
+    generatePaletteWithAI, applySimulationToPalette,
+    setPaletteAdjustments, commitPaletteAdjustments, cancelPaletteAdjustments,
+    originalExplorerPalette,
+    lockedColors,
+    toggleLockColor,
+  } = hook;
 
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
   const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
+  const [isAdjusterSidebarVisible, setIsAdjusterSidebarVisible] = useState(false);
 
 
-  // --- Efecto para el atajo de teclado ---
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.code !== 'Space') return;
@@ -43,7 +64,9 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
       }
 
       e.preventDefault();
-      hook.handleRandomTheme();
+      // --- MODIFICADO ---
+      // La barra espaciadora ahora llama a la función sin parámetros
+      handleRandomTheme();
     };
 
     window.addEventListener('keydown', handleKeyPress);
@@ -51,17 +74,18 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [hook]);
+  }, [handleRandomTheme]);
 
 
   const handleNativeExport = async () => {
     const data = { 
-      brandColor: hook.brandColor, 
-      grayColor: hook.grayColor, 
-      font: hook.font, 
+      brandColor: brandColor, 
+      grayColor: grayColor, 
+      font: font, 
       theme: themeData.theme, 
-      isGrayAuto: hook.isGrayAuto,
-      explorerPalette: hook.originalExplorerPalette,
+      isGrayAuto: isGrayAuto,
+      explorerPalette: originalExplorerPalette,
+      lockedColors: lockedColors,
     };
     
     try {
@@ -76,18 +100,19 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
       });
     } catch (error) {
        console.log('Share API no disponible o cancelado', error);
-       hook.showNotification('La exportación nativa no está disponible en la web.', 'error');
+       showNotification('La exportación nativa no está disponible en la web.', 'error');
     }
   };
 
   const handleWebExport = () => {
     const data = { 
-      brandColor: hook.brandColor, 
-      grayColor: hook.grayColor, 
-      font: hook.font, 
+      brandColor: brandColor, 
+      grayColor: grayColor, 
+      font: font, 
       theme: themeData.theme, 
-      isGrayAuto: hook.isGrayAuto,
-      explorerPalette: hook.originalExplorerPalette,
+      isGrayAuto: isGrayAuto,
+      explorerPalette: originalExplorerPalette,
+      lockedColors: lockedColors,
     };
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
     const link = document.createElement("a");
@@ -110,7 +135,7 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
     backgroundColor: themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Predeterminado').color,
     color: themeData.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color,
     transition: 'background-color 0.3s ease, color 0.3s ease',
-    fontFamily: availableFonts[hook.font],
+    fontFamily: availableFonts[font],
   };
 
   return (
@@ -132,25 +157,92 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
 
       <div className="flex-grow p-4 md:p-8">
         <Header 
-          hook={hook}
-          onImport={hook.handleImport} 
+          onImport={handleImport} 
           onExport={isNative ? handleNativeExport : handleWebExport} 
-          onReset={hook.handleReset} 
+          onReset={handleReset} 
           onOpenExportModal={() => setIsExportModalVisible(true)}
           themeData={themeData} 
-          font={hook.font}
-          setFont={hook.setFont}
+          font={font}
+          setFont={setFont}
           user={user}
           onLogout={onLogout}
         />
         
         <main>
-          <Explorer hook={hook} />
+          <Explorer 
+            explorerPalette={explorerPalette}
+            reorderExplorerPalette={reorderExplorerPalette}
+            explorerGrayShades={explorerGrayShades}
+            handleExplorerColorPick={handleExplorerColorPick}
+            setGrayColor={setGrayColor}
+            paletteAdjustments={paletteAdjustments}
+            brandColor={brandColor}
+            updateBrandColor={updateBrandColor}
+            themeData={themeData}
+            insertColorInPalette={insertColorInPalette}
+            removeColorFromPalette={removeColorFromPalette}
+            explorerMethod={explorerMethod}
+            setExplorerMethod={setExplorerMethod}
+            replaceColorInPalette={replaceColorInPalette}
+            handleUndo={handleUndo}
+            handleRedo={handleRedo}
+            history={history}
+            historyIndex={historyIndex}
+            simulationMode={simulationMode}
+            setSimulationMode={setSimulationMode}
+            generatePaletteWithAI={generatePaletteWithAI}
+            showNotification={showNotification}
+            applySimulationToPalette={applySimulationToPalette}
+            onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
+            onOpenComponentPreviewModal={() => setIsComponentPreviewModal(true)}
+            onOpenAdjuster={() => setIsAdjusterSidebarVisible(true)}
+            lockedColors={lockedColors}
+            toggleLockColor={toggleLockColor}
+          />
           <div className="space-y-6 mb-8">
-            <ColorPreviewer title="Modo Claro" themeOverride="light" previewMode={hook.lightPreviewMode} onCyclePreviewMode={() => hook.cyclePreviewMode(hook.lightPreviewMode, hook.setLightPreviewMode, ['white', 'T950'])} hook={hook} onShadeCopy={hook.showNotification} />
-            <ColorPreviewer title="Modo Oscuro" themeOverride="dark" previewMode={hook.darkPreviewMode} onCyclePreviewMode={() => hook.cyclePreviewMode(hook.darkPreviewMode, hook.setDarkPreviewMode, ['black', 'T0'])} hook={hook} onShadeCopy={hook.showNotification} />
+            <ColorPreviewer 
+              title="Modo Claro" 
+              themeOverride="light" 
+              previewMode={lightPreviewMode} 
+              onCyclePreviewMode={() => cyclePreviewMode(lightPreviewMode, setLightPreviewMode, ['white', 'T950'])} 
+              onShadeCopy={showNotification}
+              brandColor={brandColor}
+              grayColor={grayColor}
+              isGrayAuto={isGrayAuto}
+              themeData={themeData}
+              updateBrandColor={updateBrandColor}
+              setGrayColor={setGrayColor}
+              setIsGrayAuto={setIsGrayAuto}
+              simulationMode={simulationMode}
+              // --- NUEVO ---
+              handleRandomTheme={handleRandomTheme}
+            />
+            <ColorPreviewer 
+              title="Modo Oscuro" 
+              themeOverride="dark" 
+              previewMode={darkPreviewMode} 
+              onCyclePreviewMode={() => cyclePreviewMode(darkPreviewMode, setDarkPreviewMode, ['black', 'T0'])} 
+              onShadeCopy={showNotification}
+              brandColor={brandColor}
+              grayColor={grayColor}
+              isGrayAuto={isGrayAuto}
+              themeData={themeData}
+              updateBrandColor={updateBrandColor}
+              setGrayColor={setGrayColor}
+              setIsGrayAuto={setIsGrayAuto}
+              simulationMode={simulationMode}
+              // --- NUEVO ---
+              handleRandomTheme={handleRandomTheme}
+            />
           </div>
-          <SemanticPalettes stylePalette={themeData.stylePalette} onCopy={hook.showNotification} themeData={themeData} previewMode={hook.semanticPreviewMode} onCyclePreviewMode={() => hook.cyclePreviewMode(hook.semanticPreviewMode, hook.setSemanticPreviewMode, ['card', 'white', 'T950', 'black', 'T0'])} simulationMode={hook.simulationMode} />
+          <SemanticPalettes 
+            stylePalette={themeData.stylePalette} 
+            onCopy={showNotification} 
+            themeData={themeData} 
+            previewMode={semanticPreviewMode} 
+            onCyclePreviewMode={() => cyclePreviewMode(semanticPreviewMode, setSemanticPreviewMode, ['card', 'white', 'T950', 'black', 'T0'])} 
+            simulationMode={simulationMode} 
+          />
         </main>
       </div>
 
@@ -160,27 +252,38 @@ const MainApp = ({ hook, isNative, user, onLogout, onNavigate }) => {
         </footer>
 
         {hook.notification.message && (<div className="fixed bottom-5 right-5 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-lg flex items-center gap-2" style={{ backgroundColor: hook.notification.type === 'error' ? '#EF4444' : '#10B981'}}>{hook.notification.message}</div>)}
-        {isExportModalVisible && <ExportModal onClose={() => setIsExportModalVisible(false)} themeData={themeData} fxSeparator={hook.fxSeparator} setFxSeparator={hook.setFxSeparator} useFxQuotes={hook.useFxQuotes} setUseFxQuotes={hook.setUseFxQuotes} onCopy={hook.showNotification} />}
-        {isAccessibilityModalVisible && <AccessibilityModal onClose={() => setIsAccessibilityModalVisible(false)} accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={hook.showNotification} />}
-        {isComponentPreviewModalVisible && <ComponentPreviewModal onClose={() => setIsComponentPreviewModalVisible(false)} primaryButtonTextColor={themeData.primaryButtonTextColor} />}
         
-        {isHistoryModalVisible && <HistoryModal history={hook.history} onSelect={hook.goToHistoryState} onClose={() => setIsHistoryModalVisible(false)} />}
+        {isExportModalVisible && <ExportModal onClose={() => setIsExportModalVisible(false)} themeData={themeData} fxSeparator={fxSeparator} setFxSeparator={setFxSeparator} useFxQuotes={useFxQuotes} setUseFxQuotes={setUseFxQuotes} onCopy={showNotification} />}
+        {isAccessibilityModalVisible && <AccessibilityModal onClose={() => setIsAccessibilityModalVisible(false)} accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={showNotification} />}
+        {isComponentPreviewModalVisible && <ComponentPreviewModal onClose={() => setIsComponentPreviewModal(false)} primaryButtonTextColor={themeData.primaryButtonTextColor} />}
+        {isHistoryModalVisible && <HistoryModal history={history} onSelect={goToHistoryState} onClose={() => setIsHistoryModalVisible(false)} />}
 
+        {isAdjusterSidebarVisible && (
+          <PaletteAdjusterSidebar
+            paletteAdjustments={paletteAdjustments}
+            setPaletteAdjustments={setPaletteAdjustments}
+            commitPaletteAdjustments={commitPaletteAdjustments}
+            cancelPaletteAdjustments={cancelPaletteAdjustments}
+            setIsAdjusterSidebarVisible={setIsAdjusterSidebarVisible}
+            brandColor={brandColor}
+          />
+        )}
 
-        {/* --- MODIFICACIÓN --- Se pasa la función para abrir el modal al componente correcto --- */}
-        <FloatingActionButtons 
-          onRandomClick={hook.handleRandomTheme} 
-          onThemeToggle={hook.handleThemeToggle} 
-          currentTheme={themeData.theme} 
-          onUndo={hook.handleUndo} 
-          onRedo={hook.handleRedo} 
-          canUndo={hook.historyIndex > 0} 
-          canRedo={hook.historyIndex < hook.history.length - 1}
-          onOpenHistoryModal={() => setIsHistoryModalVisible(true)}
-        />
+        {!isAdjusterSidebarVisible && (
+          <FloatingActionButtons 
+            onRandomClick={() => handleRandomTheme()} // --- MODIFICADO --- Llama a la función sin parámetros
+            onThemeToggle={handleThemeToggle} 
+            currentTheme={themeData.theme} 
+            onUndo={handleUndo} 
+            onRedo={handleRedo} 
+            canUndo={historyIndex > 0} 
+            canRedo={historyIndex < history.length - 1}
+            onOpenHistoryModal={() => setIsHistoryModalVisible(true)}
+          />
+        )}
     </div>
   );
-}
+});
 
 
 function App() {
@@ -198,37 +301,35 @@ function App() {
     }
   }, [hook.themeData?.theme]);
   
-  const handleNavigate = (newRoute) => {
+  const handleNavigate = useCallback((newRoute) => {
       setRoute(newRoute);
-  }
+  }, []);
 
-  const handleLoginSuccess = (userData) => {
+  const handleLoginSuccess = useCallback((userData) => {
       setUser(userData);
       setRoute('generator');
-  }
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
       setUser(null);
       setRoute('landing');
       hook.showNotification('Has cerrado sesión.');
-  }
+  }, [hook]);
   
-  const CurrentView = () => {
-    switch (route) {
-        case 'landing':
-            return <LandingPage onNavigate={handleNavigate} />;
-        case 'auth':
-            return <AuthPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
-        case 'generator':
-            return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>;
-        default:
-            return <LandingPage onNavigate={handleNavigate} />;
-    }
-  }
-
   return (
     <div className="w-full min-h-screen flex flex-col">
-      <CurrentView />
+      {(() => {
+        switch (route) {
+          case 'landing':
+            return <LandingPage onNavigate={handleNavigate} />;
+          case 'auth':
+            return <AuthPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+          case 'generator':
+            return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>;
+          default:
+            return <LandingPage onNavigate={handleNavigate} />;
+        }
+      })()}
     </div>
   );
 }

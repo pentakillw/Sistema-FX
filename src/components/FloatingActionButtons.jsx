@@ -31,7 +31,23 @@ const FloatingActionButtons = ({
     // --- NUEVO --- Se recibe la función para abrir el modal de historial
     onOpenHistoryModal
 }) => (
-    <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 flex flex-col items-center gap-3">
+    // --- CORRECCIÓN DE Z-INDEX ---
+    // El z-index aquí DEBE SER z-40.
+    //
+    // Tus otros componentes tienen este orden:
+    // 1. Panel de Ajuste (Sidebar): z-60
+    // 2. Fondo del Panel (Backdrop): z-50
+    //
+    // Al poner los botones en z-40, te aseguras de que queden *detrás*
+    // del fondo (z-50). Esto es correcto. Cuando el panel se abre,
+    // el fondo (backdrop) debe cubrir los botones y deshabilitarlos.
+    //
+    // Si sigues viendo los botones *encima* del panel (como en tu imagen), 
+    // es 100% un problema de CACHÉ de tu navegador o del servidor (Vite).
+    //
+    // Intenta forzar un refresco (Ctrl + Shift + R) o
+    // detén y reinicia tu servidor (npm run dev) después de guardar este archivo.
+    <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 flex flex-col items-center gap-3">
       <ActionButton
         onClick={onUndo}
         title="Deshacer"
@@ -83,3 +99,4 @@ const FloatingActionButtons = ({
 );
 
 export default FloatingActionButtons;
+

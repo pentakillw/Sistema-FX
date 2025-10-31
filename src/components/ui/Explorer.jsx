@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, Accessibility, TestTube2, Pipette, Wand2 } from 'lucide-react';
+import React, { useState, memo, useRef } from 'react';
+// --- MODIFICADO --- Importamos Lock y Star
+import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, Accessibility, TestTube2, Pipette, Wand2, Lock, Star } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import ColorPalette from './ColorPalette.jsx';
-import { VariationsModal, PaletteContrastChecker, PaletteAdjusterModal, ImagePaletteModal, AIPaletteModal, AccessibilityModal, ComponentPreviewModal } from './modals/index.jsx';
-import { generationMethods, generateShades } from '../utils/colorUtils.js';
+import ColorPalette from '../ColorPalette.jsx';
+import { VariationsModal, PaletteContrastChecker, ImagePaletteModal, AIPaletteModal, AccessibilityModal, ComponentPreviewModal } from '../modals/index.jsx';
+import { generationMethods, generateShades } from '../../utils/colorUtils.js';
+import { HexColorPicker } from 'react-colorful';
+import ColorActionMenu from './ColorActionMenu.jsx';
 
 const backgroundModeLabels = {
     'T950': 'Fondo T950',
@@ -27,30 +30,73 @@ const getPreviewBgColor = (mode, shades, cardColor) => {
     }
 }
 
-const Explorer = ({ hook }) => {
+const ColorPickerPopover = ({ color, onChange, onClose }) => {
+    const [localColor, setLocalColor] = useState(color);
+
+    const handleOk = () => {
+        onChange(localColor);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center" onClick={handleOk}>
+            <div className="p-4 rounded-xl border shadow-2xl" 
+                 style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+                 onClick={(e) => e.stopPropagation()}>
+                <HexColorPicker color={localColor} onChange={setLocalColor} />
+                <div className="flex items-center gap-2 mt-4">
+                    <div className="w-6 h-6 rounded-md border" style={{ backgroundColor: localColor, borderColor: 'var(--border-default)' }}></div>
+                    <input 
+                        type="text"
+                        value={localColor.toUpperCase()}
+                        onChange={(e) => setLocalColor(e.target.value)}
+                        className="w-full font-mono text-sm px-2 py-1 rounded-md border"
+                        style={{ backgroundColor: 'var(--bg-muted)', borderColor: 'var(--border-default)', color: 'var(--text-default)'}}
+                    />
+                    <button
+                        onClick={handleOk}
+                        className="text-sm font-semibold px-4 py-1 rounded-md text-white"
+                        style={{ backgroundColor: 'var(--action-primary-default)' }}
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+const Explorer = (props) => {
     const {
         explorerPalette, reorderExplorerPalette, explorerGrayShades, 
-        handleExplorerColorPick, setGrayColor, paletteAdjustments, setPaletteAdjustments,
+        handleExplorerColorPick, setGrayColor,
         brandColor, updateBrandColor, themeData, insertColorInPalette,
         removeColorFromPalette, explorerMethod, setExplorerMethod, replaceColorInPalette,
         handleUndo, handleRedo, history, historyIndex, simulationMode,
         setSimulationMode, generatePaletteWithAI, showNotification,
-        applySimulationToPalette
-    } = hook;
+        applySimulationToPalette,
+        onOpenAdjuster,
+        onOpenAccessibilityModal,
+        onOpenComponentPreviewModal,
+        lockedColors,
+        toggleLockColor,
+    } = props;
     
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
-    const [isPaletteAdjusterVisible, setIsPaletteAdjusterVisible] = useState(false);
     const [colorModePreview, setColorModePreview] = useState('card');
     const [isExpanded, setIsExpanded] = useState(false);
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
     const [isAIModalVisible, setIsAIModalVisible] = useState(false);
     const [baseColorForShades, setBaseColorForShades] = useState(null);
-    const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
-    const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
     const [isMethodMenuVisible, setIsMethodMenuVisible] = useState(false);
     const [isSimulationMenuVisible, setIsSimulationMenuVisible] = useState(false);
+    const [pickerColor, setPickerColor] = useState(null); 
+    const [activeColorMenu, setActiveColorMenu] = useState(null); 
+    const paletteContainerRef = useRef(null);
+
 
     if (!themeData || !themeData.stylePalette || !themeData.grayShades) {
         return null;
@@ -74,7 +120,6 @@ const Explorer = ({ hook }) => {
         }
     };
     
-    // --- NUEVA FUNCIÓN ---
     const handleCyclePreviewMode = () => {
         const options = ['card', 'white', 'black', 'T0', 'T950'];
         const currentIndex = options.indexOf(colorModePreview);
@@ -94,15 +139,28 @@ const Explorer = ({ hook }) => {
         { value: "achromatomaly", label: "Acromatomalía" }
     ];
 
+    const handleColorBarClick = (e, index) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setActiveColorMenu({
+            index,
+            rect,
+        });
+    };
+
+
     return (
         <>
-            <section className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}>
+            <section 
+                ref={paletteContainerRef}
+                className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} 
+                style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
+            >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div className="flex-1 min-w-0">
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
                         <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Arrastra, inserta o quita colores para crear tu paleta.</p>
                     </div>
-                    {/* --- CONTROLES MODIFICADOS --- */}
+                    
                     <div className="flex items-center flex-wrap justify-end gap-2 self-end sm:self-auto">
                         <button
                             onClick={handleCyclePreviewMode}
@@ -184,6 +242,7 @@ const Explorer = ({ hook }) => {
                     </div>
                 </div>
 
+
                 <div style={simulationFilterStyle}>
                     <div className="overflow-x-auto sm:overflow-x-visible pb-2 -mb-2">
                          <DragDropContext onDragEnd={onDragEnd}>
@@ -208,9 +267,21 @@ const Explorer = ({ hook }) => {
                                                             {...provided.dragHandleProps}
                                                             className="relative group/item h-full w-full cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform duration-100 ease-in-out"
                                                             style={{ backgroundColor: shade, minWidth: '50px' }}
-                                                            onClick={() => handleExplorerColorPick(shade)}
-                                                            title={`Usar ${shade.toUpperCase()}`}
+                                                            onClick={(e) => handleColorBarClick(e, index)}
+                                                            title={`Acciones para ${shade.toUpperCase()}`}
                                                         >
+                                                            {/* --- NUEVO: Indicador de Color de Marca --- */}
+                                                            {shade === brandColor && (
+                                                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 p-1 bg-black/30 rounded-full text-white z-10" title="Color de Marca Actual">
+                                                                    <Star size={10} className="fill-white" />
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {lockedColors.includes(shade) && (
+                                                                <div className="absolute top-2 left-2 p-1 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
+                                                                    <Lock size={10} />
+                                                                </div>
+                                                            )}
                                                             <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
                                                                 {shade.substring(1).toUpperCase()}
                                                             </span>
@@ -248,14 +319,14 @@ const Explorer = ({ hook }) => {
                      <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-4">
                         <p className="text-sm font-semibold self-start sm:self-center" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Escala de Grises Sugerida</p>
                         <div className="flex items-center gap-2 self-start sm:self-center">
-                             <button onClick={() => setIsAccessibilityModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                             <button onClick={onOpenAccessibilityModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <Accessibility size={14}/> <span className="hidden sm:inline">Accesibilidad</span>
                             </button>
-                            <button onClick={() => setIsComponentPreviewModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                            <button onClick={onOpenComponentPreviewModal} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <TestTube2 size={14}/> <span className="hidden sm:inline">Componentes</span>
                             </button>
                              <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block"></div>
-                            <button onClick={() => setIsPaletteAdjusterVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                            <button onClick={onOpenAdjuster} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
                                 <Settings size={14} /> <span className="hidden sm:inline">Ajustar</span>
                             </button>
                             <button onClick={() => setIsVariationsVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
@@ -277,9 +348,60 @@ const Explorer = ({ hook }) => {
                 </div>
             </section>
             
+            {activeColorMenu && (
+                <ColorActionMenu
+                    style={{
+                        top: `${activeColorMenu.rect.bottom + window.scrollY + 8}px`,
+                        left: `${activeColorMenu.rect.left + activeColorMenu.rect.width / 2}px`,
+                        transform: 'translateX(-50%)',
+                    }}
+                    color={explorerPalette[activeColorMenu.index]}
+                    isLocked={lockedColors.includes(explorerPalette[activeColorMenu.index])}
+                    onClose={() => setActiveColorMenu(null)}
+                    onSetAsBrand={() => {
+                        handleExplorerColorPick(explorerPalette[activeColorMenu.index]);
+                        setActiveColorMenu(null);
+                    }}
+                    onOpenPicker={() => {
+                        setPickerColor({ index: activeColorMenu.index, color: explorerPalette[activeColorMenu.index] });
+                        setActiveColorMenu(null);
+                    }}
+                    onRemove={() => {
+                        removeColorFromPalette(activeColorMenu.index);
+                        setActiveColorMenu(null);
+                    }}
+                    onCopy={() => {
+                        const color = explorerPalette[activeColorMenu.index];
+                        navigator.clipboard.writeText(color);
+                        showNotification(`Color ${color.toUpperCase()} copiado!`);
+                        setActiveColorMenu(null);
+                    }}
+                    onToggleLock={() => {
+                        toggleLockColor(explorerPalette[activeColorMenu.index]);
+                        // Mantenemos el menú abierto para que el usuario vea el cambio
+                        // setActiveColorMenu(null); 
+                    }}
+                />
+            )}
+
+
+            {pickerColor && (
+                <ColorPickerPopover 
+                    color={pickerColor.color}
+                    onClose={() => setPickerColor(null)}
+                    onChange={(newColor) => {
+                        replaceColorInPalette(pickerColor.index, newColor);
+                    }}
+                />
+            )}
+            
             {isExpanded && (
                 <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={(e) => { e.stopPropagation(); setIsExpanded(false); setActiveShadeIndex(null);}}>
-                    <div className="w-full h-full p-4 flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                    <div 
+                        className="w-full h-full p-4 flex flex-col items-center justify-center" 
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseUp={(e) => e.stopPropagation()}
+                    >
                         <div className="absolute top-4 left-4 flex gap-2 z-30">
                             <button onClick={(e) => { e.stopPropagation(); handleUndo(); }} disabled={!history || historyIndex <= 0} className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Deshacer cambio de paleta" ><Undo2 size={24} /></button>
                             <button onClick={(e) => { e.stopPropagation(); handleRedo(); }} disabled={!history || historyIndex >= history.length - 1} className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Rehacer cambio de paleta" ><Redo2 size={24} /></button>
@@ -293,9 +415,26 @@ const Explorer = ({ hook }) => {
                                             <Draggable key={"expanded-" + color + index} draggableId={"expanded-" + color + index} index={index}>
                                                 {(provided) => (
                                                     <div ref={provided.innerRef} {...provided.draggableProps} className="relative group h-full flex flex-col items-center justify-end text-white font-bold text-lg" style={{...provided.draggableProps.style, minWidth: '100px', flex: '1 1 0px' }} >
-                                                        <div {...provided.dragHandleProps} className="w-full h-full cursor-grab active:cursor-grabbing" style={{backgroundColor: color}}></div>
-                                                        {activeShadeIndex !== index && (
+                                                        <div 
+                                                            {...provided.dragHandleProps} 
+                                                            className="w-full h-full cursor-grab active:cursor-grabbing" 
+                                                            style={{backgroundColor: color}}
+                                                            onClick={(e) => handleColorBarClick(e, index)}
+                                                        ></div>
+                                                        
+                                                        {activeColorMenu?.index !== index && (
                                                             <>
+                                                                {/* --- NUEVO: Indicador de Color de Marca --- */}
+                                                                {color === brandColor && (
+                                                                    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color de Marca Actual">
+                                                                        <Star size={14} className="fill-white" />
+                                                                    </div>
+                                                                )}
+                                                                {lockedColors.includes(color) && (
+                                                                    <div className="absolute top-2 left-2 p-1 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
+                                                                        <Lock size={12} />
+                                                                    </div>
+                                                                )}
                                                                 <div className="text-center transition-opacity duration-300 pointer-events-none absolute bottom-4">
                                                                     <p className="font-mono text-sm hidden sm:block" style={{ color: tinycolor(color).isLight() ? '#000' : '#FFF' }}>{color.toUpperCase()}</p>
                                                                 </div>
@@ -336,12 +475,9 @@ const Explorer = ({ hook }) => {
             {isImageModalVisible && ( <ImagePaletteModal onColorSelect={updateBrandColor} onClose={() => setIsImageModalVisible(false)} /> )}
             {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={updateBrandColor} />}
             {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
-            {isPaletteAdjusterVisible && <PaletteAdjusterModal adjustments={paletteAdjustments} onAdjust={setPaletteAdjustments} onClose={() => setIsPaletteAdjusterVisible(false)} brandColor={brandColor} />}
-            {isAccessibilityModalVisible && <AccessibilityModal accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={(msg) => showNotification(msg)} onClose={() => setIsAccessibilityModalVisible(false)}/>}
-            {isComponentPreviewModalVisible && <ComponentPreviewModal primaryButtonTextColor={themeData.primaryButtonTextColor} onClose={() => setIsComponentPreviewModalVisible(false)}/>}
         </>
     );
 };
 
-export default Explorer;
+export default memo(Explorer);
 
