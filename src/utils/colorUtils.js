@@ -66,16 +66,43 @@ export const generateShades = (hex) => {
   return shades;
 };
 
+// --- NUEVO: Lista de colores primarios y secundarios para sesgar la aleatoriedad ---
+const primaryHues = [
+    { h: 0, s: 0.9, l: 0.45 },   // Rojo
+    { h: 30, s: 0.95, l: 0.5 }, // Naranja
+    { h: 60, s: 0.9, l: 0.5 },  // Amarillo
+    { h: 120, s: 0.8, l: 0.4 }, // Verde
+    { h: 220, s: 0.9, l: 0.5 }, // Azul
+    { h: 275, s: 0.7, l: 0.45 },// Morado/Púrpura
+    { h: 320, s: 0.9, l: 0.55 },// Rosa/Magenta
+    { h: 25, s: 0.6, l: 0.3 }   // Café
+];
+
 // --- MODIFICADO --- Se actualiza la firma de la función
 export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseColorHex = null) => {
     
-    const baseColor = baseColorHex 
-        ? tinycolor(baseColorHex)
-        : tinycolor({
-            h: Math.random() * 360,
-            s: 0.3 + Math.random() * 0.5,
-            l: 0.4 + Math.random() * 0.3,
-          });
+    let baseColor;
+    if (baseColorHex) {
+        // 1. Si se provee un color base (desde un tono), usarlo.
+        baseColor = tinycolor(baseColorHex);
+    } else {
+        // 2. Si NO se provee un color base (aleatorio puro):
+        const biasCheck = Math.random();
+
+        // --- NUEVA LÓGICA DE SESGO ---
+        // 30% de probabilidad de forzar un color primario/secundario
+        if (biasCheck < 0.3) { 
+            const specialColor = primaryHues[Math.floor(Math.random() * primaryHues.length)];
+            baseColor = tinycolor(specialColor);
+        } else {
+            // 70% de probabilidad de usar la lógica aleatoria original
+            baseColor = tinycolor({
+                h: Math.random() * 360,
+                s: 0.3 + Math.random() * 0.5,
+                l: 0.4 + Math.random() * 0.3,
+            });
+        }
+    }
 
     // --- MODIFICADO --- Si el método es 'auto', elige uno aleatorio. Si no, usa el método.
     let harmonyMethod = method;
