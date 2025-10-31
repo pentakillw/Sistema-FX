@@ -1,10 +1,8 @@
 import React, { useRef, useState } from 'react';
-// --- MODIFICACIÓN --- Se elimina el ícono Clock ---
 import { RefreshCcw, Upload, Download, HelpCircle, FileCode, Type, User, LogOut } from 'lucide-react';
 import { HelpModal } from './modals';
 import { availableFonts } from '../utils/colorUtils';
 
-// --- MODIFICACIÓN --- Se elimina onOpenHistoryModal de las props ---
 const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, font, setFont, user, onLogout }) => {
     const importFileRef = useRef(null);
     const [isHelpVisible, setIsHelpVisible] = useState(false);
@@ -16,11 +14,11 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
 
     return (
         <>
-            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                 <div className="flex items-center gap-4">
-                    <img src="https://raw.githubusercontent.com/pentakillw/sistema-de-diseno-react/main/Icono_FX.png" alt="Sistema FX Logo" className="h-16 w-16 md:h-20 md:w-20 rounded-2xl shadow-md"/>
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-4">
+                 <div className="flex items-center gap-3 sm:gap-4">
+                    <img src="https://raw.githubusercontent.com/pentakillw/sistema-de-diseno-react/main/Icono_FX.png" alt="Sistema FX Logo" className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 rounded-2xl shadow-md"/>
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: pageTextColor }}>BIENVENIDOS</h1>
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold" style={{ color: pageTextColor }}>BIENVENIDOS</h1>
                         <p className="text-sm md:text-md" style={{ color: mutedTextColor }}>al sistema de diseño FX</p>
                     </div>
                 </div>

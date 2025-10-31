@@ -9,6 +9,10 @@
 html, body {
   overflow-x: hidden;
   width: 100%;
+  /* --- NUEVO: Evita el auto-zoom de texto en móviles --- */
+  -webkit-text-size-adjust: 100%; /* Safari */
+  -ms-text-size-adjust: 100%; /* IE */
+  text-size-adjust: 100%; /* Standard */
 }
 
 /* Mejora de estilos para los menús desplegables en modo oscuro */
@@ -27,3 +31,4 @@ body {
 /* --- ESTILOS DE SLIDER ANTIGUOS ELIMINADOS --- */
 /* Ya no se necesitan las clases .custom-slider-* las hemos borrado para limpiar el código.
 */
+

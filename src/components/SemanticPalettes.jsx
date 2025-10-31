@@ -74,16 +74,16 @@ const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCycl
     };
 
     return (
-        <section className="p-4 sm:p-6 rounded-xl border mb-8" style={{ backgroundColor: bgColor, borderColor: 'var(--border-default)', ...simulationFilterStyle }}>
+        <section className="p-2 sm:p-6 rounded-xl border mb-4 sm:mb-8" style={{ backgroundColor: bgColor, borderColor: 'var(--border-default)', ...simulationFilterStyle }}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <h2 className="font-bold text-lg" style={{ color: textColor }}>Paletas Semánticas</h2>
-                <div className="flex items-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-1 sm:gap-2 self-start sm:self-center flex-wrap">
                     <span className="text-xs font-mono p-1 rounded-md" style={{ backgroundColor: buttonBg, color: textColor }}>
                         {backgroundModeLabels[previewMode]}
                     </span>
                     <button
                         onClick={onCyclePreviewMode}
-                        className="text-sm font-medium py-1 px-3 rounded-lg flex items-center gap-2"
+                        className="text-sm font-medium py-1 px-3 rounded-lg flex items-center gap-1 sm:gap-2"
                         style={{ backgroundColor: buttonBg, color: textColor }}
                     >
                         <Layers size={14} /> Alternar Fondo
