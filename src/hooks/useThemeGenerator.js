@@ -1,14 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import tinycolor from 'tinycolor2';
-// --- MODIFICADO --- Se importa `generateAdvancedRandomPalette` desde colorUtils
 import { generateShades, generateAdvancedRandomPalette, applyColorMatrix, colorblindnessMatrices } from '../utils/colorUtils.js';
 
 const defaultState = {
     theme: 'light',
     brandColor: '#009fdb',
-    // --- ELIMINADO --- El estado 'isGrayAuto' ya no es necesario
-    // isGrayAuto: true, 
-    grayColor: '#5d5d5d', // Ahora este es un color de inicio independiente
+    grayColor: '#5d5d5d', // Color gris por defecto inicial
     font: 'Segoe UI',
     fxSeparator: ';',
     useFxQuotes: true,
@@ -18,24 +15,29 @@ const defaultState = {
 
 const defaultPaletteAdjustments = { hue: 0, saturation: 0, brightness: 0, temperature: 0 };
 
+// --- LÓGICA DE GRIS AUTOMÁTICO ---
+// Esta función ahora vive aquí y será llamada explícitamente.
+const getAutoGrayColor = (brandColor) => {
+    return tinycolor(brandColor).desaturate(85).toHexString();
+};
+// --- FIN LÓGICA GRIS ---
+
 const useThemeGenerator = () => {
     const [theme, setTheme] = useState(defaultState.theme);
     const [brandColor, setBrandColor] = useState(defaultState.brandColor);
-    const [grayColor, setGrayColor] = useState(defaultState.grayColor);
-    // --- ELIMINADO ---
-    // const [isGrayAuto, setIsGrayAuto] = useState(defaultState.isGrayAuto);
+    // --- MODIFICADO --- El estado inicial del gris ahora se deriva del brandColor por defecto
+    const [grayColor, setGrayColor] = useState(getAutoGrayColor(defaultState.brandColor));
     const [font, setFont] = useState(defaultState.font);
     const [lockedColors, setLockedColors] = useState(defaultState.lockedColors);
 
     const [history, setHistory] = useState([{
         brandColor: defaultState.brandColor,
-        grayColor: defaultState.grayColor,
+        grayColor: getAutoGrayColor(defaultState.brandColor), // Asegura que el historial inicial sea correcto
         explorerPalette: defaultState.explorerPalette,
         lockedColors: defaultState.lockedColors, 
     }]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
-    // --- MODIFICADO --- El método por defecto vuelve a ser 'auto'
     const [explorerMethod, setExplorerMethod] = useState('auto');
     const [explorerPalette, setExplorerPalette] = useState(defaultState.explorerPalette); 
     const [originalExplorerPalette, setOriginalExplorerPalette] = useState([]); 
@@ -84,48 +86,41 @@ const useThemeGenerator = () => {
         }
     };
 
+    // --- CORRECCIÓN 1 ---
+    // updateBrandColor ahora TAMBIÉN actualiza grayColor
     const updateBrandColor = useCallback((newColor) => {
         if (!newColor || newColor === brandColor) return;
 
-        // --- MODIFICADO --- La lógica de 'isGrayAuto' se ha eliminado
         setBrandColor(newColor);
+        
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Generamos un nuevo color gris basado en el 'newColor'
+        const newGrayColor = getAutoGrayColor(newColor);
+        setGrayColor(newGrayColor); // <-- Actualizamos también el gris
+        // --- FIN DE LA CORRECCIÓN ---
 
         saveStateToHistory({ 
             brandColor: newColor, 
-            grayColor: grayColor, // Simplemente pasa el color gris actual
+            grayColor: newGrayColor, // <-- Guardamos el NUEVO gris
             explorerPalette: originalExplorerPalette,
             lockedColors: lockedColors,
         });
-
-    }, [brandColor, grayColor, originalExplorerPalette, history, historyIndex, lockedColors]); // 'isGrayAuto' eliminado de las dependencias
-
-    // --- ELIMINADO ---
-    // El 'useEffect' que vinculaba 'grayColor' a 'brandColor' se ha eliminado por completo.
-    /*
-    useEffect(() => {
-        if (isGrayAuto) {
-            ...
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isGrayAuto, brandColor, lockedColors]);
-    */
-   
-    // --- ELIMINADO ---
-    // El 'useEffect' que sincronizaba 'isGrayAuto' al inicio ya no es necesario.
-    /*
-    useEffect(() => {
-        if (isGrayAuto) {
-            ...
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-    */
+        
+    }, [brandColor, originalExplorerPalette, history, historyIndex, lockedColors]); // grayColor ya no es dependencia
 
     const updatePaletteState = (newPalette, newBrandColor = brandColor) => {
         setOriginalExplorerPalette(newPalette);
         
-        // --- MODIFICADO --- La lógica de 'isGrayAuto' se ha eliminado
-        saveStateToHistory({ brandColor: newBrandColor, grayColor: grayColor, explorerPalette: newPalette, lockedColors: lockedColors });
+        // --- CORRECCIÓN ---
+        // Se asegura que el grayColor se actualice si el brandColor cambia
+        const newGrayColor = getAutoGrayColor(newBrandColor);
+        if(newBrandColor !== brandColor) {
+            setBrandColor(newBrandColor);
+        }
+        setGrayColor(newGrayColor); 
+        // --- FIN CORRECCIÓN ---
+        
+        saveStateToHistory({ brandColor: newBrandColor, grayColor: newGrayColor, explorerPalette: newPalette, lockedColors: lockedColors });
     };
 
     const applySimulationToPalette = () => {
@@ -147,7 +142,7 @@ const useThemeGenerator = () => {
         const items = Array.from(originalExplorerPalette);
         const [reorderedItem] = items.splice(sourceIndex, 1);
         items.splice(destinationIndex, 0, reorderedItem);
-        updatePaletteState(items);
+        updatePaletteState(items); // updatePaletteState se encargará de brand/gray/history
     };
     
     const insertColorInPalette = (index) => {
@@ -268,7 +263,9 @@ const useThemeGenerator = () => {
                         return newPaletteFromAI[index] || tinycolor.random().toHexString();
                     });
 
-                    updatePaletteState(finalPalette);
+                    // La IA define la paleta, pero el color de marca sigue siendo el primero libre o el base
+                    const newBrandColor = finalPalette.filter(c => !lockedColors.includes(c))[0] || finalPalette[0];
+                    updatePaletteState(finalPalette, newBrandColor);
                     return true;
                 }
             }
@@ -282,18 +279,20 @@ const useThemeGenerator = () => {
     
     useEffect(() => {
         if (originalExplorerPalette.length === 0 && brandColor) {
-            // --- MODIFICADO --- 'isGrayAuto' ya no se evalúa
             const { palette } = generateAdvancedRandomPalette(5);
             setOriginalExplorerPalette(palette);
             
-            const initialGray = defaultState.grayColor; // Usa el gris por defecto
+            // --- MODIFICADO ---
+            // Asegura que el gris inicial se base en el brandColor inicial
+            const initialGray = getAutoGrayColor(brandColor);
+            setGrayColor(initialGray); // Setea el estado del gris
 
             const initialState = { brandColor, grayColor: initialGray, explorerPalette: palette, lockedColors: [] };
             setHistory([initialState]);
             setHistoryIndex(0);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [brandColor]);
+    }, [brandColor]); // Solo depende de brandColor para la carga inicial
 
     const showNotification = (message, type = 'success') => {
         setNotification({ message, type });
@@ -332,10 +331,12 @@ const useThemeGenerator = () => {
         
         setExplorerPalette(adjusted);
         
-        const grayBase = adjusted.length > 0 ? adjusted[Math.floor(adjusted.length / 2)] : tinycolor.random().toHexString();
-        setExplorerGrayShades(generateShades(tinycolor(grayBase).desaturate(85).toHexString()));
+        // --- MODIFICADO ---
+        // La escala de grises del explorador (la vista previa pequeña)
+        // ahora se basa en el 'grayColor' principal, no en la paleta.
+        setExplorerGrayShades(generateShades(grayColor));
 
-    }, [originalExplorerPalette, paletteAdjustments, lockedColors]);
+    }, [originalExplorerPalette, paletteAdjustments, lockedColors, grayColor]); // <-- Se añade grayColor como dependencia
 
 
     useEffect(() => {
@@ -346,6 +347,8 @@ const useThemeGenerator = () => {
 
     
     useEffect(() => {
+        // Este efecto ahora depende de brandColor Y grayColor.
+        // Cuando CUALQUIERA de ellos cambie, TODAS las paletas se regenerarán.
         const brandShades = generateShades(brandColor);
         const grayShades = generateShades(grayColor);
         
@@ -358,6 +361,10 @@ const useThemeGenerator = () => {
             grayShades: generateShades(tinycolor(accentColor).desaturate(85).toHexString()),
         };
 
+        // --- CORRECCIÓN 3 ---
+        // Las paletas semánticas (info, success, etc.) ahora se mezclan
+        // con el 'grayColor' del estado, no con un 'infoBase' estático.
+        // Esto las hace dinámicas y dependientes del tema.
         const infoBase = '#0ea5e9', successBase = '#22c55e', attentionBase = '#f97316', criticalBase = '#ef4444',
               purpleBase = '#a855f7', tealBase = '#14b8a6', pinkBase = '#ec4899';
 
@@ -368,6 +375,7 @@ const useThemeGenerator = () => {
               purple = tinycolor.mix(purpleBase, grayColor, 15).saturate(10).toHexString(),
               teal = tinycolor.mix(tealBase, grayColor, 15).saturate(10).toHexString(),
               pink = tinycolor.mix(pinkBase, grayColor, 15).saturate(10).toHexString();
+        // --- FIN CORRECCIÓN 3 ---
 
         let stylePalette = {
           decorateColors: [
@@ -469,7 +477,7 @@ const useThemeGenerator = () => {
         document.documentElement.style.setProperty('--bg-muted', theme === 'light' ? grayShades[17] : grayShades[2]);
         document.documentElement.style.setProperty('--action-primary-default', brandShades[4]);
 
-    }, [brandColor, grayColor, theme, originalExplorerPalette, lockedColors]);
+    }, [brandColor, grayColor, theme, originalExplorerPalette, lockedColors]); // <-- Dependencias correctas
 
 
     const handleImport = (event) => {
@@ -483,18 +491,22 @@ const useThemeGenerator = () => {
                 const importedLockedColors = imported.lockedColors || [];
                 
                 setBrandColor(imported.brandColor);
-                setGrayColor(imported.grayColor);
+                // --- MODIFICADO ---
+                // Si 'isGrayAuto' es true (o no existe), genera el gris. Si no, usa el gris guardado.
+                const newGrayColor = (imported.isGrayAuto === true || imported.isGrayAuto === undefined) 
+                    ? getAutoGrayColor(imported.brandColor) 
+                    : imported.grayColor;
+                setGrayColor(newGrayColor);
+                
                 setFont(imported.font);
                 setTheme(imported.theme);
-                // --- ELIMINADO --- 'isGrayAuto' ya no se importa
-                // setIsGrayAuto(imported.isGrayAuto);
                 setOriginalExplorerPalette(importedPalette);
                 setLockedColors(importedLockedColors);
                 setPaletteAdjustments(defaultPaletteAdjustments); 
                 
                 const newState = {
                     brandColor: imported.brandColor,
-                    grayColor: imported.grayColor,
+                    grayColor: newGrayColor,
                     explorerPalette: importedPalette,
                     lockedColors: importedLockedColors,
                 };
@@ -508,21 +520,26 @@ const useThemeGenerator = () => {
         reader.readAsText(file);
     };
 
+    // --- CORRECCIÓN 2 ---
+    // handleReset ahora TAMBIÉN recalcula el grayColor
     const handleReset = () => {
         const { palette } = generateAdvancedRandomPalette(5);
         setTheme(defaultState.theme);
         setBrandColor(defaultState.brandColor);
-        // --- ELIMINADO ---
-        // setIsGrayAuto(defaultState.isGrayAuto);
         setFont(defaultState.font);
         
-        // --- MODIFICADO ---
-        const newGrayColor = defaultState.grayColor; // Simplemente usa el gris por defecto
-        setGrayColor(newGrayColor);
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Generamos el gris por defecto a partir del color de marca por defecto.
+        const newGrayColor = getAutoGrayColor(defaultState.brandColor); 
+        setGrayColor(newGrayColor); // <-- Actualizamos el estado del color gris
+        // --- FIN DE LA CORRECCIÓN ---
         
         setOriginalExplorerPalette(palette);
         setLockedColors([]);
         setPaletteAdjustments(defaultPaletteAdjustments);
+        
+        // --- MODIFICADO ---
+        // Pasamos el 'newGrayColor' al estado inicial del historial
         const initialState = { brandColor: defaultState.brandColor, grayColor: newGrayColor, explorerPalette: palette, lockedColors: [] };
         setHistory([initialState]);
         setHistoryIndex(0);
@@ -531,54 +548,52 @@ const useThemeGenerator = () => {
 
     const handleThemeToggle = () => setTheme(t => t === 'light' ? 'dark' : 'light');
     
+    // --- CORRECCIÓN 3 ---
+    // handleRandomTheme ahora TAMBIÉN recalcula y setea el grayColor
     const handleRandomTheme = (baseColorHex = null) => {
-        // --- MODIFICADO --- Si el método es 'auto', elige uno aleatorio. Si no, usa el método seleccionado.
         let methodToUse = explorerMethod;
         if (explorerMethod === 'auto') {
             const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic'];
             methodToUse = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
         }
         
-        // 1. Genera una paleta nueva
         const { palette: newRandomPalette, brandColor: newBrandColorSuggestion } = 
-            generateAdvancedRandomPalette(originalExplorerPalette.length || 5, methodToUse, baseColorHex); // <-- Pasa el método a usar
+            generateAdvancedRandomPalette(originalExplorerPalette.length || 5, methodToUse, baseColorHex); 
 
-        // 2. Combina la paleta nueva con la antigua, respetando los bloqueos
         let randomColorsUsed = 0;
         let baseColorPlaced = false;
         const finalPalette = originalExplorerPalette.map((oldColor) => {
-            // Si está bloqueado, mantenerlo
             if (lockedColors.includes(oldColor)) {
                 return oldColor;
             }
-            // Si se proveyó un color base y aún no se ha colocado, ponerlo en la primera ranura libre
             if (baseColorHex && !baseColorPlaced) {
                 baseColorPlaced = true;
                 return baseColorHex;
             }
-            // Asigna un color aleatorio nuevo
             const newColor = newRandomPalette[randomColorsUsed % newRandomPalette.length];
             randomColorsUsed++;
             return newColor;
         });
 
-        // 3. Elige un nuevo color de marca
         let newBrandColor;
         if (baseColorHex) {
-            newBrandColor = baseColorHex; // Si se proveyó un color base, usarlo
+            newBrandColor = baseColorHex; 
         } else {
             const unLockedColors = finalPalette.filter(c => !lockedColors.includes(c));
             newBrandColor = unLockedColors.length > 0 ? unLockedColors[0] : (lockedColors.length > 0 ? lockedColors[0] : newBrandColorSuggestion);
         }
         
         setBrandColor(newBrandColor);
-        setOriginalExplorerPalette(finalPalette); // Guarda la nueva paleta combinada
+        setOriginalExplorerPalette(finalPalette); 
 
-        // --- MODIFICADO --- 'isGrayAuto' ya no se evalúa
-        const newGrayColor = grayColor; // Mantiene el color gris actual
-        // setGrayColor(newGrayColor); // No es necesario establecerlo si no cambia
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Generamos un nuevo color gris basado en el nuevo color de marca
+        const newGrayColor = getAutoGrayColor(newBrandColor);
+        setGrayColor(newGrayColor); // <-- Actualizamos el estado del color gris
+        // --- FIN DE LA CORRECCIÓN ---
         
         setPaletteAdjustments(defaultPaletteAdjustments);
+        // Pasamos el 'newGrayColor' al historial
         saveStateToHistory({ brandColor: newBrandColor, grayColor: newGrayColor, explorerPalette: finalPalette, lockedColors: lockedColors });
     };
 
@@ -595,6 +610,8 @@ const useThemeGenerator = () => {
         setLockedColors(newLockedColors);
         setPaletteAdjustments(defaultPaletteAdjustments);
         
+        // Al aplicar ajustes, NO cambiamos el brandColor, pero SÍ actualizamos
+        // el historial con la nueva paleta. El grayColor no se toca.
         saveStateToHistory({
             brandColor,
             grayColor,
@@ -609,16 +626,16 @@ const useThemeGenerator = () => {
     };
 
     return {
-        // --- MODIFICADO --- 'isGrayAuto' ya no se exporta
+        // --- MODIFICADO --- 'isGrayAuto' y 'setIsGrayAuto' se eliminan de la exportación
         themeData, font, brandColor, grayColor, explorerMethod, simulationMode,
         explorerPalette,
         explorerGrayShades, paletteAdjustments, notification, fxSeparator, useFxQuotes,
-        // 'setIsGrayAuto' ya no se exporta
         setFont, updateBrandColor, setGrayColor, setExplorerMethod, setSimulationMode, 
         handleUndo, handleRedo, 
         handleImport, 
         handleReset, showNotification, setPaletteAdjustments, handleExplorerColorPick, 
         handleRandomTheme, handleThemeToggle, setFxSeparator, setUseFxQuotes,
+        lightPreviewMode, darkPreviewMode, semanticPreviewMode,
         cyclePreviewMode, setLightPreviewMode, setDarkPreviewMode, setSemanticPreviewMode,
         reorderExplorerPalette,
         insertColorInPalette, removeColorFromPalette,

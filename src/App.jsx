@@ -1,16 +1,16 @@
 import React, { useEffect, useState, memo, useCallback } from 'react';
-import useThemeGenerator from './hooks/useThemeGenerator';
-import { availableFonts } from './utils/colorUtils';
-import Header from './components/Header';
-import Explorer from './components/ui/Explorer';
-import FloatingActionButtons from './components/FloatingActionButtons';
-import ColorPreviewer from './components/ColorPreviewer';
-import SemanticPalettes from './components/SemanticPalettes';
-import { ExportModal, AccessibilityModal, ComponentPreviewModal, HistoryModal } from './components/modals';
-import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar';
-import AuthPage from './components/AuthPage';
-import LandingPage from './components/LandingPage';
-import LoginBanner from './components/LoginBanner';
+import useThemeGenerator from './hooks/useThemeGenerator.js';
+import { availableFonts } from './utils/colorUtils.js';
+import Header from './components/Header.jsx';
+import Explorer from './components/ui/Explorer.jsx';
+import FloatingActionButtons from './components/FloatingActionButtons.jsx';
+import ColorPreviewer from './components/ColorPreviewer.jsx';
+import SemanticPalettes from './components/SemanticPalettes.jsx';
+import { ExportModal, AccessibilityModal, ComponentPreviewModal, HistoryModal } from './components/modals/index.jsx';
+import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
+import AuthPage from './components/AuthPage.jsx';
+import LandingPage from './components/LandingPage.jsx';
+import LoginBanner from './components/LoginBanner.jsx';
 
 // --- Funciones simuladas para Capacitor ---
 const Capacitor = {
@@ -193,13 +193,14 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             generatePaletteWithAI={generatePaletteWithAI}
             showNotification={showNotification}
             applySimulationToPalette={applySimulationToPalette}
+            onOpenAdjuster={() => setIsAdjusterSidebarVisible(true)}
             onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
             onOpenComponentPreviewModal={() => setIsComponentPreviewModal(true)}
-            onOpenAdjuster={() => setIsAdjusterSidebarVisible(true)}
             lockedColors={lockedColors}
             toggleLockColor={toggleLockColor}
           />
           <div className="space-y-6 mb-8">
+            {/* Aquí es donde se define el comportamiento del Modo Claro */}
             <ColorPreviewer 
               title="Modo Claro" 
               themeOverride="light" 
@@ -214,9 +215,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               setGrayColor={setGrayColor}
               setIsGrayAuto={setIsGrayAuto}
               simulationMode={simulationMode}
-              // --- NUEVO ---
               handleRandomTheme={handleRandomTheme}
             />
+            {/* Aquí es donde se define el comportamiento del Modo Oscuro */}
             <ColorPreviewer 
               title="Modo Oscuro" 
               themeOverride="dark" 
@@ -231,10 +232,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               setGrayColor={setGrayColor}
               setIsGrayAuto={setIsGrayAuto}
               simulationMode={simulationMode}
-              // --- NUEVO ---
               handleRandomTheme={handleRandomTheme}
             />
           </div>
+          {/* Aquí es donde se define el comportamiento de las Paletas Semánticas */}
           <SemanticPalettes 
             stylePalette={themeData.stylePalette} 
             onCopy={showNotification} 

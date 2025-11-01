@@ -5,6 +5,7 @@ import ColorPalette from './ColorPalette';
 // --- ELIMINADO --- No se importa el Switch
 // import Switch from './ui/Switch'; 
 
+// Etiquetas para los modos de fondo
 const backgroundModeLabels = {
     'T950': 'Fondo T950',
     'white': 'Fondo Blanco',
@@ -12,12 +13,14 @@ const backgroundModeLabels = {
     'black': 'Fondo Negro',
 };
 
+// Función helper para obtener el color de fondo correcto
 const getPreviewBgColor = (mode, shades) => {
-    if (!shades || shades.length < 20) return '#FFFFFF';
+    // Asegura que 'shades' exista y tenga suficientes elementos
+    if (!shades || shades.length < 20) return '#FFFFFF'; 
     switch (mode) {
-        case 'T950': return shades[19];
+        case 'T950': return shades[19]; // T950 es el último (más oscuro)
         case 'white': return '#FFFFFF';
-        case 'T0': return shades[0];
+        case 'T0': return shades[0]; // T0 es el primero (más claro)
         case 'black': return '#000000';
         default: return '#FFFFFF';
     }
@@ -47,16 +50,14 @@ const ColorPreviewer = ({
         return null; 
     }
 
+    // Obtiene el color de fondo basado en el modo (white, T950, black, T0)
     const bgColor = getPreviewBgColor(previewMode, grayShades);
     const isLight = tinycolor(bgColor).isLight();
     
-    // --- MODIFICADO ---
-    // Se usa 'var(--bg-muted)' y 'var(--text-default)' para los botones
-    // en lugar de lógica de JS, para que se adapten al tema.
-    const textColor = isLight ? 'var(--text-default)' : 'var(--text-default)';
-    const buttonBg = isLight ? 'var(--bg-muted)' : 'var(--bg-muted)';
-    // El texto principal sí depende del fondo de la vista previa
+    // Determina el color del texto y botones basado en el fondo
     const mainTextColor = isLight ? '#000' : '#FFF';
+    const buttonBg = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)';
+    const buttonTextColor = isLight ? '#000' : '#FFF';
 
 
     const simulationFilterStyle = {
@@ -69,17 +70,19 @@ const ColorPreviewer = ({
                 <h2 className="font-bold text-lg" style={{ color: mainTextColor }}>{title}</h2>
                 <div className="flex items-center gap-2 sm:gap-4">
                     
-                    {/* --- ELIMINADO ---
-                      Se ha eliminado el interruptor "Auto" y su label
+                    {/* El interruptor "Auto" fue eliminado de este componente.
+                      La prop 'isGrayAuto' ahora solo se usa para deshabilitar el picker.
                     */}
                     
-                    <span className="text-xs font-mono p-1 rounded-md" style={{ backgroundColor: buttonBg, color: textColor }}>
+                    {/* Muestra la etiqueta del modo de fondo actual */}
+                    <span className="text-xs font-mono p-1 rounded-md" style={{ backgroundColor: buttonBg, color: buttonTextColor }}>
                         {backgroundModeLabels[previewMode]}
                     </span>
+                    {/* Botón para ciclar al siguiente modo de fondo */}
                     <button
                         onClick={onCyclePreviewMode}
                         className="text-sm font-medium py-1 px-3 rounded-lg flex items-center gap-2"
-                        style={{ backgroundColor: buttonBg, color: textColor }}
+                        style={{ backgroundColor: buttonBg, color: buttonTextColor }}
                     >
                         <Layers size={14} /> Alternar Fondo
                     </button>
@@ -114,4 +117,3 @@ const ColorPreviewer = ({
 };
 
 export default ColorPreviewer;
-
