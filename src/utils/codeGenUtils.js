@@ -14,6 +14,7 @@ const displayStylesConfig = {
 };
 
 // Función interna para generar las paletas semánticas para un tema específico (claro u oscuro).
+// (Sin cambios)
 const generateSemanticPalettesForTheme = (theme, brandShades, grayShades, grayColor) => {
     const infoBase = '#0ea5e9', successBase = '#22c55e', attentionBase = '#f97316', criticalBase = '#ef4444',
           purpleBase = '#a855f7', tealBase = '#14b8a6', pinkBase = '#ec4899';
@@ -92,13 +93,12 @@ const generateSemanticPalettesForTheme = (theme, brandShades, grayShades, grayCo
       ];
     }
     return stylePalette;
-}
+};
 
 
 export const generatePowerFxCode = (themeData, separator, useQuotes) => {
   if (!themeData || !themeData.brandShades) return "// Generando código...";
 
-  // --- CORRECCIÓN 1: Se extrae explorerPalette de themeData ---
   const { brandShades, grayShades, grayColor, font = "Segoe UI", explorerPalette } = themeData;
 
   const formatKey = (key) => {
@@ -114,8 +114,6 @@ export const generatePowerFxCode = (themeData, separator, useQuotes) => {
     return (palette || []).map(item => `    ${formatKey(item.name)}: ColorValue("${item.color.toUpperCase()}")`).join(`${separator}\n`);
   };
 
-  // --- NUEVA FUNCIÓN ---
-  // Formatea la paleta del explorador, que es un array simple de strings.
   const formatExplorerPalette = (palette) => {
       return (palette || []).map((color, index) => `    ${formatKey(`Color${index + 1}`)}: ColorValue("${color.toUpperCase()}")`).join(`${separator}\n`);
   };
@@ -136,7 +134,6 @@ ${formatShades(brandShades)}
     Gris: {
 ${formatShades(grayShades)}
     }${separator}
-    // --- NUEVO: Se añade la paleta del Modo Color ---
     ModoColor: {
 ${formatExplorerPalette(explorerPalette)}
     }${separator}
@@ -255,4 +252,110 @@ ${formatShades(grayShades)}
     }
   }
 };`;
+};
+
+// --- NUEVA FUNCIÓN ---
+// Genera un objeto JSON limpio para exportar.
+export const generateJsonCode = (themeData) => {
+    if (!themeData) return "{}";
+
+    const { brandShades, grayShades, grayColor, font, theme, explorerPalette } = themeData;
+
+    // Función auxiliar para convertir array de sombras a objeto
+    const formatShadesForJson = (shades) => {
+        const shadeObj = {};
+        shades.forEach((s, i) => {
+            shadeObj[`t${i * 50}`] = s.toUpperCase();
+        });
+        return shadeObj;
+    };
+    
+    // Función auxiliar para convertir paleta semántica a objeto
+    const formatPaletteForJson = (palette) => {
+        const paletteObj = {};
+        (palette || []).forEach(item => {
+            paletteObj[item.name.toLowerCase().replace(/ /g, '-')] = item.color.toUpperCase();
+        });
+        return paletteObj;
+    };
+
+    const lightPalettes = generateSemanticPalettesForTheme('light', brandShades, grayShades, grayColor);
+    const darkPalettes = generateSemanticPalettesForTheme('dark', brandShades, grayShades, grayColor);
+
+    const exportData = {
+        meta: {
+            themeActual: theme,
+            font: font,
+            brandColor: themeData.brandColor,
+            grayColor: themeData.grayColor,
+            isGrayAuto: themeData.isGrayAuto,
+        },
+        palettes: {
+            brand: formatShadesForJson(brandShades),
+            gray: formatShadesForJson(grayShades),
+            explorer: explorerPalette.map(c => c.toUpperCase()),
+        },
+        themes: {
+            light: {
+                backgrounds: formatPaletteForJson(lightPalettes.fullBackgroundColors),
+                foregrounds: formatPaletteForJson(lightPalettes.fullForegroundColors),
+                borders: formatPaletteForJson(lightPalettes.fullBorderColors),
+                actions: formatPaletteForJson(lightPalettes.fullActionColors),
+                decorative: formatPaletteForJson(lightPalettes.decorateColors),
+            },
+            dark: {
+                backgrounds: formatPaletteForJson(darkPalettes.fullBackgroundColors),
+                foregrounds: formatPaletteForJson(darkPalettes.fullForegroundColors),
+                borders: formatPaletteForJson(darkPalettes.fullBorderColors),
+                actions: formatPaletteForJson(darkPalettes.fullActionColors),
+                decorative: formatPaletteForJson(darkPalettes.decorateColors),
+            }
+        }
+    };
+
+    return JSON.stringify(exportData, null, 2);
+};
+
+// --- NUEVA FUNCIÓN ---
+// Genera variables SCSS (Sass).
+export const generateScssCode = (themeData) => {
+  if (!themeData || !themeData.stylePalette) return "/* Generando SCSS... */";
+  const { brandShades, grayShades, stylePalette, theme } = themeData;
+
+  // Modificamos las funciones de formato para SCSS
+  const formatShades = (shades, prefix) => 
+    shades.map((s, i) => `$${prefix}-t${i * 50}: ${s.toUpperCase()};`).join('\n');
+  
+  const formatPalette = (palette, prefix) =>
+    (palette || []).map(item => `$${prefix}-${item.name.toLowerCase().replace(/ /g, '-')}: ${item.color.toUpperCase()};`).join('\n');
+
+  // El tema actual (light/dark) se usa para generar las paletas semánticas
+  const semanticPrefix = theme === 'light' ? 'light' : 'dark';
+  
+  return `
+// --- TEMA DE DISEÑO GENERADO ---
+// Modo: ${theme === 'light' ? 'Claro' : 'Oscuro'}
+
+// --- Colores de Marca ---
+${formatShades(brandShades, 'brand')}
+
+// --- Escala de Grises ---
+${formatShades(grayShades, 'gray')}
+
+// --- Paletas Semánticas (basadas en el modo '${semanticPrefix}') ---
+// --- Fondos ---
+${formatPalette(stylePalette.fullBackgroundColors, 'bg')}
+
+// --- Textos ---
+${formatPalette(stylePalette.fullForegroundColors, 'text')}
+
+// --- Bordes ---
+${formatPalette(stylePalette.fullBorderColors, 'border')}
+
+// --- Acciones ---
+${formatPalette(stylePalette.fullActionColors, 'action')}
+
+// --- Decorativos ---
+${formatPalette(stylePalette.decorateColors, 'deco')}
+`;
 };

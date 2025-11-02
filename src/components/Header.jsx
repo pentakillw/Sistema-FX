@@ -1,9 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { RefreshCcw, Upload, Download, HelpCircle, FileCode, Type, User, LogOut } from 'lucide-react';
+// --- MODIFICACIÓN ---
+// Ya no necesitamos FileCode aquí, así que lo quitamos.
+import { RefreshCcw, Upload, Download, HelpCircle, Type, User, LogOut } from 'lucide-react';
 import { HelpModal } from './modals';
 import { availableFonts } from '../utils/colorUtils';
 
-const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, font, setFont, user, onLogout }) => {
+// --- MODIFICACIÓN ---
+// Quitamos onOpenExportModal de las props
+const Header = ({ onImport, onExport, onReset, themeData, font, setFont, user, onLogout }) => {
     const importFileRef = useRef(null);
     const [isHelpVisible, setIsHelpVisible] = useState(false);
     const [isFontMenuVisible, setIsFontMenuVisible] = useState(false);
@@ -34,9 +38,7 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
                         </button>
                     </div>
                 ) : (
-                    // --- MODIFICACIÓN ---
-                    // Añadido 'flex-wrap' y 'justify-end' para que los botones se ajusten en pantallas pequeñas
-                    <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
+                    <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
                         <input type="file" ref={importFileRef} onChange={onImport} accept=".json" className="hidden"/>
                         
                         <div className="relative">
@@ -71,7 +73,11 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
                         
                         <button title="Importar Tema" onClick={() => importFileRef.current.click()} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Upload size={16}/></button>
                         <button title="Exportar Tema" onClick={onExport} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><Download size={16}/></button>
-                        <button title="Exportar Código" onClick={onOpenExportModal} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><FileCode size={16}/></button>
+                        
+                        {/* --- MODIFICACIÓN --- 
+                            El botón de Exportar Código ha sido eliminado de aquí.
+                        */}
+                        
                         <div className="h-6 w-px" style={{backgroundColor: 'var(--border-default)'}}></div>
                         <button title="Reiniciar Tema" onClick={onReset} className="text-sm font-medium p-2 rounded-lg" style={controlsThemeStyle}><RefreshCcw size={16}/></button>
                         <button title="Ayuda" onClick={() => setIsHelpVisible(true)} className="text-sm font-medium p-2 rounded-lg flex items-center" style={controlsThemeStyle}><HelpCircle size={16}/></button>
@@ -84,3 +90,4 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
 };
 
 export default Header;
+

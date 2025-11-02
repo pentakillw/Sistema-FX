@@ -159,7 +159,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           onImport={handleImport} 
           onExport={isNative ? handleNativeExport : handleWebExport} 
           onReset={handleReset} 
-          onOpenExportModal={() => setIsExportModalVisible(true)}
+          // --- MODIFICACIÓN --- 
+          // Ya no pasamos onOpenExportModal al Header
+          // onOpenExportModal={() => setIsExportModalVisible(true)} 
           themeData={themeData} 
           font={font}
           setFont={setFont}
@@ -168,6 +170,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         />
         
         <main>
+          {/* ... (Explorer, ColorPreviewer, SemanticPalettes sin cambios en props) ... */}
           <Explorer 
             explorerPalette={explorerPalette}
             reorderExplorerPalette={reorderExplorerPalette}
@@ -199,7 +202,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             toggleLockColor={toggleLockColor}
           />
           <div className="space-y-6 mb-8">
-            {/* Aquí es donde se define el comportamiento del Modo Claro */}
             <ColorPreviewer 
               title="Modo Claro" 
               themeOverride="light" 
@@ -216,7 +218,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               simulationMode={simulationMode}
               handleRandomTheme={handleRandomTheme}
             />
-            {/* Aquí es donde se define el comportamiento del Modo Oscuro */}
             <ColorPreviewer 
               title="Modo Oscuro" 
               themeOverride="dark" 
@@ -234,7 +235,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               handleRandomTheme={handleRandomTheme}
             />
           </div>
-          {/* Aquí es donde se define el comportamiento de las Paletas Semánticas */}
           <SemanticPalettes 
             stylePalette={themeData.stylePalette} 
             onCopy={showNotification} 
@@ -251,7 +251,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
         </footer>
 
-        {hook.notification.message && (<div className="fixed bottom-5 right-5 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-lg flex items-center gap-2" style={{ backgroundColor: hook.notification.type === 'error' ? '#EF4444' : '#10B981'}}>{hook.notification.message}</div>)}
+        {hook.notification.message && (
+          <div className="fixed bottom-5 right-5 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-lg flex items-center gap-2" style={{ backgroundColor: hook.notification.type === 'error' ? '#EF4444' : '#10B981'}}>{hook.notification.message}</div>
+        )}
         
         {isExportModalVisible && <ExportModal onClose={() => setIsExportModalVisible(false)} themeData={themeData} fxSeparator={fxSeparator} setFxSeparator={setFxSeparator} useFxQuotes={useFxQuotes} setUseFxQuotes={setUseFxQuotes} onCopy={showNotification} />}
         {isAccessibilityModalVisible && <AccessibilityModal onClose={() => setIsAccessibilityModalVisible(false)} accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={showNotification} />}
@@ -279,6 +281,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             canUndo={historyIndex > 0} 
             canRedo={historyIndex < history.length - 1}
             onOpenHistoryModal={() => setIsHistoryModalVisible(true)}
+            // --- MODIFICACIÓN --- 
+            // Pasamos la prop para abrir el modal a los botones flotantes
+            onOpenExportModal={() => setIsExportModalVisible(true)} 
           />
         )}
     </div>
@@ -335,3 +340,4 @@ function App() {
 }
 
 export default App;
+

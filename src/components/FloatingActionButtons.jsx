@@ -1,6 +1,7 @@
 import React from 'react';
-// --- MODIFICACIÓN --- Se importa el ícono Clock ---
-import { Sparkles, Sun, Moon, Undo2, Redo2, Clock } from 'lucide-react';
+// --- MODIFICACIÓN --- 
+// Importamos FileCode para el nuevo botón
+import { Sparkles, Sun, Moon, Undo2, Redo2, Clock, FileCode } from 'lucide-react';
 
 const ActionButton = ({ onClick, title, disabled = false, children, className = '', style = {} }) => (
   <button
@@ -28,25 +29,11 @@ const FloatingActionButtons = ({
     onRedo,
     canUndo,
     canRedo,
-    // --- NUEVO --- Se recibe la función para abrir el modal de historial
-    onOpenHistoryModal
+    onOpenHistoryModal,
+    // --- MODIFICACIÓN --- 
+    // Recibimos la nueva prop para abrir el modal de exportación
+    onOpenExportModal 
 }) => (
-    // --- CORRECCIÓN DE Z-INDEX ---
-    // El z-index aquí DEBE SER z-40.
-    //
-    // Tus otros componentes tienen este orden:
-    // 1. Panel de Ajuste (Sidebar): z-60
-    // 2. Fondo del Panel (Backdrop): z-50
-    //
-    // Al poner los botones en z-40, te aseguras de que queden *detrás*
-    // del fondo (z-50). Esto es correcto. Cuando el panel se abre,
-    // el fondo (backdrop) debe cubrir los botones y deshabilitarlos.
-    //
-    // Si sigues viendo los botones *encima* del panel (como en tu imagen), 
-    // es 100% un problema de CACHÉ de tu navegador o del servidor (Vite).
-    //
-    // Intenta forzar un refresco (Ctrl + Shift + R) o
-    // detén y reinicia tu servidor (npm run dev) después de guardar este archivo.
     <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 flex flex-col items-center gap-3">
       <ActionButton
         onClick={onUndo}
@@ -68,7 +55,6 @@ const FloatingActionButtons = ({
         <Redo2 size={20} />
       </ActionButton>
 
-      {/* --- NUEVO --- Botón de historial añadido a los botones flotantes --- */}
       <ActionButton
         onClick={onOpenHistoryModal}
         title="Historial de Paletas"
@@ -85,6 +71,19 @@ const FloatingActionButtons = ({
         style={{ backgroundColor: 'var(--bg-card)' }}
       >
         {currentTheme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
+      </ActionButton>
+
+      {/* --- NUEVO --- 
+          Añadimos el botón de Exportar Código aquí.
+          Lo pongo antes del botón "Aleatorio" para que "Aleatorio" quede al final.
+      */}
+      <ActionButton
+        onClick={onOpenExportModal}
+        title="Exportar Código"
+        className="text-[var(--text-default)] border border-[var(--border-default)]"
+        style={{ backgroundColor: 'var(--bg-card)' }}
+      >
+        <FileCode size={20} />
       </ActionButton>
 
       <ActionButton
