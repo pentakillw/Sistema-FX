@@ -11,12 +11,17 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
         <div className="mb-4">
             <h3 className="text-sm font-medium mb-2" style={{ color: titleColor }}>{title}</h3>
             <div className="overflow-x-auto pb-2 -mb-2">
-                 <div className="sm:min-w-0" style={{ minWidth: `${colors.length * 64}px` }}>
+                 {/* MODIFICACIÓN 1: 
+                   El minWidth se calcula con 64px por item, que coincide con el `w-16` de los hijos.
+                   Se ha eliminado la clase `sm:min-w-0` que era innecesaria.
+                 */}
+                 <div style={{ minWidth: `${(colors?.length || 0) * 64}px` }}>
                     <div className="flex rounded-md overflow-hidden h-12 sm:h-10 relative group">
                         {(colors || []).map((item) => (
                             <div
                                 key={item.name}
                                 className="w-16 flex-shrink-0 sm:flex-1 cursor-pointer transition-transform duration-100 ease-in-out sm:group-hover:transform sm:group-hover:scale-y-110 sm:hover:!scale-125 sm:hover:z-10 flex items-center justify-center"
+                                // --- MODIFICACIÓN 2: Eliminado el `minWidth: '30px'` que era conflictivo/innecesario ---
                                 style={{ backgroundColor: item.color }}
                                 onClick={() => onColorCopy(item.color, `${title}: ${item.name} (${item.color.toUpperCase()}) copiado!`)}
                                 title={`${item.name} - ${item.color.toUpperCase()}`}
@@ -30,7 +35,15 @@ const SemanticPaletteRow = ({ title, colors, onColorCopy, themeOverride }) => {
                     {/* Nombres de los colores semánticos */}
                     <div className="flex text-xs pt-2 mt-1" style={{ color: textColor }}>
                         {(colors || []).map((item) => (
-                             <div key={item.name} className="w-16 sm:flex-1 text-center text-wrap text-[10px] py-1 flex-shrink-0" title={item.name}>
+                             <div 
+                                key={item.name} 
+                                // --- MODIFICACIÓN CLAVE ---
+                                // - `truncate`: Corta el texto en móvil (ej: "Predeter...")
+                                // - `sm:text-wrap`: Permite que el texto se envuelva en desktop
+                                // - Eliminado `minWidth: '60px'` innecesario.
+                                className="w-16 sm:flex-1 text-center truncate sm:text-wrap text-[10px] py-1 flex-shrink-0" 
+                                title={item.name}
+                             >
                                 {item.name}
                             </div>
                         ))}

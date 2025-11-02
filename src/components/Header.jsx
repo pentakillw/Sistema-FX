@@ -34,7 +34,9 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
                         </button>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
+                    // --- MODIFICACIÓN ---
+                    // Añadido 'flex-wrap' y 'justify-end' para que los botones se ajusten en pantallas pequeñas
+                    <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
                         <input type="file" ref={importFileRef} onChange={onImport} accept=".json" className="hidden"/>
                         
                         <div className="relative">
@@ -82,4 +84,3 @@ const Header = ({ onImport, onExport, onReset, onOpenExportModal, themeData, fon
 };
 
 export default Header;
-
