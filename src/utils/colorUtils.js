@@ -10,26 +10,29 @@ export const availableFonts = {
   'Lato': '"Lato", sans-serif',
 };
 
-// --- MODIFICADO --- Se re-introduce el método 'Auto'
 export const generationMethods = [
-    { id: 'auto', name: 'Auto (Aleatorio)' }, // Vuelve a añadir 'auto'
+    { id: 'auto', name: 'Auto (Aleatorio)' }, 
     { id: 'mono', name: 'Monocromo' },
     { id: 'analogous', name: 'Análogo' },
     { id: 'complement', name: 'Complementario' },
     { id: 'split-complement', name: 'Comp. Dividido' },
     { id: 'triad', name: 'Triádico' },
-    { id: 'tetrad', name: 'Tetrádico' }
+    { id: 'tetrad', 
+name: 'Tetrádico' }
 ];
 
 export const colorblindnessMatrices = {
   protanopia: [0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0],
   deuteranopia: [0.625, 0.375, 0, 0, 0, 0.7, 0.3, 0, 0, 0, 0, 0.3, 0.7, 0, 0, 0, 0, 0, 1, 0],
-  tritanopia: [0.95, 0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0],
+  tritanopia: [0.95, 
+0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0],
   achromatopsia: [0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 1, 0],
-  protanomaly: [0.817, 0.183, 0, 0, 0, 0.333, 0.667, 0, 0, 0, 0, 0.125, 0.875, 0, 0, 0, 0, 0, 1, 0],
+  protanomaly: [0.817, 0.183, 0, 0, 0, 0.333, 0.667, 0, 0, 0, 0, 0.125, 
+0.875, 0, 0, 0, 0, 0, 1, 0],
   deuteranomaly: [0.8, 0.2, 0, 0, 0, 0.258, 0.742, 0, 0, 0, 0, 0.142, 0.858, 0, 0, 0, 0, 0, 1, 0],
   tritanomaly: [0.967, 0.033, 0, 0, 0, 0, 0.733, 0.267, 0, 0, 0, 0.183, 0.817, 0, 0, 0, 0, 0, 1, 0],
-  achromatomaly: [0.618, 0.320, 0.062, 0, 0, 0.163, 0.775, 0.062, 0, 0, 0.163, 0.320, 0.516, 0, 0, 0, 0, 0, 1, 0],
+  achromatomaly: [0.618, 
+0.320, 0.062, 0, 0, 0.163, 0.775, 0.062, 0, 0, 0.163, 0.320, 0.516, 0, 0, 0, 0, 0, 1, 0],
 };
 
 export const applyColorMatrix = (hex, matrix) => {
@@ -43,7 +46,8 @@ export const applyColorMatrix = (hex, matrix) => {
     const clamp = (val) => Math.max(0, Math.min(1, val));
 
     const finalRgb = {
-        r: Math.round(clamp(newR) * 255),
+ 
+       r: Math.round(clamp(newR) * 255),
         g: Math.round(clamp(newG) * 255),
         b: Math.round(clamp(newB) * 255),
     };
@@ -53,7 +57,8 @@ export const applyColorMatrix = (hex, matrix) => {
 
 export const generateShades = (hex) => {
   if (!tinycolor(hex).isValid()) return Array(20).fill('#cccccc');
-  const baseColor = tinycolor(hex);
+  const baseColor = 
+tinycolor(hex);
   const shades = [];
 
   for (let i = 9; i > 0; i--) {
@@ -66,7 +71,48 @@ export const generateShades = (hex) => {
   return shades;
 };
 
-// --- NUEVO: Lista de colores primarios y secundarios para sesgar la aleatoriedad ---
+// --- LÓGICA DE GRIS ARMÓNICO MODIFICADA ---
+/**
+ * Genera un color gris armónico aleatorio basado en el matiz del color de marca.
+ * @param {string} brandColor - El color de marca en formato hexadecimal.
+ * @returns {string} Un color gris armónico en formato hexadecimal.
+ */
+export const getHarmonicGrayColor = (brandColor) => {
+    const color = tinycolor(brandColor);
+    const hsl = color.toHsl();
+
+    // Si ya es casi gris (saturación muy baja)
+    if (hsl.s < 0.1) {
+        // --- MODIFICACIÓN: Añadir jitter aquí también ---
+        const randomLightness = 0.45 + (Math.random() * 0.1); // Rango: 45% a 55%
+        return tinycolor({ h: hsl.h, s: 0, l: randomLightness }).toHexString();
+    }
+
+    let harmonicHue;
+
+    // Colores cálidos (Rojos, Naranjas, Amarillos)
+    if (hsl.h > 330 || hsl.h < 50) {
+        harmonicHue = 30; // Tono anaranjado sutil
+    } 
+    // Colores fríos (Azules, Púrpuras)
+    else if (hsl.h > 200 && hsl.h < 310) {
+        harmonicHue = 220; // Tono azulado sutil
+    } 
+    // Verdes y Cianes (neutros/fríos)
+    else {
+        harmonicHue = 200; // Tono cian/azulado sutil
+    }
+    
+    // --- MODIFICACIÓN: Añadimos "jitter" aleatorio ---
+    // Esto asegura que cada gris sea único, pero siga siendo armónico.
+    const randomSaturation = 0.05 + (Math.random() * 0.1); // Rango: 5% a 15%
+    const randomLightness = 0.45 + (Math.random() * 0.1); // Rango: 45% a 55%
+
+    return tinycolor({ h: harmonicHue, s: randomSaturation, l: randomLightness }).toHexString();
+};
+// --- FIN DE LA MODIFICACIÓN ---
+
+
 const primaryHues = [
     { h: 0, s: 0.9, l: 0.45 },   // Rojo
     { h: 30, s: 0.95, l: 0.5 }, // Naranja
@@ -75,27 +121,22 @@ const primaryHues = [
     { h: 220, s: 0.9, l: 0.5 }, // Azul
     { h: 275, s: 0.7, l: 0.45 },// Morado/Púrpura
     { h: 320, s: 0.9, l: 0.55 },// Rosa/Magenta
-    { h: 25, s: 0.6, l: 0.3 }   // Café
+    { h: 25, s: 
+0.6, l: 0.3 }   // Café
 ];
 
-// --- MODIFICADO --- Se actualiza la firma de la función
 export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseColorHex = null) => {
     
     let baseColor;
     if (baseColorHex) {
-        // 1. Si se provee un color base (desde un tono), usarlo.
         baseColor = tinycolor(baseColorHex);
     } else {
-        // 2. Si NO se provee un color base (aleatorio puro):
         const biasCheck = Math.random();
 
-        // --- NUEVA LÓGICA DE SESGO ---
-        // 30% de probabilidad de forzar un color primario/secundario
         if (biasCheck < 0.3) { 
             const specialColor = primaryHues[Math.floor(Math.random() * primaryHues.length)];
             baseColor = tinycolor(specialColor);
         } else {
-            // 70% de probabilidad de usar la lógica aleatoria original
             baseColor = tinycolor({
                 h: Math.random() * 360,
                 s: 0.3 + Math.random() * 0.5,
@@ -104,7 +145,6 @@ export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseCo
         }
     }
 
-    // --- MODIFICADO --- Si el método es 'auto', elige uno aleatorio. Si no, usa el método.
     let harmonyMethod = method;
     if (harmonyMethod === 'auto') {
         const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic', 'complement'];
@@ -129,7 +169,7 @@ export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseCo
              initialPalette = baseColor.monochromatic(count);
             break;
         default: // 'complement' y otros casos
-             const complementColor = baseColor.complement();
+            const complementColor = baseColor.complement();
              initialPalette = [baseColor];
              for (let i = 1; i < count; i++) {
                  const mixAmount = (i / (count - 1)) * 100;
@@ -152,7 +192,8 @@ export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseCo
         0.3 + (i * (0.6 / (count - 1 || 1)))
     );
     
-    initialPalette.sort((a, b) => a.getLuminance() - b.getLuminance());
+    initialPalette.sort((a, b) => a.getLuminance() - 
+b.getLuminance());
     
     let balancedPalette = initialPalette.map((color, index) => {
         let hsl = color.toHsl();
@@ -172,13 +213,14 @@ export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseCo
     return { palette: finalPalette, brandColor: brandColor };
 };
 
-export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 20) => {
+export const generateExplorerPalette = (method = 
+'auto', baseColorHex, count = 20) => {
     let newPalette = [];
     const colorForExplorer = !baseColorHex ? tinycolor.random() : tinycolor(baseColorHex);
 
-    // --- MODIFICADO --- 'auto' ahora llama a 'generateAdvancedRandomPalette' con un método aleatorio
     if (method === 'auto') {
-      const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic', 'complement'];
+      const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 
+'monochromatic', 'complement'];
       const randomMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
       
       const { palette } = generateAdvancedRandomPalette(count, randomMethod, colorForExplorer.toHexString());
@@ -221,7 +263,8 @@ export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 2
                 const colorIndex = i % 3;
                 let hsv = triadColors[colorIndex].toHsv();
                 hsv.s = 0.5 + Math.random() * 0.5;
-                hsv.v = 0.7 + Math.random() * 0.3;
+                hsv.v = 
+0.7 + Math.random() * 0.3;
                 newPalette.push(tinycolor(hsv).toHexString());
             }
             break;
@@ -249,7 +292,8 @@ export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 2
 export const applyAdjustments = (hex, adjustments) => {
   let color = tinycolor(hex);
 
-  if (adjustments.hue !== 0) {
+  if (adjustments.hue !== 
+0) {
     color = color.spin(adjustments.hue);
   }
   if (adjustments.saturation > 0) {
@@ -270,4 +314,3 @@ export const applyAdjustments = (hex, adjustments) => {
 
   return color.toHexString();
 };
-
