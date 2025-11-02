@@ -3,7 +3,7 @@ import { X, UploadCloud, Palette, Loader2, Pipette, Plus, Minus } from 'lucide-r
 import tinycolor from 'tinycolor2';
 import { extractColorsFromImage, findColorInCanvas } from '../../utils/imageColorExtractor.js';
 
-// **FIX**: Componente de vista previa reconstruido para un posicionamiento preciso de la lupa.
+// Componente de vista previa (sin cambios)
 const ImagePreview = ({ imageUrl, onColorSelect, onIndicatorPositionChange, selectedColor, indicatorPosition, mode }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
@@ -54,10 +54,8 @@ const ImagePreview = ({ imageUrl, onColorSelect, onIndicatorPositionChange, sele
         
         const loupe = loupeRef.current;
         if (loupe) {
-            // Posicionar la lupa relativa al contenedor de la imagen, no a la ventana
             const loupeX = x - 50;
             const loupeY = y - 50;
-            console.log(`Loupe position: x=${loupeX}, y=${loupeY}`);
             loupe.style.transform = `translate(${loupeX}px, ${loupeY}px)`;
             const zoom = 3;
             loupe.style.backgroundSize = `${rect.width * zoom}px ${rect.height * zoom}px`;
@@ -112,7 +110,6 @@ const ImagePreview = ({ imageUrl, onColorSelect, onIndicatorPositionChange, sele
     );
 };
 
-
 const ImagePaletteModal = ({ onColorSelect, onClose }) => {
     const [imageUrl, setImageUrl] = useState(null);
     const [colorPalette, setColorPalette] = useState(null);
@@ -134,7 +131,7 @@ const ImagePaletteModal = ({ onColorSelect, onClose }) => {
         img.src = imageUrl;
         img.onload = () => {
             const aspectRatio = img.width / img.height;
-            canvas.width = 200; // Ancho fijo para consistencia
+            canvas.width = 200; 
             canvas.height = 200 / aspectRatio;
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         };
@@ -200,14 +197,26 @@ const ImagePaletteModal = ({ onColorSelect, onClose }) => {
     const triggerFileInput = () => fileInputRef.current.click();
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+        // --- MODIFICACIÓN --- Backdrop responsivo
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
             <canvas ref={hiddenCanvasRef} className="hidden" />
-            <div className="p-6 rounded-xl border max-w-2xl w-full relative flex flex-col" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }} onClick={(e) => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-4">
+            {/* --- MODIFICACIÓN ---
+              - Panel responsivo (bottom sheet en móvil)
+              - Padding inferior con 'safe-area-inset'.
+            */}
+            <div 
+                className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-2xl w-full relative flex flex-col max-h-[90vh]" 
+                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }} 
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
+                <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+                
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                     <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-default)' }}>
                         <Palette size={24} /> Extraer Paleta de Imagen
                     </h2>
-                     <div className="flex items-center gap-2">
+                     <div className="flex items-center gap-2 self-end sm:self-center">
                          <button 
                             onClick={handleFinalSelect}
                             disabled={!selectedColor}
@@ -222,63 +231,65 @@ const ImagePaletteModal = ({ onColorSelect, onClose }) => {
                 </div>
                 
                 <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-
-                {!imageUrl && (
-                    <div className="w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[var(--action-primary-default)] transition-colors" style={{ borderColor: 'var(--border-default)' }} onClick={triggerFileInput}>
-                        <UploadCloud size={48} style={{ color: 'var(--text-muted)' }} />
-                        <p className="mt-4 text-lg font-semibold" style={{ color: 'var(--text-default)' }}>Haz clic para subir una imagen</p>
-                    </div>
-                )}
-
-                {imageUrl && (
-                    <div className="space-y-4">
-                        <div className="flex border-b mb-4" style={{ borderColor: 'var(--border-default)'}}>
-                            <button onClick={() => setMode('palette')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex items-center gap-2 ${mode === 'palette' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}><Palette size={16}/> Paleta Automática</button>
-                            <button onClick={() => setMode('picker')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex items-center gap-2 ${mode === 'picker' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}><Pipette size={16}/> Selector</button>
+                
+                {/* --- MODIFICACIÓN --- Contenedor con overflow para el contenido */}
+                <div className="overflow-y-auto">
+                    {!imageUrl && (
+                        <div className="w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[var(--action-primary-default)] transition-colors" style={{ borderColor: 'var(--border-default)' }} onClick={triggerFileInput}>
+                            <UploadCloud size={48} style={{ color: 'var(--text-muted)' }} />
+                            <p className="mt-4 text-lg font-semibold" style={{ color: 'var(--text-default)' }}>Haz clic para subir una imagen</p>
                         </div>
-                        
-                        <ImagePreview 
-                            imageUrl={imageUrl} 
-                            onColorSelect={setSelectedColor} 
-                            onIndicatorPositionChange={setIndicatorPosition} 
-                            selectedColor={selectedColor} 
-                            indicatorPosition={indicatorPosition}
-                            mode={mode}
-                        />
+                    )}
 
-                        {mode === 'palette' && (
-                        <div className='mt-4'>
-                            {loading && <div className="flex items-center justify-center p-4"><Loader2 size={32} className="animate-spin" style={{ color: 'var(--action-primary-default)' }}/><p className="ml-4 font-semibold" style={{ color: 'var(--text-muted)'}}>Extrayendo colores...</p></div>}
-                            {error && <div className="text-center p-2 rounded-md" style={{ backgroundColor: 'var(--bg-critical-weak)', color: 'var(--text-critical)' }}><p className="text-sm font-semibold">{error}</p></div>}
-                            {colorPalette && (
-                                <div>
-                                    <div className='flex justify-between items-center mb-2'>
-                                        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>Paleta Extraída (toca un color)</h3>
-                                        <div className='flex items-center gap-2'>
-                                            <button onClick={() => setColorCount(c => Math.max(2, c - 1))} className="p-1 rounded-md" style={{ backgroundColor: 'var(--bg-muted)'}}><Minus size={14}/></button>
-                                            <span className='text-xs font-mono w-6 text-center'>{colorCount}</span>
-                                            <button onClick={() => setColorCount(c => Math.min(20, c + 1))} className="p-1 rounded-md" style={{ backgroundColor: 'var(--bg-muted)'}}><Plus size={14}/></button>
+                    {imageUrl && (
+                        <div className="space-y-4">
+                            <div className="flex border-b mb-4" style={{ borderColor: 'var(--border-default)'}}>
+                                <button onClick={() => setMode('palette')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex items-center gap-2 ${mode === 'palette' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}><Palette size={16}/> Paleta Automática</button>
+                                <button onClick={() => setMode('picker')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex items-center gap-2 ${mode === 'picker' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}><Pipette size={16}/> Selector</button>
+                            </div>
+                            
+                            <ImagePreview 
+                                imageUrl={imageUrl} 
+                                onColorSelect={setSelectedColor} 
+                                onIndicatorPositionChange={setIndicatorPosition} 
+                                selectedColor={selectedColor} 
+                                indicatorPosition={indicatorPosition}
+                                mode={mode}
+                            />
+
+                            {mode === 'palette' && (
+                            <div className='mt-4'>
+                                {loading && <div className="flex items-center justify-center p-4"><Loader2 size={32} className="animate-spin" style={{ color: 'var(--action-primary-default)' }}/><p className="ml-4 font-semibold" style={{ color: 'var(--text-muted)'}}>Extrayendo colores...</p></div>}
+                                {error && <div className="text-center p-2 rounded-md" style={{ backgroundColor: 'var(--bg-critical-weak)', color: 'var(--text-critical)' }}><p className="text-sm font-semibold">{error}</p></div>}
+                                {colorPalette && (
+                                    <div>
+                                        <div className='flex justify-between items-center mb-2'>
+                                            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>Paleta Extraída (toca un color)</h3>
+                                            <div className='flex items-center gap-2'>
+                                                <button onClick={() => setColorCount(c => Math.max(2, c - 1))} className="p-1 rounded-md" style={{ backgroundColor: 'var(--bg-muted)'}}><Minus size={14}/></button>
+                                                <span className='text-xs font-mono w-6 text-center'>{colorCount}</span>
+                                                <button onClick={() => setColorCount(c => Math.min(20, c + 1))} className="p-1 rounded-md" style={{ backgroundColor: 'var(--bg-muted)'}}><Plus size={14}/></button>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                                            {colorPalette.map((color, index) => (
+                                                <div key={index} className="h-16 w-full rounded-lg cursor-pointer transition-transform hover:scale-110 border-2" style={{ backgroundColor: color, borderColor: color === selectedColor ? 'var(--action-primary-default)' : 'transparent' }} title={color.toUpperCase()} onClick={() => handlePaletteColorSelect(color)}>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                                        {colorPalette.map((color, index) => (
-                                            <div key={index} className="h-16 w-full rounded-lg cursor-pointer transition-transform hover:scale-110 border-2" style={{ backgroundColor: color, borderColor: color === selectedColor ? 'var(--action-primary-default)' : 'transparent' }} title={color.toUpperCase()} onClick={() => handlePaletteColorSelect(color)}>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                )}
+                            </div>
                             )}
+                             <div className="flex justify-center mt-4">
+                                <button onClick={triggerFileInput} className="text-sm font-medium py-2 px-4 rounded-lg" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}}>Cambiar Imagen</button>
+                            </div>
                         </div>
-                        )}
-                         <div className="flex justify-center mt-4">
-                            <button onClick={triggerFileInput} className="text-sm font-medium py-2 px-4 rounded-lg" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}}>Cambiar Imagen</button>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
 };
 
 export default ImagePaletteModal;
-

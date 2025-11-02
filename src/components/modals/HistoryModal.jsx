@@ -6,12 +6,20 @@ const HistoryModal = ({ history, onSelect, onClose }) => {
     const recentHistory = [...history].slice(-15).reverse();
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4" onClick={onClose}>
+        // --- MODIFICACIÓN --- Backdrop responsivo
+        <div className="fixed inset-0 bg-black/60 z-[70] flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
+            {/* --- MODIFICACIÓN ---
+              - Panel responsivo (bottom sheet en móvil)
+              - Padding inferior con 'safe-area-inset'.
+            */}
             <div
-                className="p-6 rounded-xl border max-w-md w-full relative flex flex-col"
+                className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-md w-full relative flex flex-col"
                 style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
+                <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+                
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-default)' }}>
                         <Clock size={24} /> Historial de Paletas

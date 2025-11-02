@@ -64,7 +64,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       }
 
       e.preventDefault();
-      // --- MODIFICADO ---
       // La barra espaciadora ahora llama a la función sin parámetros
       handleRandomTheme();
     };
@@ -85,7 +84,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       theme: themeData.theme, 
       isGrayAuto: isGrayAuto,
       explorerPalette: originalExplorerPalette,
-      lockedColors: lockedColors,
+      lockedColors: lockedColors, // <-- DETALLE AÑADIDO
     };
     
     try {
@@ -112,7 +111,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       theme: themeData.theme, 
       isGrayAuto: isGrayAuto,
       explorerPalette: originalExplorerPalette,
-      lockedColors: lockedColors,
+      lockedColors: lockedColors, // <-- DETALLE AÑADIDO
     };
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
     const link = document.createElement("a");
@@ -272,7 +271,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
 
         {!isAdjusterSidebarVisible && (
           <FloatingActionButtons 
-            onRandomClick={() => handleRandomTheme()} // --- MODIFICADO --- Llama a la función sin parámetros
+            onRandomClick={() => handleRandomTheme()} 
             onThemeToggle={handleThemeToggle} 
             currentTheme={themeData.theme} 
             onUndo={handleUndo} 
@@ -336,4 +335,3 @@ function App() {
 }
 
 export default App;
-

@@ -8,11 +8,23 @@ const PaletteContrastChecker = ({ palette, onClose, onCopy }) => {
   const fullPalette = [...new Set([...palette, '#FFFFFF', '#000000'])];
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4" onClick={onClose}>
-      <div className="p-4 sm:p-6 rounded-xl border max-w-7xl w-full relative flex flex-col" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)', height: '90vh' }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-6 flex-shrink-0">
+    // --- MODIFICACIÓN --- Backdrop responsivo
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
+        {/* --- MODIFICACIÓN ---
+          - Panel responsivo (bottom sheet en móvil)
+          - Padding inferior con 'safe-area-inset'.
+        */}
+      <div 
+        className="p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-7xl w-full relative flex flex-col max-h-[90vh]" 
+        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }} 
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
+        <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden flex-shrink-0" />
+        
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 flex-shrink-0 gap-4">
           <h2 className="text-xl font-bold" style={{ color: 'var(--text-default)' }}>Comprobar Contraste de Paleta</h2>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 self-end sm:self-center">
             <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-default)'}}>
               <span>Solo Válido (AA/AAA)</span>
               <Switch checked={showOnlyValid} onCheckedChange={setShowOnlyValid} />
@@ -22,7 +34,8 @@ const PaletteContrastChecker = ({ palette, onClose, onCopy }) => {
         </div>
         
         <div className="flex-1 overflow-auto">
-          <div className="grid gap-1" style={{ gridTemplateColumns: `30px repeat(${fullPalette.length}, 1fr)` }}>
+          {/* --- MODIFICACIÓN --- Añadido 'min-w-[700px]' para forzar scroll horizontal en móvil */}
+          <div className="grid gap-1 min-w-[700px]" style={{ gridTemplateColumns: `30px repeat(${fullPalette.length}, 1fr)` }}>
             <div />
             {fullPalette.map((fgColor, index) => (
               <div key={`fg-${index}`} className="h-8 rounded-md" style={{ backgroundColor: fgColor }} title={fgColor.toUpperCase()} />

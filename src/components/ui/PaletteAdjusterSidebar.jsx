@@ -3,33 +3,27 @@ import { X, Check } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { applyAdjustments } from '../../utils/colorUtils';
 
-// --- NUEVO HOOK ---
-// Este hook maneja la detección de clics fuera del elemento (el panel lateral)
-// para poder cerrarlo sin necesidad de un fondo oscuro.
+// Hook para detectar clics fuera del panel
 function useOnClickOutside(ref, handler) {
   useEffect(() => {
     const listener = (event) => {
-      // No hacer nada si se hace clic en el elemento del ref o en sus descendientes
       if (!ref.current || ref.current.contains(event.target)) {
         return;
       }
       handler(event);
     };
     
-    // Añadimos los listeners al documento
     document.addEventListener("mousedown", listener);
     document.addEventListener("touchstart", listener);
     
-    // Función de limpieza al desmontar el componente
     return () => {
       document.removeEventListener("mousedown", listener);
       document.removeEventListener("touchstart", listener);
     };
-  }, [ref, handler]); // Volver a ejecutar si el ref o el handler cambian
+  }, [ref, handler]);
 }
 
-
-// --- Componente de Slider Personalizado (SIN CAMBIOS) ---
+// Componente de Slider Personalizado (sin cambios)
 const CustomSlider = ({ min, max, value, onChange, gradient }) => {
   const trackRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -49,7 +43,6 @@ const CustomSlider = ({ min, max, value, onChange, gradient }) => {
     onChange(newValue);
   }, [getValueFromX, onChange]);
 
-  // Listeners de Ratón
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
@@ -69,7 +62,6 @@ const CustomSlider = ({ min, max, value, onChange, gradient }) => {
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  // Listeners Táctiles
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
   }, []);
@@ -89,7 +81,6 @@ const CustomSlider = ({ min, max, value, onChange, gradient }) => {
     };
   }, [isDragging, handleTouchMove, handleTouchEnd]);
 
-  // Handlers de eventos directos
   const handleTrackMouseDown = (e) => {
     handleMove(e.clientX);
     setIsDragging(true);
@@ -136,8 +127,7 @@ const CustomSlider = ({ min, max, value, onChange, gradient }) => {
   );
 };
 
-
-// --- Componente SliderControl (SIN CAMBIOS) ---
+// Componente SliderControl (sin cambios)
 const SliderControl = ({ label, value, min, max, onChange, gradient, onInputChange }) => (
     <div 
       className="space-y-3" 
@@ -198,9 +188,6 @@ const PaletteAdjusterSidebar = ({
     temperature: 'linear-gradient(to right, #66b3ff, #fff, #ffc966)'
   };
 
-  // --- MODIFICADO ---
-  // Se ha renombrado la función de 'handleCancel' a 'closeHandler'
-  // para que sea más genérica, ya que ahora la usa el hook 'useOnClickOutside'.
   const closeHandler = () => {
     cancelPaletteAdjustments();
     setIsAdjusterSidebarVisible(false);
@@ -224,52 +211,37 @@ const PaletteAdjusterSidebar = ({
     }));
   };
   
-  // --- NUEVO ---
-  // Creamos una ref para el panel lateral
   const sidebarRef = useRef();
-  
-  // --- NUEVO ---
-  // Llamamos al hook para que ejecute 'closeHandler' si se hace clic
-  // fuera del elemento apuntado por 'sidebarRef'
   useOnClickOutside(sidebarRef, closeHandler);
-
 
   return (
     <>
-      {/* --- ELIMINADO --- 
-        Se ha eliminado el 'div' que actuaba como fondo oscuro (backdrop)
-      
-        <div
-          className="fixed inset-0 bg-black/30 z-50"
-          onMouseDown={(e) => { ... }}
-        ></div>
+      {/* --- MODIFICACIÓN ---
+        Se han eliminado las clases fijas de escritorio (top-0, right-0, w-80, h-full).
+        Se han añadido clases de "bottom sheet" para móvil (por defecto).
+        Se han añadido clases de 'md:' para restaurar la vista de escritorio.
+        Se ha eliminado el backdrop (fondo oscuro).
       */}
-
       <aside
-        // --- NUEVO ---
-        // Adjuntamos la ref a nuestro panel lateral
         ref={sidebarRef}
-        className="fixed top-0 right-0 z-[60] w-80 h-full transition-transform transform translate-x-0"
+        className="fixed bottom-0 left-0 right-0 z-[60] w-full max-h-[80vh] rounded-t-2xl shadow-2xl transition-transform transform translate-y-0
+                   md:top-0 md:right-0 md:bottom-auto md:left-auto md:w-80 md:h-full md:rounded-t-none md:shadow-lg
+                   border-t md:border-t-0 md:border-l"
         style={{
           backgroundColor: 'var(--bg-card)',
           borderColor: 'var(--border-default)',
-          borderLeftWidth: '1px',
-          // --- NUEVO ---
-          // Añadimos una sombra para dar separación visual,
-          // ya que no hay fondo oscuro.
-          boxShadow: '-10px 0 25px -5px rgba(0, 0, 0, 0.1), -5px 0 10px -6px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -5px 10px -6px rgba(0, 0, 0, 0.1)'
         }}
-        // Se eliminan los 'onMouseDown' y 'onTouchStart' del 'aside'
-        // ya que el hook 'useOnClickOutside' maneja esta lógica de forma más limpia.
       >
         <div className="h-full px-6 py-4 overflow-y-auto flex flex-col">
+          {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
+          <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+          
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold" style={{ color: 'var(--text-default)' }}>
-              Adjust Palette
+              Ajustar Paleta
             </h2>
             <button 
-              // --- MODIFICADO ---
-              // El botón X ahora llama a 'closeHandler'
               onClick={closeHandler} 
               style={{ color: 'var(--text-muted)' }}
             >
@@ -290,7 +262,7 @@ const PaletteAdjusterSidebar = ({
           {/* Sliders */}
           <div className="space-y-6 flex-grow">
             <SliderControl
-              label="Hue"
+              label="Matiz"
               value={paletteAdjustments.hue}
               min={-180}
               max={180}
@@ -299,7 +271,7 @@ const PaletteAdjusterSidebar = ({
               gradient={gradients.hue}
             />
             <SliderControl
-              label="Saturation"
+              label="Saturación"
               value={paletteAdjustments.saturation}
               min={-100}
               max={100}
@@ -308,7 +280,7 @@ const PaletteAdjusterSidebar = ({
               gradient={gradients.saturation}
             />
             <SliderControl
-              label="Brightness"
+              label="Brillo"
               value={paletteAdjustments.brightness}
               min={-100}
               max={100}
@@ -317,7 +289,7 @@ const PaletteAdjusterSidebar = ({
               gradient={gradients.brightness}
             />
             <SliderControl
-              label="Temperature"
+              label="Temperatura"
               value={paletteAdjustments.temperature}
               min={-100}
               max={100}
@@ -333,8 +305,6 @@ const PaletteAdjusterSidebar = ({
             style={{ borderColor: 'var(--border-default)' }}
           >
             <button
-              // --- MODIFICADO ---
-              // El botón Cancelar ahora llama a 'closeHandler'
               onClick={closeHandler}
               className="flex-1 font-bold py-2 px-4 rounded-lg transition-colors border"
               style={{
@@ -343,7 +313,7 @@ const PaletteAdjusterSidebar = ({
                 borderColor: 'var(--border-default)',
               }}
             >
-              Cancel
+              Cancelar
             </button>
             <button
               onClick={handleApply}
@@ -351,7 +321,7 @@ const PaletteAdjusterSidebar = ({
               style={{ backgroundColor: 'var(--action-primary-default)' }}
             >
               <Check size={16} />
-              Apply
+              Aplicar
             </button>
           </div>
         </div>

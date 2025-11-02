@@ -3,15 +3,26 @@ import { Eye, Info, CheckCircle, AlertTriangle, AlertCircle, X } from 'lucide-re
 
 const ComponentPreviewModal = ({ primaryButtonTextColor, onClose }) => {
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="p-6 rounded-xl border max-w-4xl w-full relative flex flex-col bg-[var(--bg-card)]" onClick={(e) => e.stopPropagation()}>
-                 <div className="flex justify-between items-center mb-4">
+        // --- MODIFICACIÓN --- Backdrop responsivo
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
+            {/* --- MODIFICACIÓN ---
+              - Panel responsivo (bottom sheet en móvil)
+              - Padding inferior con 'safe-area-inset'.
+            */}
+            <div 
+                className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-4xl w-full relative flex flex-col bg-[var(--bg-card)] max-h-[90vh] md:max-h-[70vh]" 
+                onClick={(e) => e.stopPropagation()}
+            >
+                 {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
+                <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+                 
+                 <div className="flex justify-between items-center mb-4 flex-shrink-0">
                     <h2 className="text-xl font-bold flex items-center gap-2 text-[var(--text-default)]">
                         <Eye size={24} /> Vista Previa de Componentes
                     </h2>
                     <button onClick={onClose} className="text-[var(--text-muted)]"><X size={24} /></button>
                 </div>
-                <div className="mt-4 pt-4 border-t border-[var(--border-default)] overflow-y-auto max-h-[70vh]">
+                <div className="mt-4 pt-4 border-t border-[var(--border-default)] overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Columna Izquierda: Controles y Botones */}
                         <div className="space-y-6">

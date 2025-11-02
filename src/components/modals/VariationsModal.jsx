@@ -29,8 +29,20 @@ const VariationsModal = ({ explorerPalette, onClose, onColorSelect }) => {
   const currentGenerator = variationGenerators[activeTab];
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4" onClick={onClose}>
-      <div className="p-4 sm:p-6 rounded-xl border max-w-7xl w-full relative flex flex-col" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)', height: '90vh' }} onClick={(e) => e.stopPropagation()}>
+    // --- MODIFICACIÓN --- Backdrop responsivo
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
+        {/* --- MODIFICACIÓN ---
+          - Panel responsivo (bottom sheet en móvil)
+          - Padding inferior con 'safe-area-inset'.
+        */}
+      <div 
+        className="p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-7xl w-full relative flex flex-col max-h-[90vh]" 
+        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }} 
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
+        <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden flex-shrink-0" />
+        
         <div className="flex justify-between items-center mb-4 flex-shrink-0">
           <h2 className="text-xl font-bold" style={{ color: 'var(--text-default)' }}>Variaciones de Paleta</h2>
           <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>

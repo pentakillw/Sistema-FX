@@ -139,11 +139,26 @@ const Explorer = (props) => {
         { value: "achromatomaly", label: "Acromatomalía" }
     ];
 
+    // --- MODIFICACIÓN ---
+    // Esta función ahora detecta el tamaño de la ventana.
+    // En móvil, no calcula 'top' ni 'left' (el CSS lo fija abajo).
+    // En escritorio, calcula 'top' y 'left' como antes.
     const handleColorBarClick = (e, index) => {
         const rect = e.currentTarget.getBoundingClientRect();
+        let menuStyle = {};
+
+        // Solo calcula la posición absoluta en pantallas 'md' (768px) o más grandes
+        if (window.innerWidth >= 768) {
+            menuStyle = {
+                top: `${rect.bottom + window.scrollY + 8}px`,
+                left: `${rect.left + rect.width / 2}px`,
+                transform: 'translateX(-50%)',
+            };
+        }
+        
         setActiveColorMenu({
             index,
-            rect,
+            style: menuStyle // Pasa el objeto de estilo (vacío en móvil)
         });
     };
 
@@ -350,11 +365,8 @@ const Explorer = (props) => {
             
             {activeColorMenu && (
                 <ColorActionMenu
-                    style={{
-                        top: `${activeColorMenu.rect.bottom + window.scrollY + 8}px`,
-                        left: `${activeColorMenu.rect.left + activeColorMenu.rect.width / 2}px`,
-                        transform: 'translateX(-50%)',
-                    }}
+                    // --- MODIFICADO --- Se pasa el 'style' calculado
+                    style={activeColorMenu.style}
                     color={explorerPalette[activeColorMenu.index]}
                     isLocked={lockedColors.includes(explorerPalette[activeColorMenu.index])}
                     onClose={() => setActiveColorMenu(null)}
@@ -378,8 +390,6 @@ const Explorer = (props) => {
                     }}
                     onToggleLock={() => {
                         toggleLockColor(explorerPalette[activeColorMenu.index]);
-                        // Mantenemos el menú abierto para que el usuario vea el cambio
-                        // setActiveColorMenu(null); 
                     }}
                 />
             )}
@@ -480,4 +490,3 @@ const Explorer = (props) => {
 };
 
 export default memo(Explorer);
-

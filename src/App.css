@@ -1,10 +1,17 @@
+/* --- MODIFICACIÓN CLAVE ---
+  Hemos eliminado el 'max-width', 'margin' y 'padding' del #root.
+  Esto permite que tu aplicación ocupe el 100% del ancho del dispositivo,
+  lo cual es esencial para una experiencia móvil.
+  El padding ahora será controlado por los componentes internos (como App.jsx
+  que ya usa `p-4 md:p-8`).
+*/
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-height: 100vh;
+  /* Eliminamos text-align: center para dar más control a los componentes */
 }
 
+/* El resto de tus estilos (si los tuvieras) se mantienen */
 .logo {
   height: 6em;
   padding: 1.5em;
