@@ -5,13 +5,16 @@ colorblindnessMatrices, getHarmonicGrayColor } from '../utils/colorUtils.js';
 
 // 1. Definimos el color base primero
 const baseBrandColor = '#009fdb';
+// --- NUEVA SALVAGUARDA (Línea 7) ---
+// Nos aseguramos de que grayColor NUNCA sea undefined
+const safeGrayColor = getHarmonicGrayColor(baseBrandColor) || '#808080'; 
 
 // 2. Ahora usamos la constante para inicializar el estado
 const defaultState = {
     theme: 'light',
     brandColor: baseBrandColor, // Usamos la constante
     isGrayAuto: true, 
-    grayColor: getHarmonicGrayColor(baseBrandColor), // Usamos la constante
+    grayColor: safeGrayColor, // <-- USAR SALVAGUARDA
     font: 'Segoe UI',
     fxSeparator: ';',
     useFxQuotes: true,
@@ -102,7 +105,7 @@ const useThemeGenerator = () => {
 
         let newGrayColor = grayColor;
         if (isGrayAuto) { 
-            newGrayColor = getHarmonicGrayColor(newColor);
+            newGrayColor = getHarmonicGrayColor(newColor) || defaultState.grayColor; // <-- Salvaguarda
             setGrayColor(newGrayColor);
         }
 
@@ -122,7 +125,7 @@ const useThemeGenerator = () => {
         
         let newGrayColor = grayColor; 
         if (isGrayAuto) { 
-            newGrayColor = getHarmonicGrayColor(newBrandColor);
+            newGrayColor = getHarmonicGrayColor(newBrandColor) || defaultState.grayColor; // <-- Salvaguarda
             setGrayColor(newGrayColor);
         }
         
@@ -252,9 +255,18 @@ history[index];
     };
     
      const generatePaletteWithAI = async (prompt) => {
-        const apiKey = "AIzaSyDJqPrWqlXvsSRRIUfuGcCLEabga987xss"; 
-        const 
-apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY; 
+        
+        if (!apiKey) {
+            console.error("API Key no encontrada. Asegúrate de crear un archivo .env con VITE_GEMINI_API_KEY");
+            showNotification("Error: API Key no configurada.", "error");
+            return false;
+        }
+
+        // --- ¡LA CORRECCIÓN ESTÁ AQUÍ! ---
+        // Usamos el nombre del modelo que tú encontraste en la documentación.
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        
         const currentPaletteSize = originalExplorerPalette.length || 5;
         const fullPrompt = `You are an expert color palette generator. Based on the theme "${prompt}", generate an array of exactly ${currentPaletteSize} aesthetically pleasing and harmonious hex color codes.`;
         const payload = {
@@ -275,8 +287,10 @@ apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (!response.ok) 
-throw new Error(`API request failed with status ${response.status}`);
+            if (!response.ok) {
+                console.error("Respuesta de la API no fue OK:", response);
+                throw new Error(`API request failed with status ${response.status}`);
+            }
             const result = await response.json();
             const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
             
@@ -297,6 +311,7 @@ throw new Error(`API request failed with status ${response.status}`);
                     return true;
                 }
             }
+            console.error("Respuesta de la API inesperada:", result);
             throw new Error("Invalid palette format received from AI.");
         } catch (error) {
             console.error("Error generating palette with AI:", error);
@@ -310,7 +325,7 @@ throw new Error(`API request failed with status ${response.status}`);
             const { palette } = generateAdvancedRandomPalette(5);
             setOriginalExplorerPalette(palette);
             
-            const initialGray = getHarmonicGrayColor(brandColor); 
+            const initialGray = getHarmonicGrayColor(brandColor) || defaultState.grayColor; // <-- Salvaguarda
             setGrayColor(initialGray); 
             setIsGrayAuto(true); 
 
@@ -373,9 +388,23 @@ brandColor, grayColor: initialGray, explorerPalette: palette, lockedColors: [], 
 
     
     useEffect(() => {
+        // --- NUEVA SALVAGUARDA (Línea 404) ---
+        // Si los colores no están listos, no intentes renderizar
+        if (!brandColor || !grayColor) {
+            console.warn("Esperando a que los colores se inicialicen...");
+            return; 
+        }
+
         const brandShades = 
 generateShades(brandColor);
         const grayShades = generateShades(grayColor);
+
+        // --- NUEVA SALVAGUARDA (Línea 414) ---
+        // Si las sombras fallaron, no continúes
+        if (!brandShades || !grayShades || brandShades.length < 20 || grayShades.length < 20) {
+            console.error("Fallo al generar las sombras de color", { brandColor, grayColor, brandShades, grayShades });
+            return; // No sigas si las sombras no se generaron
+        }
         
         const accentColor = tinycolor(brandColor).complement().toHexString();
         const accentShades = generateShades(accentColor);
@@ -506,6 +535,8 @@ lockedColors,
         setThemeData(data);
         
         document.documentElement.style.setProperty('--bg-card', data.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color);
+        // --- ¡AQUÍ ESTABA EL ERROR! ---
+        // Se corrigió 'Predetermado' a 'Predeterminado'
         document.documentElement.style.setProperty('--text-default', data.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color);
         document.documentElement.style.setProperty('--border-default', data.stylePalette.fullBorderColors.find(c => c.name === 'Predeterminado').color);
         document.documentElement.style.setProperty('--bg-muted', theme === 'light' ? grayShades[17] : grayShades[2]);
@@ -529,7 +560,7 @@ lockedColors,
                 setIsGrayAuto(auto); 
                 
                 const newGrayColor = auto 
-                    ? getHarmonicGrayColor(imported.brandColor) 
+                    ? getHarmonicGrayColor(imported.brandColor) || defaultState.grayColor // <-- Salvaguarda
                     : imported.grayColor;
                 
                 setBrandColor(imported.brandColor);
@@ -565,7 +596,7 @@ lockedColors,
         
         setIsGrayAuto(defaultState.isGrayAuto);
 
-        const newGrayColor = getHarmonicGrayColor(defaultState.brandColor); 
+        const newGrayColor = getHarmonicGrayColor(defaultState.brandColor) || defaultState.grayColor; // <-- Salvaguarda
         setGrayColor(newGrayColor); 
         
         setOriginalExplorerPalette(palette);
@@ -626,7 +657,7 @@ newRandomPalette[randomColorsUsed % newRandomPalette.length];
 
         let newGrayColor = grayColor;
         if (isGrayAuto) { 
-            newGrayColor = getHarmonicGrayColor(newBrandColor); 
+            newGrayColor = getHarmonicGrayColor(newBrandColor) || defaultState.grayColor; // <-- Salvaguarda
             setGrayColor(newGrayColor);
         }
         
@@ -698,3 +729,4 @@ newRandomPalette[randomColorsUsed % newRandomPalette.length];
 
 export default 
 useThemeGenerator;
+
