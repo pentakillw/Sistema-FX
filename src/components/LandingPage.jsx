@@ -218,13 +218,20 @@ const LandingPage = ({ onNavigate }) => {
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                     <p>&copy; {new Date().getFullYear()} Sistema FX. Creado por JD_DM.</p>
                     
-                    {/* === ENLACE A POLÍTICA DE PRIVACIDAD === */}
-                    <div className="mt-4">
+                    {/* === ENLACES LEGALES (ACTUALIZADO) === */}
+                    <div className="mt-4 flex justify-center items-center gap-3">
                       <button 
                         onClick={() => onNavigate('privacy')}
                         className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
                       >
                         Política de Privacidad
+                      </button>
+                      <span className="text-gray-500 dark:text-gray-400">|</span>
+                      <button 
+                        onClick={() => onNavigate('terms')}
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+                      >
+                        Términos y Condiciones
                       </button>
                     </div>
                     {/* === FIN DEL ENLACE === */}

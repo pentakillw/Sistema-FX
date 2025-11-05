@@ -12,7 +12,8 @@ import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import LoginBanner from './components/LoginBanner.jsx';
 import GoogleAdBanner from './components/GoogleAdBanner.jsx';
-import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx'; // <-- IMPORTA LA NUEVA PÁGINA
+import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx'; // <-- IMPORTAR
+import TermsOfServicePage from './components/TermsOfServicePage.jsx'; // <-- IMPORTAR
 
 // --- Funciones simuladas para Capacitor ---
 const Capacitor = {
@@ -260,13 +261,20 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             <p className="text-sm">Creado por JD_DM.</p>
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
             
-            {/* === ENLACE A POLÍTICA DE PRIVACIDAD === */}
-            <div className="mt-4">
+            {/* === ENLACES LEGALES (ACTUALIZADO) === */}
+            <div className="mt-4 flex justify-center items-center gap-3">
               <button 
                 onClick={() => onNavigate('privacy')}
                 className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
               >
                 Política de Privacidad
+              </button>
+              <span className="text-gray-500 dark:text-gray-400">|</span>
+              <button 
+                onClick={() => onNavigate('terms')}
+                className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+              >
+                Términos y Condiciones
               </button>
             </div>
             {/* === FIN DEL ENLACE === */}
@@ -351,9 +359,11 @@ function App() {
           case 'generator':
             return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>;
           
-          {/* === AÑADIR LA NUEVA RUTA === */}
+           {/* === RUTAS LEGALES (ACTUALIZADO) === */}
           case 'privacy':
             return <PrivacyPolicyPage onNavigate={handleNavigate} />;
+          case 'terms':
+            return <TermsOfServicePage onNavigate={handleNavigate} />;
           
           default:
             return <LandingPage onNavigate={handleNavigate} />;
