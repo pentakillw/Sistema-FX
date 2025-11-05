@@ -35,7 +35,6 @@ const FeatureCard = ({ icon, title, children }) => (
 
 const LandingPage = ({ onNavigate }) => {
     return (
-        // --- CORRECCIÓN CLAVE: Se elimina min-h-screen y se deja que App.jsx controle la altura ---
         <div className="w-full flex flex-col relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans overflow-hidden">
             {/* Fondos con Parallax más coloridos y prominentes */}
             <ParallaxShape className="from-purple-500 to-pink-500 w-96 h-96 top-20 left-[-15rem]" speed={0.2} />
@@ -218,6 +217,17 @@ const LandingPage = ({ onNavigate }) => {
             <footer className="border-t border-gray-200 dark:border-gray-800 relative z-10">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                     <p>&copy; {new Date().getFullYear()} Sistema FX. Creado por JD_DM.</p>
+                    
+                    {/* === ENLACE A POLÍTICA DE PRIVACIDAD === */}
+                    <div className="mt-4">
+                      <button 
+                        onClick={() => onNavigate('privacy')}
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+                      >
+                        Política de Privacidad
+                      </button>
+                    </div>
+                    {/* === FIN DEL ENLACE === */}
                 </div>
             </footer>
         </div>
@@ -225,4 +235,3 @@ const LandingPage = ({ onNavigate }) => {
 };
 
 export default LandingPage;
-

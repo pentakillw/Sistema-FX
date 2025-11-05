@@ -11,7 +11,8 @@ import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import LoginBanner from './components/LoginBanner.jsx';
-import GoogleAdBanner from './components/GoogleAdBanner.jsx'; // <-- 1. IMPORTAR EL NUEVO COMPONENTE
+import GoogleAdBanner from './components/GoogleAdBanner.jsx';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx'; // <-- IMPORTA LA NUEVA PÁGINA
 
 // --- Funciones simuladas para Capacitor ---
 const Capacitor = {
@@ -160,9 +161,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           onImport={handleImport} 
           onExport={isNative ? handleNativeExport : handleWebExport} 
           onReset={handleReset} 
-          // --- MODIFICACIÓN --- 
-          // Ya no pasamos onOpenExportModal al Header
-          // onOpenExportModal={() => setIsExportModalVisible(true)} 
           themeData={themeData} 
           font={font}
           setFont={setFont}
@@ -171,7 +169,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         />
         
         <main>
-          {/* ... (Explorer, ColorPreviewer, SemanticPalettes sin cambios en props) ... */}
           <Explorer 
             explorerPalette={explorerPalette}
             reorderExplorerPalette={reorderExplorerPalette}
@@ -247,24 +244,32 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         </main>
       </div>
 
-        {/* === 2. COLOCAR EL ANUNCIO AQUÍ === */}
-        {/* Lo ponemos de forma discreta entre el contenido principal y el footer */}
         <div className="px-4 md:px-8 my-8 flex justify-center">
           <GoogleAdBanner
-            className="w-full max-w-5xl" // Ajustamos el ancho
+            className="w-full max-w-5xl"
             style={{ display: 'block' }}
             dataAdFormat="fluid"
             dataAdLayoutKey="-gw-3+1f-3d+2z"
-            dataAdClient="ca-pub-3520411621823759" // Tu publicador (ya lo lee el componente, pero es bueno tenerlo)
-            dataAdSlot="3746326433" // ¡El ID de tu bloque de anuncio!
+            dataAdClient="ca-pub-3520411621823759"
+            dataAdSlot="3746326433"
           />
         </div>
-        {/* === FIN DEL ANUNCIO === */}
 
 
         <footer className="text-center py-8 px-4 md:px-8 border-t" style={{ borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
             <p className="text-sm">Creado por JD_DM.</p>
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
+            
+            {/* === ENLACE A POLÍTICA DE PRIVACIDAD === */}
+            <div className="mt-4">
+              <button 
+                onClick={() => onNavigate('privacy')}
+                className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+              >
+                Política de Privacidad
+              </button>
+            </div>
+            {/* === FIN DEL ENLACE === */}
         </footer>
 
         {hook.notification.message && (
@@ -297,8 +302,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             canUndo={historyIndex > 0} 
             canRedo={historyIndex < history.length - 1}
             onOpenHistoryModal={() => setIsHistoryModalVisible(true)}
-            // --- MODIFICACIÓN --- 
-            // Pasamos la prop para abrir el modal a los botones flotantes
             onOpenExportModal={() => setIsExportModalVisible(true)} 
           />
         )}
@@ -347,6 +350,11 @@ function App() {
             return <AuthPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
           case 'generator':
             return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>;
+          
+          {/* === AÑADIR LA NUEVA RUTA === */}
+          case 'privacy':
+            return <PrivacyPolicyPage onNavigate={handleNavigate} />;
+          
           default:
             return <LandingPage onNavigate={handleNavigate} />;
         }
