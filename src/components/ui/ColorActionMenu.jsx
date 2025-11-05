@@ -34,8 +34,7 @@ const ColorActionMenu = ({
             className="fixed inset-0 z-30" 
             onClick={(e) => { e.stopPropagation(); onClose(); }}
         >
-            {/* --- MODIFICACIÓN ---
-              Contenedor principal que es un "bottom sheet" en móvil (clases por defecto)
+            {/* Contenedor principal que es un "bottom sheet" en móvil (clases por defecto)
               y un pop-up absoluto en escritorio (clases 'md:').
             */}
             <div
@@ -44,7 +43,7 @@ const ColorActionMenu = ({
                 style={style} // El 'style' (top/left) solo tendrá efecto en 'md:' (escritorio)
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
+                {/* Handle visual para el bottom sheet en móvil */}
                 <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mb-2 md:hidden" />
                 
                 {/* Muestra el H E X (sin cambios) */}
@@ -91,7 +90,7 @@ const ColorActionMenu = ({
                  {/* Botón de cierre (ahora oculto en móvil) */}
                  <button 
                     onClick={onClose} 
-                    className="p-2 rounded-full shadow-lg mt-2 hidden md:block" // --- MODIFICACIÓN: 'hidden md:block'
+                    className="p-2 rounded-full shadow-lg mt-2 hidden md:block" // 'hidden md:block'
                     style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-default)', border: '1px solid var(--border-default)'}}
                 >
                     <X size={18} />

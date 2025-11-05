@@ -1,13 +1,15 @@
-import HelpModal from './HelpModal.jsx';
-import VariationsModal from './VariationsModal.jsx';
-import PaletteContrastChecker from './PaletteContrastChecker.jsx';
+import HelpModal from './HelpModal';
+import VariationsModal from './VariationsModal';
+import PaletteContrastChecker from './PaletteContrastChecker';
  
-import ImagePaletteModal from './ImagePaletteModal.jsx';
-import ExportModal from './ExportModal.jsx';
-import AccessibilityModal from './AccessibilityModal.jsx';
-import ComponentPreviewModal from './ComponentPreviewModal.jsx';
-import AIPaletteModal from './AIPaletteModal.jsx';
-import HistoryModal from './HistoryModal.jsx';
+import ImagePaletteModal from './ImagePaletteModal';
+import ExportModal from './ExportModal';
+import AccessibilityModal from './AccessibilityModal';
+import ComponentPreviewModal from './ComponentPreviewModal';
+import AIPaletteModal from './AIPaletteModal';
+import HistoryModal from './HistoryModal';
+// --- NUEVA IMPORTACIÓN ---
+import DisplayModeModal from './DisplayModeModal';
 
 export {
     HelpModal,
@@ -19,5 +21,7 @@ export {
     AccessibilityModal,
     ComponentPreviewModal,
     AIPaletteModal,
-    HistoryModal
+    HistoryModal,
+    // --- NUEVA EXPORTACIÓN ---
+    DisplayModeModal
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, memo, useCallback } from 'react';
+// --- CORRECCIÓN: Se quita el './src/' de las rutas ---
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import { availableFonts } from './utils/colorUtils.js';
 import Header from './components/Header.jsx';
@@ -12,8 +13,9 @@ import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import LoginBanner from './components/LoginBanner.jsx';
 import GoogleAdBanner from './components/GoogleAdBanner.jsx';
-import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx'; // <-- IMPORTAR
-import TermsOfServicePage from './components/TermsOfServicePage.jsx'; // <-- IMPORTAR
+import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx'; 
+import TermsOfServicePage from './components/TermsOfServicePage.jsx'; 
+// --- FIN DE LA CORRECCIÓN ---
 
 // --- Funciones simuladas para Capacitor ---
 const Capacitor = {
@@ -247,12 +249,11 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
 
         <div className="px-4 md:px-8 my-8 flex justify-center">
           <GoogleAdBanner
-            className="w-full max-w-5xl"
+            dataAdClient={import.meta.env.VITE_GOOGLE_AD_CLIENT}
+            dataAdSlot="3746326433" // Reemplaza "XXXXXXXXXX" con tu Ad Slot ID real
             style={{ display: 'block' }}
             dataAdFormat="fluid"
             dataAdLayoutKey="-gw-3+1f-3d+2z"
-            dataAdClient="ca-pub-3520411621823759"
-            dataAdSlot="3746326433"
           />
         </div>
 
@@ -260,7 +261,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         <footer className="text-center py-8 px-4 md:px-8 border-t" style={{ borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
             <p className="text-sm">Creado por JD_DM.</p>
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
-            
             {/* === ENLACES LEGALES (ACTUALIZADO) === */}
             <div className="mt-4 flex justify-center items-center gap-3">
               <button 
@@ -277,7 +277,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 Términos y Condiciones
               </button>
             </div>
-            {/* === FIN DEL ENLACE === */}
+            {/* === FIN DE ENLACES === */}
         </footer>
 
         {hook.notification.message && (
@@ -359,7 +359,7 @@ function App() {
           case 'generator':
             return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>;
           
-           {/* === RUTAS LEGALES (ACTUALIZADO) === */}
+          {/* === RUTAS LEGALES (ACTUALIZADO) === */}
           case 'privacy':
             return <PrivacyPolicyPage onNavigate={handleNavigate} />;
           case 'terms':

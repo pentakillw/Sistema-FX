@@ -1,4 +1,5 @@
 import tinycolor from 'tinycolor2';
+import { colorNameList } from './colorNameList.js';
 
 export const availableFonts = {
   'Segoe UI': '"Segoe UI", system-ui, sans-serif',
@@ -71,46 +72,32 @@ tinycolor(hex);
   return shades;
 };
 
-// --- LÓGICA DE GRIS ARMÓNICO MODIFICADA ---
-/**
- * Genera un color gris armónico aleatorio basado en el matiz del color de marca.
- * @param {string} brandColor - El color de marca en formato hexadecimal.
- * @returns {string} Un color gris armónico en formato hexadecimal.
- */
 export const getHarmonicGrayColor = (brandColor) => {
     const color = tinycolor(brandColor);
     const hsl = color.toHsl();
 
-    // Si ya es casi gris (saturación muy baja)
     if (hsl.s < 0.1) {
-        // --- MODIFICACIÓN: Añadir jitter aquí también ---
-        const randomLightness = 0.45 + (Math.random() * 0.1); // Rango: 45% a 55%
+        const randomLightness = 0.45 + (Math.random() * 0.1);
         return tinycolor({ h: hsl.h, s: 0, l: randomLightness }).toHexString();
     }
 
     let harmonicHue;
 
-    // Colores cálidos (Rojos, Naranjas, Amarillos)
     if (hsl.h > 330 || hsl.h < 50) {
-        harmonicHue = 30; // Tono anaranjado sutil
+        harmonicHue = 30;
     } 
-    // Colores fríos (Azules, Púrpuras)
     else if (hsl.h > 200 && hsl.h < 310) {
-        harmonicHue = 220; // Tono azulado sutil
+        harmonicHue = 220;
     } 
-    // Verdes y Cianes (neutros/fríos)
     else {
-        harmonicHue = 200; // Tono cian/azulado sutil
+        harmonicHue = 200;
     }
     
-    // --- MODIFICACIÓN: Añadimos "jitter" aleatorio ---
-    // Esto asegura que cada gris sea único, pero siga siendo armónico.
-    const randomSaturation = 0.05 + (Math.random() * 0.1); // Rango: 5% a 15%
-    const randomLightness = 0.45 + (Math.random() * 0.1); // Rango: 45% a 55%
+    const randomSaturation = 0.05 + (Math.random() * 0.1);
+    const randomLightness = 0.45 + (Math.random() * 0.1);
 
     return tinycolor({ h: harmonicHue, s: randomSaturation, l: randomLightness }).toHexString();
 };
-// --- FIN DE LA MODIFICACIÓN ---
 
 
 const primaryHues = [
@@ -125,8 +112,12 @@ const primaryHues = [
 0.6, l: 0.3 }   // Café
 ];
 
+// --- FUNCIÓN MEJORADA (BASADA EN EL ORIGINAL) ---
 export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseColorHex = null) => {
     
+    // 1. Guardamos si el método original era 'auto'
+    const isAutoMethod = (method === 'auto');
+
     let baseColor;
     if (baseColorHex) {
         baseColor = tinycolor(baseColorHex);
@@ -137,10 +128,12 @@ export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseCo
             const specialColor = primaryHues[Math.floor(Math.random() * primaryHues.length)];
             baseColor = tinycolor(specialColor);
         } else {
+            // --- CORRECCIÓN 1: Paletas "Auto" más hermosas ---
+            // Aumentamos la saturación mínima y ajustamos la luminosidad
             baseColor = tinycolor({
                 h: Math.random() * 360,
-                s: 0.3 + Math.random() * 0.5,
-                l: 0.4 + Math.random() * 0.3,
+                s: 0.5 + Math.random() * 0.4, // Rango: 0.5 a 0.9 (Antes 0.3-0.8)
+                l: 0.45 + Math.random() * 0.2, // Rango: 0.45 a 0.65 (Antes 0.4-0.7)
             });
         }
     }
@@ -160,14 +153,17 @@ export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseCo
             initialPalette = baseColor.triad();
             break;
         case 'splitcomplement':
+        case 'split-complement': // Añadido alias
             initialPalette = baseColor.splitcomplement();
             break;
         case 'tetrad':
             initialPalette = baseColor.tetrad();
             break;
         case 'monochromatic':
+        case 'mono': // Añadido alias
              initialPalette = baseColor.monochromatic(count);
             break;
+        case 'complement':
         default: // 'complement' y otros casos
             const complementColor = baseColor.complement();
              initialPalette = [baseColor];
@@ -178,116 +174,74 @@ export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseCo
             break;
     }
 
+    // Rellenamos si la paleta no tiene suficientes colores
     while (initialPalette.length < count) {
-        const newColor = initialPalette[0].clone().spin(30 * initialPalette.length);
+        const newColor = initialPalette[initialPalette.length % 3].clone().spin(15 * initialPalette.length).lighten(5);
         initialPalette.push(newColor);
     }
     initialPalette = initialPalette.slice(0, count);
 
+    // --- LÓGICA DE BALANCEO (DE COOLORS.CO / EL ARCHIVO ORIGINAL) ---
+    // --- CORRECCIÓN 3: Rango de saturación más alto ---
     const targetLuminosities = Array.from({ length: count }, (_, i) => 
         0.95 - (i * (0.8 / (count - 1 || 1)))
     );
-
     const targetSaturations = Array.from({ length: count }, (_, i) =>
-        0.3 + (i * (0.6 / (count - 1 || 1)))
+        0.5 + (i * (0.4 / (count - 1 || 1))) // Rango: 0.5 a 0.9 (Antes 0.3-0.9)
     );
     
-    initialPalette.sort((a, b) => a.getLuminance() - 
-b.getLuminance());
+    // --- CORRECCIÓN 2: ¡ELIMINADO! ---
+    // Ya no ordenamos por luminancia, para que las teorías se mantengan por matiz.
+    // initialPalette.sort((a, b) => a.getLuminance() - b.getLuminance());
     
+    // Desordenamos las saturaciones ANTES de mapearlas.
+    const shuffledSaturations = [...targetSaturations].sort(() => 0.5 - Math.random());
+    
+    // Mapeamos a los nuevos valores de luminosidad y saturación
     let balancedPalette = initialPalette.map((color, index) => {
         let hsl = color.toHsl();
-        hsl.l = targetLuminosities[index];
-        hsl.s = targetSaturations[index] * (0.8 + Math.random() * 0.4);
+        // APLICAMOS EL BALANCEO de forma desordenada para que sea hermoso
+        hsl.l = targetLuminosities[index] * (0.9 + Math.random() * 0.2); // Jitter de luminosidad
+        hsl.s = shuffledSaturations[index] * (0.9 + Math.random() * 0.2); // Jitter de saturación
         return tinycolor(hsl);
     });
-
-    balancedPalette.sort(() => 0.5 - Math.random());
+    
+    // --- LÓGICA CONDICIONAL DE DESORDEN ---
+    // Si el método original era 'auto', desordena la paleta.
+    // Si era 'análogo', 'triádico', etc., la deja ordenada (por matiz/generación).
+    if (isAutoMethod) {
+        balancedPalette.sort(() => 0.5 - Math.random());
+    }
 
     const finalPalette = balancedPalette.map(c => c.toHexString());
     
     const brandColor = baseColorHex 
         ? baseColorHex
+        // Si no, el color más saturado de la paleta balanceada
         : balancedPalette.sort((a,b) => b.toHsl().s - a.toHsl().s)[0].toHexString();
 
     return { palette: finalPalette, brandColor: brandColor };
 };
 
-export const generateExplorerPalette = (method = 
-'auto', baseColorHex, count = 20) => {
-    let newPalette = [];
-    const colorForExplorer = !baseColorHex ? tinycolor.random() : tinycolor(baseColorHex);
-
-    if (method === 'auto') {
-      const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 
-'monochromatic', 'complement'];
-      const randomMethod = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
-      
-      const { palette } = generateAdvancedRandomPalette(count, randomMethod, colorForExplorer.toHexString());
-      const baseForGray = palette.length > 0 ? palette[Math.floor(palette.length / 2)] : tinycolor.random().toHexString();
-      const harmonicGrayShades = generateShades(tinycolor(baseForGray).desaturate(85).toHexString());
-      return { palette, gray: harmonicGrayShades };
-    }
-
-    switch (method) {
-        case 'mono':
-            newPalette = generateShades(colorForExplorer.toHexString()).slice(0, count);
-            break;
-        case 'analogous': {
-            const analogousColors = colorForExplorer.analogous(count);
-            newPalette = analogousColors.map(c => c.toHexString());
-            break;
-        }
-        case 'complement': {
-            const complementColor = colorForExplorer.complement();
-            for (let i = 0; i < count; i++) {
-                const mixAmount = (i / (count - 1)) * 100;
-                newPalette.push(tinycolor.mix(colorForExplorer, complementColor, mixAmount).toHexString());
-            }
-            break;
-        }
-        case 'split-complement': {
-            const splitColors = colorForExplorer.splitcomplement();
-            for (let i = 0; i < count; i++) {
-                const colorIndex = i % 3;
-                let hsv = splitColors[colorIndex].toHsv();
-                hsv.s = 0.5 + Math.random() * 0.4;
-                hsv.v = 0.6 + Math.random() * 0.4;
-                newPalette.push(tinycolor(hsv).toHexString());
-            }
-            break;
-        }
-        case 'triad': {
-            const triadColors = colorForExplorer.triad();
-            for (let i = 0; i < count; i++) {
-                const colorIndex = i % 3;
-                let hsv = triadColors[colorIndex].toHsv();
-                hsv.s = 0.5 + Math.random() * 0.5;
-                hsv.v = 
-0.7 + Math.random() * 0.3;
-                newPalette.push(tinycolor(hsv).toHexString());
-            }
-            break;
-        }
-        case 'tetrad': {
-            const tetradColors = colorForExplorer.tetrad();
-             for (let i = 0; i < count; i++) {
-                const colorIndex = i % 4;
-                let hsv = tetradColors[colorIndex].toHsv();
-                hsv.s = 0.5 + Math.random() * 0.5;
-                hsv.v = 0.7 + Math.random() * 0.3;
-                newPalette.push(tinycolor(hsv).toHexString());
-            }
-            break;
-        }
-    }
+// --- FUNCIÓN SIMPLIFICADA ---
+// Ahora SÓLO llama a la función principal de generación.
+export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 20) => {
     
-    const finalPalette = newPalette.slice(0, count);
-    const baseForGray = finalPalette.length > 0 ? finalPalette[Math.floor(finalPalette.length / 2)] : tinycolor.random().toHexString();
+    // 'method' es ahora 'auto', 'mono', 'analogous', etc.
+    // generateAdvancedRandomPalette se encargará de:
+    // 1. Elegir una armonía (si method es 'auto') o usar la específica.
+    // 2. Balancear la paleta (para que sea "hermosa").
+    // 3. Desordenar la paleta (SOLO si method es 'auto').
+    
+    const { palette } = generateAdvancedRandomPalette(count, method, baseColorHex);
+    
+    // La lógica de los grises sigue igual
+    const baseForGray = palette.length > 0 ? palette[Math.floor(palette.length / 2)] : tinycolor.random().toHexString();
     const harmonicGrayShades = generateShades(tinycolor(baseForGray).desaturate(85).toHexString());
 
-    return { palette: finalPalette, gray: harmonicGrayShades };
+    return { palette: palette, gray: harmonicGrayShades };
 };
+// --- FIN DE LA SIMPLIFICACIÓN ---
 
 export const applyAdjustments = (hex, adjustments) => {
   let color = tinycolor(hex);
@@ -313,4 +267,44 @@ export const applyAdjustments = (hex, adjustments) => {
   }
 
   return color.toHexString();
+};
+
+
+export const findClosestColorName = (hex) => {
+  const targetColor = tinycolor(hex).toRgb();
+  let minDistance = Infinity;
+  let closestName = "Color";
+
+  if (!colorNameList || colorNameList.length === 0) {
+    return closestName;
+  }
+
+  for (const color of colorNameList) {
+    const listColor = tinycolor(color.hex).toRgb();
+
+    // Cálculo de distancia de color (delta E) - más preciso que RGB simple
+    const distance = Math.sqrt(
+      Math.pow(targetColor.r - listColor.r, 2) +
+      Math.pow(targetColor.g - listColor.g, 2) +
+      Math.pow(targetColor.b - listColor.b, 2)
+    );
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestName = color.name;
+    }
+  }
+
+  // --- MODIFICADO: Rango de distancia ajustado ---
+  // Solo devuelve el nombre si es un "buen" match (distancia < 50)
+  if (minDistance < 50) {
+    return closestName;
+  }
+
+  // Si no, devuelve un nombre genérico
+  const lightness = targetColor.r * 0.299 + targetColor.g * 0.587 + targetColor.b * 0.114;
+  if (lightness < 40) return "Tono Oscuro";
+  if (lightness > 220) return "Tono Claro";
+  
+  return "Color"; 
 };

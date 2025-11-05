@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import tinycolor from 'tinycolor2';
-import { generateShades, generateAdvancedRandomPalette, applyColorMatrix, 
-colorblindnessMatrices, getHarmonicGrayColor } from '../utils/colorUtils.js';
+import { 
+    generateShades, 
+    generateAdvancedRandomPalette, // Usaremos esta
+    applyColorMatrix, 
+    colorblindnessMatrices, 
+    getHarmonicGrayColor,
+    generateExplorerPalette // Mantenemos esta por si se usa en otro lado
+} from '../utils/colorUtils.js';
 
 // 1. Definimos el color base primero
 const baseBrandColor = '#009fdb';
@@ -255,6 +261,8 @@ history[index];
     };
     
      const generatePaletteWithAI = async (prompt) => {
+        // --- MODIFICACIÓN (Línea 257) ---
+        // Leemos la clave desde las variables de entorno de Vite
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY; 
         
         if (!apiKey) {
@@ -263,9 +271,9 @@ history[index];
             return false;
         }
 
-        // --- ¡LA CORRECCIÓN ESTÁ AQUÍ! ---
-        // Usamos el nombre del modelo que tú encontraste en la documentación.
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        // --- CORRECCIÓN DEL ERROR 404 ---
+        // Cambiamos 'gemini-1.0-pro' por 'gemini-1.5-flash-latest'
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${apiKey}`;
         
         const currentPaletteSize = originalExplorerPalette.length || 5;
         const fullPrompt = `You are an expert color palette generator. Based on the theme "${prompt}", generate an array of exactly ${currentPaletteSize} aesthetically pleasing and harmonious hex color codes.`;
@@ -288,6 +296,7 @@ history[index];
                 body: JSON.stringify(payload)
             });
             if (!response.ok) {
+                // Añadimos más contexto al error
                 console.error("Respuesta de la API no fue OK:", response);
                 throw new Error(`API request failed with status ${response.status}`);
             }
@@ -617,17 +626,28 @@ lockedColors,
 
     const handleThemeToggle = () => setTheme(t => t === 'light' ? 'dark' : 'light');
     
-    const handleRandomTheme = (baseColorHex 
-= null) => {
-        let methodToUse = explorerMethod;
-        if (explorerMethod === 'auto') {
-            const harmonyMethods = ['analogous', 'triad', 'splitcomplement', 'tetrad', 'monochromatic', 'complement'];
-            methodToUse = harmonyMethods[Math.floor(Math.random() * harmonyMethods.length)];
-        }
+    // ---
+    // --- ¡¡AQUÍ ESTÁ LA CORRECCIÓN!! ---
+    // ---
+    const handleRandomTheme = (baseColorHex = null) => {
+        
+        // ¡CORRECCIÓN!
+        // Pasamos el 'explorerMethod' ('auto' o 'analogous', etc.) directamente.
+        // La función 'generateAdvancedRandomPalette' (en colorUtils.js)
+        // se encargará de:
+        // 1. Si es 'auto', elegir una armonía AL AZAR.
+        // 2. Generar y balancear la paleta para que sea "hermosa".
+        // 3. Si es 'auto', DESORDENAR la paleta.
+        // 4. Si es un método de teoría, NO desordenarla (la dejará ordenada por luz).
         
         const { palette: newRandomPalette, brandColor: newBrandColorSuggestion } = 
-            generateAdvancedRandomPalette(originalExplorerPalette.length || 5, methodToUse, baseColorHex); 
+            generateAdvancedRandomPalette(
+                originalExplorerPalette.length || 5, 
+                explorerMethod, // <-- Se pasa el método seleccionado ('auto', 'analogous', etc.)
+                baseColorHex
+            ); 
 
+        // Esta parte (manejo de colores bloqueados) sigue igual
         let randomColorsUsed = 0;
         let baseColorPlaced = false;
         const finalPalette = originalExplorerPalette.map((oldColor) => {
@@ -647,7 +667,7 @@ newRandomPalette[randomColorsUsed % newRandomPalette.length];
         let newBrandColor;
         if (baseColorHex) {
             newBrandColor = baseColorHex;
-} else {
+        } else {
             const unLockedColors = finalPalette.filter(c => !lockedColors.includes(c));
             newBrandColor = unLockedColors.length > 0 ? unLockedColors[0] : (lockedColors.length > 0 ? lockedColors[0] : newBrandColorSuggestion);
         }
@@ -670,6 +690,7 @@ newRandomPalette[randomColorsUsed % newRandomPalette.length];
             isGrayAuto: isGrayAuto, // <-- AÑADIDO
         });
     };
+    // --- FIN DE LA CORRECCIÓN ---
 
     const commitPaletteAdjustments = () => {
         const newLockedColors = lockedColors.map(oldLockedColor => {
@@ -729,4 +750,3 @@ newRandomPalette[randomColorsUsed % newRandomPalette.length];
 
 export default 
 useThemeGenerator;
-

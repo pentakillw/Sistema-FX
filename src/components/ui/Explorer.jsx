@@ -1,13 +1,33 @@
 import React, { useState, memo, useRef } from 'react';
-// --- MODIFICADO --- Importamos Lock y Star
-import { Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, Undo2, Redo2, Eye, Sparkles, Accessibility, TestTube2, Pipette, Wand2, Lock, Star } from 'lucide-react';
+import { 
+    Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, 
+    Undo2, Redo2, Eye, Sparkles, Accessibility, TestTube2, Pipette, Wand2, 
+    Lock, Star, Unlock, Copy, Trash2, 
+    ArrowLeftRight
+} from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from '../ColorPalette.jsx';
-import { VariationsModal, PaletteContrastChecker, ImagePaletteModal, AIPaletteModal, AccessibilityModal, ComponentPreviewModal } from '../modals/index.jsx';
-import { generationMethods, generateShades } from '../../utils/colorUtils.js';
+import { 
+    VariationsModal, PaletteContrastChecker, ImagePaletteModal, 
+    AIPaletteModal, DisplayModeModal
+} from '../modals/index.jsx'; 
+import { generationMethods, generateShades, findClosestColorName } from '../../utils/colorUtils.js'; 
 import { HexColorPicker } from 'react-colorful';
 import ColorActionMenu from './ColorActionMenu.jsx';
+
+// Componente para los botones de acción que aparecen al pasar el mouse
+const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMouseDown }) => (
+    <button
+        onMouseDown={onMouseDown} // Añadido para dragHandleProps
+        onClick={(e) => { e.stopPropagation(); onClick(); }}
+        title={title}
+        className={`p-2 rounded-lg transition-colors ${iconColor} ${hoverBg}`}
+    >
+        {children}
+    </button>
+);
+
 
 const backgroundModeLabels = {
     'T950': 'Fondo T950',
@@ -18,6 +38,7 @@ const backgroundModeLabels = {
     'card': 'Fondo Tarjeta'
 };
 
+// Función helper para obtener el color de fondo correcto
 const getPreviewBgColor = (mode, shades, cardColor) => {
     if (!shades || shades.length === 0) return '#FFFFFF';
     switch (mode) {
@@ -30,6 +51,7 @@ const getPreviewBgColor = (mode, shades, cardColor) => {
     }
 }
 
+// Pop-over para el selector de color
 const ColorPickerPopover = ({ color, onChange, onClose }) => {
     const [localColor, setLocalColor] = useState(color);
 
@@ -39,7 +61,7 @@ const ColorPickerPopover = ({ color, onChange, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center" onClick={handleOk}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center" onClick={onClose}>
             <div className="p-4 rounded-xl border shadow-2xl" 
                  style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
                  onClick={(e) => e.stopPropagation()}>
@@ -83,6 +105,7 @@ const Explorer = (props) => {
         toggleLockColor,
     } = props;
     
+    // Estado para los modales
     const [isVariationsVisible, setIsVariationsVisible] = useState(false);
     const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
     const [colorModePreview, setColorModePreview] = useState('card');
@@ -97,11 +120,41 @@ const Explorer = (props) => {
     const [activeColorMenu, setActiveColorMenu] = useState(null); 
     const paletteContainerRef = useRef(null);
 
+    // Estado para el formato de texto del color
+    const [displayMode, setDisplayMode] = useState('name'); // 'name', 'rgb', 'hsl', 'hsb'
+    const [isDisplayModeModalVisible, setIsDisplayModeModalVisible] = useState(false);
+
+    // Devuelve el valor de texto inferior (Nombre, RGB, HSL, HSB)
+    const getDisplayValue = (colorStr, mode) => {
+        const color = tinycolor(colorStr);
+        switch (mode) {
+            case 'rgb':
+                const { r, g, b } = color.toRgb();
+                return `RGB: ${r}, ${g}, ${b}`;
+            case 'hsl':
+                const { h, s, l } = color.toHsl();
+                return `HSL: ${Math.round(h)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%`;
+            case 'hsb': // HSB (o HSV)
+                const { h: hsvH, s: hsvS, v: hsvV } = color.toHsv();
+                return `HSB: ${Math.round(hsvH)}, ${Math.round(hsvS * 100)}%, ${Math.round(hsvV * 100)}%`;
+            case 'name':
+            default:
+                // Usa la nueva función de colorUtils.js
+                return findClosestColorName(colorStr);
+        }
+    };
+    
+    // Devuelve el valor H E X siempre, para el texto superior.
+    const getHexValue = (colorStr) => {
+        return tinycolor(colorStr).toHexString().substring(1).toUpperCase();
+    }
+
 
     if (!themeData || !themeData.stylePalette || !themeData.grayShades) {
-        return null;
+        return null; 
     }
     
+    // Asignación de colores y funciones
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
 
@@ -139,15 +192,11 @@ const Explorer = (props) => {
         { value: "achromatomaly", label: "Acromatomalía" }
     ];
 
-    // --- MODIFICACIÓN ---
-    // Esta función ahora detecta el tamaño de la ventana.
-    // En móvil, no calcula 'top' ni 'left' (el CSS lo fija abajo).
-    // En escritorio, calcula 'top' y 'left' como antes.
+    // Abre el menú de acciones para el modo expandido
     const handleColorBarClick = (e, index) => {
         const rect = e.currentTarget.getBoundingClientRect();
         let menuStyle = {};
 
-        // Solo calcula la posición absoluta en pantallas 'md' (768px) o más grandes
         if (window.innerWidth >= 768) {
             menuStyle = {
                 top: `${rect.bottom + window.scrollY + 8}px`,
@@ -158,7 +207,7 @@ const Explorer = (props) => {
         
         setActiveColorMenu({
             index,
-            style: menuStyle // Pasa el objeto de estilo (vacío en móvil)
+            style: menuStyle 
         });
     };
 
@@ -170,12 +219,14 @@ const Explorer = (props) => {
                 className={`p-4 sm:p-6 rounded-xl border mb-8 transition-all duration-300`} 
                 style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
             >
+                {/* --- HEADER DEL EXPLORER --- */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div className="flex-1 min-w-0">
                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
                         <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Arrastra, inserta o quita colores para crear tu paleta.</p>
                     </div>
                     
+                    {/* Botones de acción del header */}
                     <div className="flex items-center flex-wrap justify-end gap-2 self-end sm:self-auto">
                         <button
                             onClick={handleCyclePreviewMode}
@@ -257,7 +308,7 @@ const Explorer = (props) => {
                     </div>
                 </div>
 
-
+                {/* --- CONTENEDOR DE LA PALETA PRINCIPAL --- */}
                 <div style={simulationFilterStyle}>
                     <div className="overflow-x-auto sm:overflow-x-visible pb-2 -mb-2">
                          <DragDropContext onDragEnd={onDragEnd}>
@@ -266,62 +317,168 @@ const Explorer = (props) => {
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.droppableProps}
-                                        className="flex items-center rounded-md h-48 relative group"
+                                        className="flex items-center rounded-md h-[60vh] relative group" // Paleta alta
                                         style={{ minWidth: `${explorerPalette.length * 50}px` }}
                                     >
-                                        {explorerPalette.map((shade, index) => (
-                                            <Draggable key={"main-" + shade + index} draggableId={"main-" + shade + index} index={index}>
-                                                {(provided) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        className="relative h-full flex-1 flex items-center justify-center group/color-wrapper"
-                                                        style={{...provided.draggableProps.style}}
-                                                    >
-                                                        <div
-                                                            {...provided.dragHandleProps}
-                                                            className="relative group/item h-full w-full cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform duration-100 ease-in-out"
-                                                            style={{ backgroundColor: shade, minWidth: '50px' }}
-                                                            onClick={(e) => handleColorBarClick(e, index)}
-                                                            title={`Acciones para ${shade.toUpperCase()}`}
-                                                        >
-                                                            {/* --- NUEVO: Indicador de Color de Marca --- */}
-                                                            {shade === brandColor && (
-                                                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 p-1 bg-black/30 rounded-full text-white z-10" title="Color de Marca Actual">
-                                                                    <Star size={10} className="fill-white" />
-                                                                </div>
-                                                            )}
-                                                            
-                                                            {lockedColors.includes(shade) && (
-                                                                <div className="absolute top-2 left-2 p-1 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
-                                                                    <Lock size={10} />
-                                                                </div>
-                                                            )}
-                                                            <span className="text-[10px] font-mono opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 pointer-events-none z-20" style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF' }}>
-                                                                {shade.substring(1).toUpperCase()}
-                                                            </span>
-                                                           <button 
-                                                                onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}}
-                                                                className="absolute top-1 right-1 p-0.5 bg-black/30 rounded-full text-white opacity-0 group-hover/item:opacity-100 hover:bg-black/60 transition-opacity z-20"
-                                                                title="Quitar color"
-                                                            >
-                                                                <X size={12}/>
-                                                            </button>
-                                                        </div>
+                                        {explorerPalette.map((shade, index) => {
+                                            
+                                            // Lógica de color dinámico
+                                            const isLight = tinycolor(shade).isLight();
+                                            const iconColor = isLight ? 'text-gray-900' : 'text-white';
+                                            const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
+                                            const textColor = isLight ? '#000' : '#FFF';
+                                            const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
+                                            
+                                            // Valores de texto
+                                            const hexValue = getHexValue(shade);
+                                            const displayValue = getDisplayValue(shade, displayMode);
 
-                                                        <div className="absolute top-0 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
-                                                            <button 
-                                                                onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
-                                                                className="bg-white/90 backdrop-blur-sm rounded-full p-0.5 text-black shadow-lg hover:scale-110 transition-transform"
-                                                                title="Insertar color"
+                                            return (
+                                                <Draggable key={"main-" + shade + index} draggableId={"main-" + shade + index} index={index}>
+                                                    {(provided) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            className="relative h-full flex-1 flex items-center justify-center group/color-wrapper"
+                                                            style={{...provided.draggableProps.style}}
+                                                        >
+                                                            <div
+                                                                className="relative group/item h-full w-full flex items-center justify-center transition-transform duration-100 ease-in-out"
+                                                                style={{ backgroundColor: shade, minWidth: '50px' }}
+                                                                title={shade.toUpperCase()}
                                                             >
-                                                                <Plus size={14}/>
-                                                            </button>
+                                                                {/* Iconos indicadores (Marca y Bloqueo) */}
+                                                                {shade === brandColor && (
+                                                                    <div className={`absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color de Marca Actual">
+                                                                        <Star size={12} className="fill-current" strokeWidth={1.5} />
+                                                                    </div>
+                                                                )}
+                                                                {lockedColors.includes(shade) && (
+                                                                    <div className={`absolute top-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color Bloqueado">
+                                                                        <Lock size={12} strokeWidth={1.5} />
+                                                                    </div>
+                                                                )}
+                                                                
+                                                                {/* Contenedor de botones en el centro (Aparece en hover) */}
+                                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                                                                                flex flex-col items-center gap-2
+                                                                                opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
+                                                                    
+                                                                    {/* Icono de Arrastre */}
+                                                                    <div 
+                                                                        title="Arrastrar para mover"
+                                                                        className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`}
+                                                                        // Aplicamos los dragHandleProps aquí
+                                                                        {...provided.dragHandleProps} 
+                                                                        onClick={(e) => e.stopPropagation()} // Previene que el clic se propague
+                                                                    >
+                                                                        <ArrowLeftRight size={18} strokeWidth={1.5} />
+                                                                    </div>
+
+                                                                    <ActionButtonHover 
+                                                                        title="Usar como Marca"
+                                                                        onClick={() => handleExplorerColorPick(shade)}
+                                                                        iconColor={iconColor}
+                                                                        hoverBg={hoverBg}
+                                                                    >
+                                                                        <Star size={18} strokeWidth={1.5} />
+                                                                    </ActionButtonHover>
+                                                                    
+                                                                    <ActionButtonHover 
+                                                                        title="Ver Tonalidades"
+                                                                        onClick={() => toggleShades(index)}
+                                                                        iconColor={iconColor}
+                                                                        hoverBg={hoverBg}
+                                                                    >
+                                                                        <Palette size={18} strokeWidth={1.5} />
+                                                                    </ActionButtonHover>
+                                                                    
+                                                                    <ActionButtonHover 
+                                                                        title="Copiar H E X"
+                                                                        onClick={() => {
+                                                                            navigator.clipboard.writeText(hexValue);
+                                                                            showNotification(`H E X ${hexValue} copiado!`);
+                                                                        }}
+                                                                        iconColor={iconColor}
+                                                                        hoverBg={hoverBg}
+                                                                    >
+                                                                        <Copy size={18} strokeWidth={1.5} />
+                                                                    </ActionButtonHover>
+
+                                                                    <ActionButtonHover 
+                                                                        title={lockedColors.includes(shade) ? "Desbloquear" : "Bloquear"}
+                                                                        onClick={() => toggleLockColor(shade)}
+                                                                        iconColor={iconColor}
+                                                                        hoverBg={hoverBg}
+                                                                    >
+                                                                        {lockedColors.includes(shade) ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}
+                                                                    </ActionButtonHover>
+
+                                                                    <ActionButtonHover 
+                                                                        title="Eliminar Color"
+                                                                        onClick={() => removeColorFromPalette(index)}
+                                                                        iconColor={iconColor}
+                                                                        hoverBg={hoverBg}
+                                                                    >
+                                                                        <Trash2 size={18} strokeWidth={1.5} />
+                                                                    </ActionButtonHover>
+                                                                </div>
+                                                                
+                                                                {/* Contenedor de H E X y Nombre (SIEMPRE VISIBLE) */}
+                                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2
+                                                                                flex flex-col items-center gap-1
+                                                                                opacity-100 transition-opacity duration-200 z-10">
+                                                                    
+                                                                    <button
+                                                                        className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`}
+                                                                        style={{ color: textColor, textShadow: textShadow }}
+                                                                        onClick={(e) => { e.stopPropagation(); setPickerColor({ index, color: shade }); }}
+                                                                        title="Editar Color"
+                                                                    >
+                                                                        {hexValue}
+                                                                    </button>
+                                                                    
+                                                                    <button
+                                                                        className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`}
+                                                                        style={{ color: textColor, textShadow: textShadow }}
+                                                                        onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }}
+                                                                        title="Cambiar formato de color"
+                                                                    >
+                                                                        {displayValue}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                    className="bg-white/90 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform"
+                                                                    title="Insertar color"
+                                                                >
+                                                                    <Plus size={16}/>
+                                                                </button>
+                                                            </div>
+
+                                                            {activeShadeIndex === index && (
+                                                                <div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                                                                    {generateShades(baseColorForShades).map((shade, shadeIndex) => (
+                                                                        <div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" 
+                                                                             style={{ backgroundColor: shade }} 
+                                                                             onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} 
+                                                                             title={`Usar ${shade.toUpperCase()}`} 
+                                                                        >
+                                                                            {shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
+                                                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                     <button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        ))}
+                                                    )}
+                                                </Draggable>
+                                            )
+                                        })}
                                         {provided.placeholder}
                                     </div>
                                 )}
@@ -330,6 +487,7 @@ const Explorer = (props) => {
                     </div>
                 </div>
                 
+                {/* --- FOOTER DEL EXPLORER (Escala de grises) --- */}
                 <div className="mt-6 pt-4 border-t" style={{ borderColor: tinycolor(colorModeBg).isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}>
                      <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-4">
                         <p className="text-sm font-semibold self-start sm:self-center" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Escala de Grises Sugerida</p>
@@ -363,9 +521,9 @@ const Explorer = (props) => {
                 </div>
             </section>
             
+            {/* --- MENÚ EMERGENTE PARA MODO EXPANDIDO --- */}
             {activeColorMenu && (
                 <ColorActionMenu
-                    // --- MODIFICADO --- Se pasa el 'style' calculado
                     style={activeColorMenu.style}
                     color={explorerPalette[activeColorMenu.index]}
                     isLocked={lockedColors.includes(explorerPalette[activeColorMenu.index])}
@@ -395,6 +553,7 @@ const Explorer = (props) => {
             )}
 
 
+            {/* --- MODAL DE PICKER --- */}
             {pickerColor && (
                 <ColorPickerPopover 
                     color={pickerColor.color}
@@ -405,6 +564,7 @@ const Explorer = (props) => {
                 />
             )}
             
+            {/* --- MODO EXPANDIDO (PANTALLA COMPLETA) --- */}
             {isExpanded && (
                 <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={(e) => { e.stopPropagation(); setIsExpanded(false); setActiveShadeIndex(null);}}>
                     <div 
@@ -412,11 +572,15 @@ const Explorer = (props) => {
                         onClick={(e) => e.stopPropagation()}
                         onMouseUp={(e) => e.stopPropagation()}
                     >
+                        {/* Botones de deshacer/rehacer */}
                         <div className="absolute top-4 left-4 flex gap-2 z-30">
                             <button onClick={(e) => { e.stopPropagation(); handleUndo(); }} disabled={!history || historyIndex <= 0} className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Deshacer cambio de paleta" ><Undo2 size={24} /></button>
                             <button onClick={(e) => { e.stopPropagation(); handleRedo(); }} disabled={!history || historyIndex >= history.length - 1} className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Rehacer cambio de paleta" ><Redo2 size={24} /></button>
                         </div>
+                        {/* Botón de cerrar */}
                         <button onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}} className="absolute top-4 right-4 text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors z-30"><X size={24} /></button>
+                        
+                        {/* Paleta expandida */}
                         <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="palette-expanded" direction="horizontal">
                                 {(provided) => (
@@ -426,15 +590,14 @@ const Explorer = (props) => {
                                                 {(provided) => (
                                                     <div ref={provided.innerRef} {...provided.draggableProps} className="relative group h-full flex flex-col items-center justify-end text-white font-bold text-lg" style={{...provided.draggableProps.style, minWidth: '100px', flex: '1 1 0px' }} >
                                                         <div 
-                                                            {...provided.dragHandleProps} 
+                                                            {...provided.dragHandleProps} // El drag handle props se aplica directamente al div de color
                                                             className="w-full h-full cursor-grab active:cursor-grabbing" 
                                                             style={{backgroundColor: color}}
-                                                            onClick={(e) => handleColorBarClick(e, index)}
+                                                            onClick={(e) => handleColorBarClick(e, index)} // Usa el menú emergente
                                                         ></div>
                                                         
                                                         {activeColorMenu?.index !== index && (
                                                             <>
-                                                                {/* --- NUEVO: Indicador de Color de Marca --- */}
                                                                 {color === brandColor && (
                                                                     <div className="absolute bottom-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color de Marca Actual">
                                                                         <Star size={14} className="fill-white" />
@@ -457,11 +620,12 @@ const Explorer = (props) => {
                                                                 </div>
                                                             </>
                                                         )}
+                                                        {/* Vista de Tonalidades (en modo expandido) */}
                                                         {activeShadeIndex === index && (
                                                             <div className="absolute inset-0 flex flex-col z-20 animate-fade-in">
                                                                 {generateShades(baseColorForShades).map((shade, shadeIndex) => (
                                                                     <div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >
-                                                                        {shade.toLowerCase() === color.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
+                                                                        {shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
                                                                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div>
                                                                     </div>
                                                                 ))}
@@ -481,10 +645,20 @@ const Explorer = (props) => {
                 </div>
             )}
             
+            {/* --- MODALES --- */}
             {isAIModalVisible && ( <AIPaletteModal onClose={() => setIsAIModalVisible(false)} onGenerate={generatePaletteWithAI} /> )}
             {isImageModalVisible && ( <ImagePaletteModal onColorSelect={updateBrandColor} onClose={() => setIsImageModalVisible(false)} /> )}
             {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={updateBrandColor} />}
             {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
+            
+            {/* Modal de Formato de Visualización */}
+            {isDisplayModeModalVisible && (
+                <DisplayModeModal
+                    currentMode={displayMode}
+                    onModeChange={setDisplayMode}
+                    onClose={() => setIsDisplayModeModalVisible(false)}
+                />
+            )}
         </>
     );
 };

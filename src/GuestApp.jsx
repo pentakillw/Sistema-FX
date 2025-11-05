@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
+// --- CORRECCIÓN: Se quita el './src/' de la ruta ---
 import useThemeGenerator from './hooks/useThemeGenerator.js';
-import Explorer from './components/Explorer.jsx';
+// --- CORRECCIÓN: Se añade 'ui/' a la ruta de Explorer ---
+import Explorer from './components/ui/Explorer.jsx';
 
 // This is a simplified version of App.jsx for unauthenticated users
 function GuestApp() {
