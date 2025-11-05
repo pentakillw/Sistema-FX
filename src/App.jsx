@@ -11,6 +11,7 @@ import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import LoginBanner from './components/LoginBanner.jsx';
+import GoogleAdBanner from './components/GoogleAdBanner.jsx'; // <-- 1. IMPORTAR EL NUEVO COMPONENTE
 
 // --- Funciones simuladas para Capacitor ---
 const Capacitor = {
@@ -245,6 +246,21 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           />
         </main>
       </div>
+
+        {/* === 2. COLOCAR EL ANUNCIO AQUÍ === */}
+        {/* Lo ponemos de forma discreta entre el contenido principal y el footer */}
+        <div className="px-4 md:px-8 my-8 flex justify-center">
+          <GoogleAdBanner
+            className="w-full max-w-5xl" // Ajustamos el ancho
+            style={{ display: 'block' }}
+            dataAdFormat="fluid"
+            dataAdLayoutKey="-gw-3+1f-3d+2z"
+            dataAdClient="ca-pub-3520411621823759" // Tu publicador (ya lo lee el componente, pero es bueno tenerlo)
+            dataAdSlot="3746326433" // ¡El ID de tu bloque de anuncio!
+          />
+        </div>
+        {/* === FIN DEL ANUNCIO === */}
+
 
         <footer className="text-center py-8 px-4 md:px-8 border-t" style={{ borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
             <p className="text-sm">Creado por JD_DM.</p>
