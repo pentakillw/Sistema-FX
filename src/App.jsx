@@ -1,21 +1,59 @@
-import React, { useEffect, useState, memo, useCallback } from 'react';
-// --- CORRECCIÓN: Se quita el './src/' de las rutas ---
+import React, { useEffect, useState, memo, useCallback, useRef } from 'react';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
-import { availableFonts } from './utils/colorUtils.js';
-import Header from './components/Header.jsx';
+import { availableFonts, generationMethods } from './utils/colorUtils.js';
+// ¡Ya no se importa Header, se define uno minimalista aquí!
 import Explorer from './components/ui/Explorer.jsx';
 import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
-import { ExportModal, AccessibilityModal, ComponentPreviewModal, HistoryModal } from './components/modals/index.jsx';
+// Se importa HelpModal y los iconos necesarios para el nuevo header
+import { ExportModal, AccessibilityModal, ComponentPreviewModal, HistoryModal, HelpModal } from './components/modals/index.jsx';
+import { Settings, Type, Upload, Download, RefreshCcw, HelpCircle, User, LogOut, LogIn } from 'lucide-react';
 import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
+// --- ¡NUEVO! --- Importamos el nuevo sidebar
+import ColorBlindnessSidebar from './components/ui/ColorBlindnessSidebar.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
-import LoginBanner from './components/LoginBanner.jsx';
+// ¡LoginBanner ya no se importa!
 import GoogleAdBanner from './components/GoogleAdBanner.jsx';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx'; 
 import TermsOfServicePage from './components/TermsOfServicePage.jsx'; 
-// --- FIN DE LA CORRECCIÓN ---
+
+// --- ¡NUEVO! --- Componentes de Menú (movidos de Explorer)
+const PopoverMenu = ({ children, onClose, align = 'right' }) => {
+    const menuRef = useRef(null);
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                onClose();
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [onClose]);
+
+    return (
+        <div
+            ref={menuRef}
+            className={`absolute top-full ${align === 'right' ? 'right-0' : 'left-0'} mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-xl z-50 p-2 space-y-1`}
+            onClick={(e) => { e.stopPropagation(); }}
+        >
+            {children}
+        </div>
+    );
+};
+
+const MenuButton = ({ icon, label, onClick, className = "" }) => (
+    <button
+        onClick={onClick}
+        className={`flex items-center w-full px-3 py-2 text-sm rounded-md text-[var(--text-default)] hover:bg-[var(--bg-muted)] transition-colors ${className}`}
+    >
+        {icon}
+        <span className="ml-3">{label}</span>
+    </button>
+);
+// --- FIN DE COMPONENTES DE MENÚ ---
+
 
 // --- Funciones simuladas para Capacitor ---
 const Capacitor = {
@@ -57,7 +95,17 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
   const [isAdjusterSidebarVisible, setIsAdjusterSidebarVisible] = useState(false);
+  const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
+  // --- ¡NUEVO! --- Estado para el sidebar de simulación
+  const [isSimulationSidebarVisible, setIsSimulationSidebarVisible] = useState(false);
 
+
+  // --- ¡NUEVO! --- Estado para los menús del header
+  const [isConfigMenuVisible, setIsConfigMenuVisible] = useState(false);
+  const [isFontMenuVisible, setIsFontMenuVisible] = useState(false);
+  const [isUserMenuVisible, setIsUserMenuVisible] = useState(false);
+  const importFileRef = useRef(null); 
+  // --- FIN DE NUEVO ESTADO ---
 
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -69,7 +117,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       }
 
       e.preventDefault();
-      // La barra espaciadora ahora llama a la función sin parámetros
       handleRandomTheme();
     };
 
@@ -89,7 +136,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       theme: themeData.theme, 
       isGrayAuto: isGrayAuto,
       explorerPalette: originalExplorerPalette,
-      lockedColors: lockedColors, // <-- DETALLE AÑADIDO
+      lockedColors: lockedColors,
     };
     
     try {
@@ -116,7 +163,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       theme: themeData.theme, 
       isGrayAuto: isGrayAuto,
       explorerPalette: originalExplorerPalette,
-      lockedColors: lockedColors, // <-- DETALLE AÑADIDO
+      lockedColors: lockedColors,
     };
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
     const link = document.createElement("a");
@@ -124,6 +171,65 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     link.download = "mi-tema.json";
     link.click();
   };
+
+  // --- ¡NUEVO! --- Handlers para los menús del header
+  const handleFontSelect = (fontName) => {
+      setFont(fontName);
+      setIsFontMenuVisible(false);
+      setIsConfigMenuVisible(false);
+  };
+  const handleImportClick = () => {
+      importFileRef.current.click();
+      setIsConfigMenuVisible(false);
+  };
+  const handleExportClick = () => {
+      handleWebExport();
+      setIsConfigMenuVisible(false);
+  };
+  const handleResetClick = () => {
+      handleReset();
+      setIsConfigMenuVisible(false);
+  };
+  const handleHelpClick = () => {
+      setIsHelpModalVisible(true);
+      setIsConfigMenuVisible(false);
+  };
+  const handleLogoutClick = () => {
+      onLogout();
+      setIsUserMenuVisible(false);
+  };
+  // --- FIN DE HANDLERS ---
+  
+  // --- ¡NUEVO! --- Handlers para el nuevo sidebar
+  const handleOpenSimulationSidebar = () => {
+    setIsSimulationSidebarVisible(true);
+    // Asegurarse de que el otro sidebar esté cerrado
+    if (isAdjusterSidebarVisible) {
+      cancelPaletteAdjustments();
+      setIsAdjusterSidebarVisible(false);
+    }
+  };
+
+  const handleOpenAdjusterSidebar = () => {
+    setIsAdjusterSidebarVisible(true);
+    // Asegurarse de que el otro sidebar esté cerrado
+    if (isSimulationSidebarVisible) {
+      setSimulationMode('none');
+      setIsSimulationSidebarVisible(false);
+    }
+  };
+  
+  const handleCancelSimulation = () => {
+    setSimulationMode('none');
+    setIsSimulationSidebarVisible(false);
+  };
+
+  const handleApplySimulation = () => {
+    applySimulationToPalette();
+    setSimulationMode('none');
+    setIsSimulationSidebarVisible(false);
+  };
+  // --- FIN DE HANDLERS ---
 
 
   if (!themeData || !themeData.stylePalette || !themeData.stylePalette.fullActionColors) {
@@ -157,94 +263,213 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         </defs>
       </svg>
       
-      {!user && <LoginBanner onLoginClick={() => onNavigate('auth')} />}
-
-      <div className="flex-grow p-4 md:p-8">
-        <Header 
-          onImport={handleImport} 
-          onExport={isNative ? handleNativeExport : handleWebExport} 
-          onReset={handleReset} 
-          themeData={themeData} 
-          font={font}
-          setFont={setFont}
-          user={user}
-          onLogout={onLogout}
-        />
+      <input type="file" ref={importFileRef} onChange={handleImport} accept=".json" className="hidden"/>
+      
+      <header 
+        className="flex justify-between items-center py-3 px-4 md:px-8 border-b"
+        style={{ borderColor: 'var(--border-default)'}}
+      >
+        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+          <img src="https://raw.githubusercontent.com/pentakillw/sistema-de-diseno-react/main/Icono_FX.png" alt="Sistema FX Logo" className="h-10 w-10 rounded-lg"/>
+          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text-default)' }}>Sistema FX</h1>
+        </div>
         
-        <main>
-          <Explorer 
-            explorerPalette={explorerPalette}
-            reorderExplorerPalette={reorderExplorerPalette}
-            explorerGrayShades={explorerGrayShades}
-            handleExplorerColorPick={handleExplorerColorPick}
-            setGrayColor={setGrayColor}
-            paletteAdjustments={paletteAdjustments}
-            brandColor={brandColor}
-            updateBrandColor={updateBrandColor}
-            themeData={themeData}
-            insertColorInPalette={insertColorInPalette}
-            removeColorFromPalette={removeColorFromPalette}
-            explorerMethod={explorerMethod}
-            setExplorerMethod={setExplorerMethod}
-            replaceColorInPalette={replaceColorInPalette}
-            handleUndo={handleUndo}
-            handleRedo={handleRedo}
-            history={history}
-            historyIndex={historyIndex}
-            simulationMode={simulationMode}
-            setSimulationMode={setSimulationMode}
-            generatePaletteWithAI={generatePaletteWithAI}
-            showNotification={showNotification}
-            applySimulationToPalette={applySimulationToPalette}
-            onOpenAdjuster={() => setIsAdjusterSidebarVisible(true)}
-            onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
-            onOpenComponentPreviewModal={() => setIsComponentPreviewModal(true)}
-            lockedColors={lockedColors}
-            toggleLockColor={toggleLockColor}
-          />
-          <div className="space-y-6 mb-8">
-            <ColorPreviewer 
-              title="Modo Claro" 
-              themeOverride="light" 
-              previewMode={lightPreviewMode} 
-              onCyclePreviewMode={() => cyclePreviewMode(lightPreviewMode, setLightPreviewMode, ['white', 'T950'])} 
-              onShadeCopy={showNotification}
-              brandColor={brandColor}
-              grayColor={grayColor}
-              isGrayAuto={isGrayAuto}
-              themeData={themeData}
-              updateBrandColor={updateBrandColor}
-              setGrayColor={setGrayColor}
-              setIsGrayAuto={setIsGrayAuto}
-              simulationMode={simulationMode}
-              handleRandomTheme={handleRandomTheme}
-            />
-            <ColorPreviewer 
-              title="Modo Oscuro" 
-              themeOverride="dark" 
-              previewMode={darkPreviewMode} 
-              onCyclePreviewMode={() => cyclePreviewMode(darkPreviewMode, setDarkPreviewMode, ['black', 'T0'])} 
-              onShadeCopy={showNotification}
-              brandColor={brandColor}
-              grayColor={grayColor}
-              isGrayAuto={isGrayAuto}
-              themeData={themeData}
-              updateBrandColor={updateBrandColor}
-              setGrayColor={setGrayColor}
-              setIsGrayAuto={setIsGrayAuto}
-              simulationMode={simulationMode}
-              handleRandomTheme={handleRandomTheme}
-            />
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {user ? (
+            <div className="relative">
+              <button 
+                  onClick={() => setIsUserMenuVisible(p => !p)}
+                  className="p-2 rounded-lg flex items-center gap-2" 
+                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  title="Mi Cuenta"
+              >
+                  <User size={16}/>
+              </button>
+              {isUserMenuVisible && (
+                  <PopoverMenu onClose={() => setIsUserMenuVisible(false)}>
+                      <div className="px-3 py-2">
+                          <p className="text-sm font-semibold text-[var(--text-default)] truncate">{user.name || user.email}</p>
+                          <p className="text-xs text-[var(--text-muted)]">Usuario Registrado</p>
+                      </div>
+                      <div className="h-px bg-[var(--border-default)] my-1"></div>
+                      <MenuButton icon={<LogOut size={16}/>} label="Cerrar Sesión" onClick={handleLogoutClick} />
+                  </PopoverMenu>
+              )}
+            </div>
+          ) : (
+            <>
+              <button 
+                onClick={() => onNavigate('auth')}
+                className="text-sm font-semibold py-2 px-3 rounded-lg flex items-center gap-2"
+                style={{ backgroundColor: 'var(--action-primary-default)', color: 'white' }}
+                title="Iniciar Sesión"
+              >
+                <LogIn size={14} />
+                <span className="hidden sm:inline">Iniciar Sesión</span>
+              </button>
+
+              <div className="relative">
+                <button 
+                    onClick={() => setIsConfigMenuVisible(p => !p)}
+                    className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                    style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                    title="Ajustes y Ayuda"
+                >
+                    <Settings size={16}/>
+                </button>
+                {isConfigMenuVisible && (
+                    <PopoverMenu onClose={() => setIsConfigMenuVisible(false)}>
+                        <div className="relative">
+                            <MenuButton 
+                                icon={<Type size={16}/>} 
+                                label="Fuente" 
+                                onClick={(e) => { e.stopPropagation(); setIsFontMenuVisible(p => !p); }} 
+                            />
+                            {isFontMenuVisible && (
+                                <PopoverMenu 
+                                    onClose={() => setIsFontMenuVisible(false)} 
+                                    align="left"
+                                >
+                                    {Object.keys(availableFonts).map(fontName => (
+                                        <button
+                                          key={fontName}
+                                          onClick={() => handleFontSelect(fontName)}
+                                          className={`w-full text-left px-3 py-2 text-sm ${font === fontName ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)] rounded-md`}
+                                          style={{fontFamily: availableFonts[fontName]}}
+                                        >
+                                            {fontName}
+                                        </button>
+                                    ))}
+                                </PopoverMenu>
+                            )}
+                        </div>
+                        <div className="h-px bg-[var(--border-default)] my-1"></div>
+                        <MenuButton icon={<Upload size={16}/>} label="Importar Tema" onClick={handleImportClick} />
+                        <MenuButton icon={<Download size={16}/>} label="Exportar Tema" onClick={handleExportClick} />
+                        <MenuButton icon={<RefreshCcw size={16}/>} label="Reiniciar Tema" onClick={handleResetClick} />
+                        <MenuButton icon={<HelpCircle size={16}/>} label="Ayuda" onClick={handleHelpClick} />
+                    </PopoverMenu>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </header>
+      
+      <div className="flex-grow">
+        
+        <div className="flex flex-col md:flex-row md:gap-4">
+          
+          <div className="flex-grow w-full min-w-0">
+            <main>
+              <Explorer 
+                explorerPalette={explorerPalette}
+                reorderExplorerPalette={reorderExplorerPalette}
+                explorerGrayShades={explorerGrayShades}
+                handleExplorerColorPick={handleExplorerColorPick}
+                setGrayColor={setGrayColor}
+                paletteAdjustments={paletteAdjustments}
+                brandColor={brandColor}
+                updateBrandColor={updateBrandColor}
+                themeData={themeData}
+                insertColorInPalette={insertColorInPalette}
+                removeColorFromPalette={removeColorFromPalette}
+                explorerMethod={explorerMethod}
+                setExplorerMethod={setExplorerMethod}
+                replaceColorInPalette={replaceColorInPalette}
+                handleUndo={handleUndo}
+                handleRedo={handleRedo}
+                history={history}
+                historyIndex={historyIndex}
+                simulationMode={simulationMode}
+                // setSimulationMode se pasa al nuevo sidebar, no a Explorer
+                generatePaletteWithAI={generatePaletteWithAI}
+                showNotification={showNotification}
+                applySimulationToPalette={applySimulationToPalette}
+                onOpenAdjuster={handleOpenAdjusterSidebar} // --- MODIFICADO ---
+                onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
+                onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
+                lockedColors={lockedColors}
+                toggleLockColor={toggleLockColor}
+                isAdjusterSidebarVisible={isAdjusterSidebarVisible}
+                originalExplorerPalette={originalExplorerPalette}
+                // --- ¡NUEVO! --- Props para el sidebar de simulación
+                isSimulationSidebarVisible={isSimulationSidebarVisible}
+                onOpenSimulationSidebar={handleOpenSimulationSidebar}
+              />
+              
+              <div className="px-4 md:px-8">
+                <div className="space-y-6 mb-8">
+                  <ColorPreviewer 
+                    title="Modo Claro" 
+                    themeOverride="light" 
+                    previewMode={lightPreviewMode} 
+                    onCyclePreviewMode={() => cyclePreviewMode(lightPreviewMode, setLightPreviewMode, ['white', 'T950'])} 
+                    onShadeCopy={showNotification}
+                    brandColor={brandColor}
+                    grayColor={grayColor}
+                    isGrayAuto={isGrayAuto}
+                    themeData={themeData}
+                    updateBrandColor={updateBrandColor}
+                    setGrayColor={setGrayColor}
+                    setIsGrayAuto={setIsGrayAuto}
+                    simulationMode={simulationMode}
+                    handleRandomTheme={handleRandomTheme}
+                  />
+                  <ColorPreviewer 
+                    title="Modo Oscuro" 
+                    themeOverride="dark" 
+                    previewMode={darkPreviewMode} 
+                    onCyclePreviewMode={() => cyclePreviewMode(darkPreviewMode, setDarkPreviewMode, ['black', 'T0'])} 
+                    onShadeCopy={showNotification}
+                    brandColor={brandColor}
+                    grayColor={grayColor}
+                    isGrayAuto={isGrayAuto}
+                    themeData={themeData}
+                    updateBrandColor={updateBrandColor}
+                    setGrayColor={setGrayColor}
+                    setIsGrayAuto={setIsGrayAuto}
+                    simulationMode={simulationMode}
+                    handleRandomTheme={handleRandomTheme}
+                  />
+                </div>
+                <SemanticPalettes 
+                  stylePalette={themeData.stylePalette} 
+                  onCopy={showNotification} 
+                  themeData={themeData} 
+                  previewMode={semanticPreviewMode} 
+                  onCyclePreviewMode={() => cyclePreviewMode(semanticPreviewMode, setSemanticPreviewMode, ['card', 'white', 'T950', 'black', 'T0'])} 
+                  simulationMode={simulationMode} 
+                />
+              </div>
+            </main>
           </div>
-          <SemanticPalettes 
-            stylePalette={themeData.stylePalette} 
-            onCopy={showNotification} 
-            themeData={themeData} 
-            previewMode={semanticPreviewMode} 
-            onCyclePreviewMode={() => cyclePreviewMode(semanticPreviewMode, setSemanticPreviewMode, ['card', 'white', 'T950', 'black', 'T0'])} 
-            simulationMode={simulationMode} 
-          />
-        </main>
+          
+          {/* Renderizado condicional de Sidebars */}
+          {isAdjusterSidebarVisible && (
+            <PaletteAdjusterSidebar
+              paletteAdjustments={paletteAdjustments}
+              setPaletteAdjustments={setPaletteAdjustments}
+              commitPaletteAdjustments={commitPaletteAdjustments}
+              cancelPaletteAdjustments={cancelPaletteAdjustments}
+              setIsAdjusterSidebarVisible={setIsAdjusterSidebarVisible}
+              originalExplorerPalette={originalExplorerPalette}
+              explorerPalette={explorerPalette}
+              lockedColors={lockedColors}
+            />
+          )}
+          
+          {/* --- ¡NUEVO! --- Renderizado del Sidebar de Simulación */}
+          {isSimulationSidebarVisible && (
+            <ColorBlindnessSidebar
+              simulationMode={simulationMode}
+              setSimulationMode={setSimulationMode}
+              onCancel={handleCancelSimulation}
+              onApply={handleApplySimulation}
+            />
+          )}
+
+        </div>
       </div>
 
         <div className="px-4 md:px-8 my-8 flex justify-center">
@@ -257,11 +482,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           />
         </div>
 
-
         <footer className="text-center py-8 px-4 md:px-8 border-t" style={{ borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
             <p className="text-sm">Creado por JD_DM.</p>
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
-            {/* === ENLACES LEGALES (ACTUALIZADO) === */}
             <div className="mt-4 flex justify-center items-center gap-3">
               <button 
                 onClick={() => onNavigate('privacy')}
@@ -277,7 +500,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 Términos y Condiciones
               </button>
             </div>
-            {/* === FIN DE ENLACES === */}
         </footer>
 
         {hook.notification.message && (
@@ -288,19 +510,11 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         {isAccessibilityModalVisible && <AccessibilityModal onClose={() => setIsAccessibilityModalVisible(false)} accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={showNotification} />}
         {isComponentPreviewModalVisible && <ComponentPreviewModal onClose={() => setIsComponentPreviewModal(false)} primaryButtonTextColor={themeData.primaryButtonTextColor} />}
         {isHistoryModalVisible && <HistoryModal history={history} onSelect={goToHistoryState} onClose={() => setIsHistoryModalVisible(false)} />}
+        {isHelpModalVisible && <HelpModal onClose={() => setIsHelpModalVisible(false)} />}
+        
 
-        {isAdjusterSidebarVisible && (
-          <PaletteAdjusterSidebar
-            paletteAdjustments={paletteAdjustments}
-            setPaletteAdjustments={setPaletteAdjustments}
-            commitPaletteAdjustments={commitPaletteAdjustments}
-            cancelPaletteAdjustments={cancelPaletteAdjustments}
-            setIsAdjusterSidebarVisible={setIsAdjusterSidebarVisible}
-            brandColor={brandColor}
-          />
-        )}
-
-        {!isAdjusterSidebarVisible && (
+        {/* --- MODIFICACIÓN --- Solo mostrar si NINGÚN sidebar está abierto */}
+        {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
           <FloatingActionButtons 
             onRandomClick={() => handleRandomTheme()} 
             onThemeToggle={handleThemeToggle} 

@@ -18,7 +18,8 @@ const Header = ({ onImport, onExport, onReset, themeData, font, setFont, user, o
 
     return (
         <>
-            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-4">
+            {/* --- MODIFICACIÓN DE ESPACIO: sm:mb-8 -> sm:mb-6 --- */}
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
                  <div className="flex items-center gap-3 sm:gap-4">
                     <img src="https://raw.githubusercontent.com/pentakillw/sistema-de-diseno-react/main/Icono_FX.png" alt="Sistema FX Logo" className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 rounded-2xl shadow-md"/>
                     <div>
@@ -90,4 +91,3 @@ const Header = ({ onImport, onExport, onReset, themeData, font, setFont, user, o
 };
 
 export default Header;
-

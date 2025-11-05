@@ -1,12 +1,18 @@
 import React, { memo, useRef, useCallback, useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import tinycolor from 'tinycolor2';
-import { applyAdjustments } from '../../utils/colorUtils';
 
-// Hook para detectar clics fuera del panel
+// --- MODIFICACIÓN ---
+// El hook 'useOnClickOutside' ya no es necesario para el layout de escritorio.
+// Lo mantendremos pero solo para el backdrop de MÓVIL.
+
 function useOnClickOutside(ref, handler) {
   useEffect(() => {
     const listener = (event) => {
+      // Si estamos en pantalla de escritorio (md o más), no hagas nada.
+      if (window.innerWidth >= 768) {
+        return;
+      }
       if (!ref.current || ref.current.contains(event.target)) {
         return;
       }
@@ -22,6 +28,8 @@ function useOnClickOutside(ref, handler) {
     };
   }, [ref, handler]);
 }
+// --- FIN MODIFICACIÓN ---
+
 
 // Componente de Slider Personalizado (sin cambios)
 const CustomSlider = ({ min, max, value, onChange, gradient }) => {
@@ -176,15 +184,20 @@ const PaletteAdjusterSidebar = ({
   commitPaletteAdjustments,
   cancelPaletteAdjustments,
   setIsAdjusterSidebarVisible,
-  brandColor,
+  originalExplorerPalette,
+  explorerPalette,
+  lockedColors,
 }) => {
 
-  const adjustedColor = applyAdjustments(brandColor, paletteAdjustments);
+  const baseForGradient = (originalExplorerPalette || []).find(c => !(lockedColors || []).includes(c)) || (originalExplorerPalette || [])[0] || '#808080';
+  const originalIndex = (originalExplorerPalette || []).indexOf(baseForGradient);
+  const adjustedBase = (explorerPalette || [])[originalIndex] || baseForGradient;
+  const previewColor = (lockedColors || []).includes(baseForGradient) ? baseForGradient : adjustedBase;
 
   const gradients = {
     hue: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
-    saturation: `linear-gradient(to right, ${tinycolor(brandColor).desaturate(100).toHexString()}, ${tinycolor(brandColor).saturate(100).toHexString()})`,
-    brightness: `linear-gradient(to right, #000, ${brandColor}, #fff)`,
+    saturation: `linear-gradient(to right, ${tinycolor(baseForGradient).desaturate(100).toHexString()}, ${tinycolor(baseForGradient).saturate(100).toHexString()})`,
+    brightness: `linear-gradient(to right, #000, ${baseForGradient}, #fff)`,
     temperature: 'linear-gradient(to right, #66b3ff, #fff, #ffc966)'
   };
 
@@ -212,29 +225,32 @@ const PaletteAdjusterSidebar = ({
   };
   
   const sidebarRef = useRef();
+  // El hook se usa solo para cerrar el bottom-sheet en móvil
   useOnClickOutside(sidebarRef, closeHandler);
 
   return (
     <>
-      {/* --- MODIFICACIÓN ---
-        Se han eliminado las clases fijas de escritorio (top-0, right-0, w-80, h-full).
-        Se han añadido clases de "bottom sheet" para móvil (por defecto).
-        Se han añadido clases de 'md:' para restaurar la vista de escritorio.
-        Se ha eliminado el backdrop (fondo oscuro).
+      {/* --- ¡CLASES MODIFICADAS! ---
+        Móvil (default): `fixed bottom-0`... (bottom sheet)
+        Escritorio (md:): `relative`, `sticky`, `w-80`... (sidebar)
       */}
       <aside
         ref={sidebarRef}
-        className="fixed bottom-0 left-0 right-0 z-[60] w-full max-h-[80vh] rounded-t-2xl shadow-2xl transition-transform transform translate-y-0
-                   md:top-0 md:right-0 md:bottom-auto md:left-auto md:w-80 md:h-full md:rounded-t-none md:shadow-lg
-                   border-t md:border-t-0 md:border-l"
+        className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform
+                   md:transform-none md:relative md:w-80 lg:w-96 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
         style={{
           backgroundColor: 'var(--bg-card)',
           borderColor: 'var(--border-default)',
-          boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -5px 10px -6px rgba(0, 0, 0, 0.1)'
         }}
       >
-        <div className="h-full px-6 py-4 overflow-y-auto flex flex-col">
-          {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
+        <div 
+          className="h-full px-6 py-4 overflow-y-auto flex flex-col"
+          // Detiene la propagación del clic en el contenido del sidebar
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          {/* Handle visual (solo móvil) */}
           <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
           
           <div className="flex justify-between items-center mb-4">
@@ -249,18 +265,26 @@ const PaletteAdjusterSidebar = ({
             </button>
           </div>
 
-          {/* Vista previa del color */}
+          {/* Vista previa de UN SOLO color (como en Coolors) */}
           <div 
-            className="flex items-center justify-center h-24 rounded-lg mb-6" 
-            style={{ backgroundColor: adjustedColor }}
+            className="flex items-center justify-center h-24 rounded-lg mb-6 border"
+            style={{ 
+              backgroundColor: previewColor,
+              borderColor: 'var(--border-default)'
+            }}
           >
-            <span className="text-white font-bold text-lg" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
-              {tinycolor(adjustedColor).toHexString()}
+            <span 
+              className="font-mono font-bold text-lg px-2 py-1 rounded-md bg-black/20 backdrop-blur-sm"
+              style={{ 
+                color: tinycolor(previewColor).isLight() ? '#000' : '#FFF',
+              }}
+            >
+              {tinycolor(previewColor).toHexString().toUpperCase()}
             </span>
           </div>
 
           {/* Sliders */}
-          <div className="space-y-6 flex-grow">
+          <div className="space-y-6">
             <SliderControl
               label="Matiz"
               value={paletteAdjustments.hue}
