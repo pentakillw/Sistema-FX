@@ -1,25 +1,32 @@
 import React, { useEffect, useState, memo, useCallback, useRef } from 'react';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import { availableFonts, generationMethods } from './utils/colorUtils.js';
-// ¡Ya no se importa Header, se define uno minimalista aquí!
 import Explorer from './components/ui/Explorer.jsx';
 import FloatingActionButtons from './components/FloatingActionButtons.jsx';
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
-// Se importa HelpModal y los iconos necesarios para el nuevo header
-import { ExportModal, AccessibilityModal, ComponentPreviewModal, HistoryModal, HelpModal } from './components/modals/index.jsx';
-import { Settings, Type, Upload, Download, RefreshCcw, HelpCircle, User, LogOut, LogIn } from 'lucide-react';
+// Importar ConfirmDeleteModal
+import { 
+    ExportModal, AccessibilityModal, ComponentPreviewModal, 
+    HistoryModal, HelpModal, ConfirmDeleteModal 
+} from './components/modals/index.jsx';
+import { 
+    Settings, Type, Upload, Download, RefreshCcw, HelpCircle, 
+    User, LogOut, LogIn, Save, FolderOpen 
+} from 'lucide-react';
 import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
-// --- ¡NUEVO! --- Importamos el nuevo sidebar
 import ColorBlindnessSidebar from './components/ui/ColorBlindnessSidebar.jsx';
+// Importar los nuevos Sidebars
+import SavePaletteSidebar from './components/ui/SavePaletteSidebar.jsx';
+import MyPalettesSidebar from './components/ui/MyPalettesSidebar.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
-// ¡LoginBanner ya no se importa!
 import GoogleAdBanner from './components/GoogleAdBanner.jsx';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx'; 
 import TermsOfServicePage from './components/TermsOfServicePage.jsx'; 
+import { supabase } from './supabaseClient.js';
 
-// --- ¡NUEVO! --- Componentes de Menú (movidos de Explorer)
+// --- Componentes de Menú (sin cambios) ---
 const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     const menuRef = useRef(null);
     useEffect(() => {
@@ -88,6 +95,31 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     originalExplorerPalette,
     lockedColors,
     toggleLockColor,
+    savedPalettes,
+    currentPaletteId,
+    isLoadingPalettes,
+    isSavingPalette,
+    deletingPaletteId,
+    handleSavePalette,
+    handleLoadPalette,
+    handleDeletePalette,
+    handleSharePalette,
+    handleDuplicatePalette,
+    handleUpdatePaletteName,
+    handleLoadSpecificPalette,
+    // --- ¡NUEVAS PROPS DEL HOOK! ---
+    projects,
+    collections,
+    filters,
+    setFilters,
+    handleCreateProject,
+    handleUpdateProjectName,
+    handleDeleteProject,
+    handleCreateCollection,
+    handleUpdateCollectionName,
+    handleDeleteCollection,
+    tags, 
+    handleCreateTag 
   } = hook;
 
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
@@ -96,16 +128,25 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
   const [isAdjusterSidebarVisible, setIsAdjusterSidebarVisible] = useState(false);
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
-  // --- ¡NUEVO! --- Estado para el sidebar de simulación
   const [isSimulationSidebarVisible, setIsSimulationSidebarVisible] = useState(false);
 
+  const [isSaveSidebarVisible, setIsSaveSidebarVisible] = useState(false);
+  const [isMyPalettesSidebarVisible, setIsMyPalettesSidebarVisible] = useState(false);
+  
+  const [exportingPaletteData, setExportingPaletteData] = useState(null);
+  
+  const [confirmModalState, setConfirmModalState] = useState({
+      isOpen: false,
+      title: '',
+      message: '',
+      onConfirm: () => {}
+  });
 
-  // --- ¡NUEVO! --- Estado para los menús del header
+
   const [isConfigMenuVisible, setIsConfigMenuVisible] = useState(false);
   const [isFontMenuVisible, setIsFontMenuVisible] = useState(false);
   const [isUserMenuVisible, setIsUserMenuVisible] = useState(false);
   const importFileRef = useRef(null); 
-  // --- FIN DE NUEVO ESTADO ---
 
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -172,7 +213,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     link.click();
   };
 
-  // --- ¡NUEVO! --- Handlers para los menús del header
   const handleFontSelect = (fontName) => {
       setFont(fontName);
       setIsFontMenuVisible(false);
@@ -183,7 +223,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       setIsConfigMenuVisible(false);
   };
   const handleExportClick = () => {
-      handleWebExport();
+      setExportingPaletteData(themeData);
+      setIsExportModalVisible(true);
       setIsConfigMenuVisible(false);
   };
   const handleResetClick = () => {
@@ -198,25 +239,34 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       onLogout();
       setIsUserMenuVisible(false);
   };
-  // --- FIN DE HANDLERS ---
   
-  // --- ¡NUEVO! --- Handlers para el nuevo sidebar
+  const closeAllSidebars = () => {
+    setIsAdjusterSidebarVisible(false);
+    setIsSimulationSidebarVisible(false);
+    setIsSaveSidebarVisible(false);
+    setIsMyPalettesSidebarVisible(false);
+    cancelPaletteAdjustments();
+    setSimulationMode('none');
+  };
+
   const handleOpenSimulationSidebar = () => {
+    closeAllSidebars();
     setIsSimulationSidebarVisible(true);
-    // Asegurarse de que el otro sidebar esté cerrado
-    if (isAdjusterSidebarVisible) {
-      cancelPaletteAdjustments();
-      setIsAdjusterSidebarVisible(false);
-    }
   };
 
   const handleOpenAdjusterSidebar = () => {
+    closeAllSidebars();
     setIsAdjusterSidebarVisible(true);
-    // Asegurarse de que el otro sidebar esté cerrado
-    if (isSimulationSidebarVisible) {
-      setSimulationMode('none');
-      setIsSimulationSidebarVisible(false);
-    }
+  };
+
+  const handleOpenSaveSidebar = () => {
+    closeAllSidebars();
+    setIsSaveSidebarVisible(true);
+  };
+
+  const handleOpenMyPalettesSidebar = () => {
+    closeAllSidebars();
+    setIsMyPalettesSidebarVisible(true);
   };
   
   const handleCancelSimulation = () => {
@@ -229,7 +279,73 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     setSimulationMode('none');
     setIsSimulationSidebarVisible(false);
   };
-  // --- FIN DE HANDLERS ---
+  
+  // Recibe el objeto 'saveData' completo
+  const onSavePalette = async (saveData) => {
+    const success = await handleSavePalette(saveData);
+    if (success) {
+        setIsSaveSidebarVisible(false); 
+    }
+  };
+  
+  const onLoadPalette = (palette) => {
+    handleLoadPalette(palette);
+    setIsMyPalettesSidebarVisible(false); 
+  };
+  
+  // Abre el modal de confirmación
+  const onDeletePalette = (paletteId) => {
+    const palette = savedPalettes.find(p => p.id === paletteId);
+    setConfirmModalState({
+        isOpen: true,
+        title: "Eliminar Paleta",
+        message: `¿De verdad quieres eliminar la paleta "${palette?.name || 'seleccionada'}"? Esta acción no se puede deshacer.`,
+        onConfirm: () => {
+            handleDeletePalette(paletteId);
+            setConfirmModalState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+        }
+    });
+  };
+
+  const handleExportSpecificPalette = (palette) => {
+    const specificThemeData = handleLoadSpecificPalette(palette);
+    setExportingPaletteData(specificThemeData);
+    setIsExportModalVisible(true);
+  };
+  
+  const handleDuplicateClick = (paletteId) => {
+    handleDuplicatePalette(paletteId);
+  };
+
+  const handleUpdateNameClick = (paletteId, newName) => {
+    handleUpdatePaletteName(paletteId, newName);
+  };
+  
+  // --- ¡NUEVO! --- Handlers para el modal de confirmación de Proyectos/Colecciones
+  const onDeleteProject = (projectId, projectName) => {
+    setConfirmModalState({
+        isOpen: true,
+        title: "Eliminar Proyecto",
+        message: `¿De verdad quieres eliminar el proyecto "${projectName}"? Las paletas dentro de este proyecto NO serán eliminadas, solo desasociadas.`,
+        onConfirm: () => {
+            handleDeleteProject(projectId);
+            setConfirmModalState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+        }
+    });
+  };
+  
+  const onDeleteCollection = (collectionId, collectionName) => {
+    setConfirmModalState({
+        isOpen: true,
+        title: "Eliminar Colección",
+        message: `¿De verdad quieres eliminar la colección "${collectionName}"? Las paletas dentro de esta colección NO serán eliminadas, solo desasociadas.`,
+        onConfirm: () => {
+            handleDeleteCollection(collectionId);
+            setConfirmModalState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+        }
+    });
+  };
+  // --- FIN ---
 
 
   if (!themeData || !themeData.stylePalette || !themeData.stylePalette.fullActionColors) {
@@ -276,27 +392,48 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         
         <div className="flex items-center gap-1.5 sm:gap-2">
           {user ? (
-            <div className="relative">
+            <>
               <button 
-                  onClick={() => setIsUserMenuVisible(p => !p)}
-                  className="p-2 rounded-lg flex items-center gap-2" 
-                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                  title="Mi Cuenta"
+                  onClick={handleOpenSaveSidebar}
+                  className="text-sm font-semibold py-2 px-3 rounded-lg flex items-center gap-2"
+                  style={{ backgroundColor: 'var(--action-primary-default)', color: 'white' }}
+                  title="Guardar paleta actual"
               >
-                  <User size={16}/>
+                  <Save size={14} />
+                  <span className="hidden sm:inline">{currentPaletteId ? "Actualizar" : "Guardar"}</span>
               </button>
-              {isUserMenuVisible && (
-                  <PopoverMenu onClose={() => setIsUserMenuVisible(false)}>
-                      <div className="px-3 py-2">
-                          <p className="text-sm font-semibold text-[var(--text-default)] truncate">{user.name || user.email}</p>
-                          <p className="text-xs text-[var(--text-muted)]">Usuario Registrado</p>
-                      </div>
-                      <div className="h-px bg-[var(--border-default)] my-1"></div>
-                      <MenuButton icon={<LogOut size={16}/>} label="Cerrar Sesión" onClick={handleLogoutClick} />
-                  </PopoverMenu>
-              )}
-            </div>
+              <button 
+                  onClick={handleOpenMyPalettesSidebar}
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  title="Mis Paletas"
+              >
+                  <FolderOpen size={16}/>
+              </button>
+              
+              <div className="relative">
+                <button 
+                    onClick={() => setIsUserMenuVisible(p => !p)}
+                    className="p-2 rounded-lg flex items-center gap-2" 
+                    style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                    title="Mi Cuenta"
+                >
+                    <User size={16}/>
+                </button>
+                {isUserMenuVisible && (
+                    <PopoverMenu onClose={() => setIsUserMenuVisible(false)}>
+                        <div className="px-3 py-2">
+                            <p className="text-sm font-semibold text-[var(--text-default)] truncate">{user.user_metadata?.name || user.email}</p>
+                            <p className="text-xs text-[var(--text-muted)]">Usuario Registrado</p>
+                        </div>
+                        <div className="h-px bg-[var(--border-default)] my-1"></div>
+                        <MenuButton icon={<LogOut size={16}/>} label="Cerrar Sesión" onClick={handleLogoutClick} />
+                    </PopoverMenu>
+                )}
+              </div>
+            </>
           ) : (
+            // Botones de Invitado
             <>
               <button 
                 onClick={() => onNavigate('auth')}
@@ -382,18 +519,16 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 history={history}
                 historyIndex={historyIndex}
                 simulationMode={simulationMode}
-                // setSimulationMode se pasa al nuevo sidebar, no a Explorer
                 generatePaletteWithAI={generatePaletteWithAI}
                 showNotification={showNotification}
                 applySimulationToPalette={applySimulationToPalette}
-                onOpenAdjuster={handleOpenAdjusterSidebar} // --- MODIFICADO ---
+                onOpenAdjuster={handleOpenAdjusterSidebar}
                 onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
-                onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
+                onOpenComponentPreviewModal={() => setIsComponentPreviewModal(true)}
                 lockedColors={lockedColors}
                 toggleLockColor={toggleLockColor}
                 isAdjusterSidebarVisible={isAdjusterSidebarVisible}
                 originalExplorerPalette={originalExplorerPalette}
-                // --- ¡NUEVO! --- Props para el sidebar de simulación
                 isSimulationSidebarVisible={isSimulationSidebarVisible}
                 onOpenSimulationSidebar={handleOpenSimulationSidebar}
               />
@@ -445,13 +580,12 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             </main>
           </div>
           
-          {/* Renderizado condicional de Sidebars */}
           {isAdjusterSidebarVisible && (
             <PaletteAdjusterSidebar
               paletteAdjustments={paletteAdjustments}
               setPaletteAdjustments={setPaletteAdjustments}
               commitPaletteAdjustments={commitPaletteAdjustments}
-              cancelPaletteAdjustments={cancelPaletteAdjustments}
+              cancelPaletteAdjustments={closeAllSidebars}
               setIsAdjusterSidebarVisible={setIsAdjusterSidebarVisible}
               originalExplorerPalette={originalExplorerPalette}
               explorerPalette={explorerPalette}
@@ -459,15 +593,59 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             />
           )}
           
-          {/* --- ¡NUEVO! --- Renderizado del Sidebar de Simulación */}
           {isSimulationSidebarVisible && (
             <ColorBlindnessSidebar
               simulationMode={simulationMode}
               setSimulationMode={setSimulationMode}
-              onCancel={handleCancelSimulation}
+              onCancel={closeAllSidebars}
               onApply={handleApplySimulation}
             />
           )}
+          
+          {/* --- ¡INICIO DE ACTUALIZACIÓN DE PROPS! --- */}
+          {isSaveSidebarVisible && (
+            <SavePaletteSidebar
+              onClose={closeAllSidebars}
+              onSave={onSavePalette}
+              isSaving={isSavingPalette}
+              initialName={savedPalettes.find(p => p.id === currentPaletteId)?.name || ''}
+              currentPaletteId={currentPaletteId}
+              // ¡NUEVO! Pasa proyectos y colecciones
+              projects={projects}
+              collections={collections}
+              tags={tags} 
+              onCreateProject={handleCreateProject}
+              onCreateCollection={handleCreateCollection}
+              onCreateTag={handleCreateTag} 
+            />
+          )}
+
+          {isMyPalettesSidebarVisible && (
+            <MyPalettesSidebar
+              onClose={closeAllSidebars}
+              palettes={savedPalettes} // ¡Importante! Pasa las paletas filtradas
+              isLoading={isLoadingPalettes}
+              onLoadPalette={onLoadPalette}
+              onDeletePalette={onDeletePalette}
+              onDuplicatePalette={handleDuplicateClick}
+              onExportPalette={handleExportSpecificPalette}
+              onUpdatePaletteName={handleUpdateNameClick}
+              deletingId={deletingPaletteId}
+              // ¡NUEVO! Pasa los filtros y gestores
+              projects={projects}
+              collections={collections}
+              filters={filters}
+              setFilters={setFilters}
+              onCreateProject={handleCreateProject}
+              onUpdateProject={handleUpdateProjectName}
+              onDeleteProject={onDeleteProject}
+              onCreateCollection={handleCreateCollection}
+              onUpdateCollection={handleUpdateCollectionName}
+              onDeleteCollection={onDeleteCollection}
+            />
+          )}
+          {/* --- ¡FIN DE ACTUALIZACIÓN DE PROPS! --- */}
+
 
         </div>
       </div>
@@ -475,7 +653,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         <div className="px-4 md:px-8 my-8 flex justify-center">
           <GoogleAdBanner
             dataAdClient={import.meta.env.VITE_GOOGLE_AD_CLIENT}
-            dataAdSlot="3746326433" // Reemplaza "XXXXXXXXXX" con tu Ad Slot ID real
+            dataAdSlot="3746326433"
             style={{ display: 'block' }}
             dataAdFormat="fluid"
             dataAdLayoutKey="-gw-3+1f-3d+2z"
@@ -506,15 +684,40 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           <div className="fixed bottom-5 right-5 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-lg flex items-center gap-2" style={{ backgroundColor: hook.notification.type === 'error' ? '#EF4444' : '#10B981'}}>{hook.notification.message}</div>
         )}
         
-        {isExportModalVisible && <ExportModal onClose={() => setIsExportModalVisible(false)} themeData={themeData} fxSeparator={fxSeparator} setFxSeparator={setFxSeparator} useFxQuotes={useFxQuotes} setUseFxQuotes={setUseFxQuotes} onCopy={showNotification} />}
+        {isExportModalVisible && 
+            <ExportModal 
+                onClose={() => {
+                  setIsExportModalVisible(false);
+                  setExportingPaletteData(null); 
+                }}
+                themeData={exportingPaletteData || themeData}
+                fxSeparator={fxSeparator} 
+                setFxSeparator={setFxSeparator} 
+                useFxQuotes={useFxQuotes} 
+                setUseFxQuotes={setUseFxQuotes} 
+                onCopy={showNotification}
+                user={user}
+                onOpenSaveModal={handleOpenSaveSidebar}
+                onOpenMyPalettes={handleOpenMyPalettesSidebar}
+                handleSharePalette={handleSharePalette}
+            />
+        }
         {isAccessibilityModalVisible && <AccessibilityModal onClose={() => setIsAccessibilityModalVisible(false)} accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={showNotification} />}
         {isComponentPreviewModalVisible && <ComponentPreviewModal onClose={() => setIsComponentPreviewModal(false)} primaryButtonTextColor={themeData.primaryButtonTextColor} />}
         {isHistoryModalVisible && <HistoryModal history={history} onSelect={goToHistoryState} onClose={() => setIsHistoryModalVisible(false)} />}
         {isHelpModalVisible && <HelpModal onClose={() => setIsHelpModalVisible(false)} />}
         
-
-        {/* --- MODIFICACIÓN --- Solo mostrar si NINGÚN sidebar está abierto */}
-        {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
+        {confirmModalState.isOpen && (
+            <ConfirmDeleteModal
+                title={confirmModalState.title}
+                message={confirmModalState.message}
+                onClose={() => setConfirmModalState({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
+                onConfirm={confirmModalState.onConfirm}
+                isDeleting={deletingPaletteId === confirmModalState.onConfirm.toString()}
+            />
+        )}
+        
+        {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && (
           <FloatingActionButtons 
             onRandomClick={() => handleRandomTheme()} 
             onThemeToggle={handleThemeToggle} 
@@ -524,7 +727,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             canUndo={historyIndex > 0} 
             canRedo={historyIndex < history.length - 1}
             onOpenHistoryModal={() => setIsHistoryModalVisible(true)}
-            onOpenExportModal={() => setIsExportModalVisible(true)} 
+            onOpenExportModal={() => {
+              setExportingPaletteData(themeData);
+              setIsExportModalVisible(true);
+            }} 
           />
         )}
     </div>
@@ -533,10 +739,54 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
 
 
 function App() {
-  const hook = useThemeGenerator();
-  const [isNative, setIsNative] = useState(false);
+  const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  
+  const hook = useThemeGenerator(user); // ¡El hook ahora tiene toda la lógica nueva!
+  
+  const [isNative, setIsNative] = useState(false);
   const [route, setRoute] = useState('landing'); 
+
+  useEffect(() => {
+    setLoadingAuth(true);
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoadingAuth(false);
+      
+      if (session) {
+        if (route !== 'generator') {
+           setRoute('generator');
+        }
+      } else {
+         if (route !== 'landing' && route !== 'auth' && route !== 'privacy' && route !== 'terms') {
+           setRoute('landing');
+         }
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoadingAuth(false);
+        
+        if (session) {
+            setRoute('generator');
+        } else {
+            if (route === 'generator') {
+                setRoute('landing');
+            }
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []); // El array de dependencias vacío está bien aquí
 
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());
@@ -551,16 +801,26 @@ function App() {
       setRoute(newRoute);
   }, []);
 
-  const handleLoginSuccess = useCallback((userData) => {
-      setUser(userData);
-      setRoute('generator');
-  }, []);
-
-  const handleLogout = useCallback(() => {
-      setUser(null);
-      setRoute('landing');
-      hook.showNotification('Has cerrado sesión.');
+  const handleLogout = useCallback(async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+          hook.showNotification(`Error al cerrar sesión: ${error.message}`, 'error');
+      } else {
+          setUser(null);
+          setSession(null);
+          setRoute('landing');
+          hook.showNotification('Has cerrado sesión.');
+      }
   }, [hook]);
+  
+  if (loadingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white">
+        <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-purple-500"></div>
+        <p className="mt-4 text-lg">Cargando sesión...</p>
+      </div>
+    );
+  }
   
   return (
     <div className="w-full min-h-screen flex flex-col">
@@ -569,11 +829,11 @@ function App() {
           case 'landing':
             return <LandingPage onNavigate={handleNavigate} />;
           case 'auth':
-            return <AuthPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+            return <AuthPage onNavigate={handleNavigate} />;
           case 'generator':
+            // Pasamos el 'hook' completo que contiene todo
             return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>;
           
-          {/* === RUTAS LEGALES (ACTUALIZADO) === */}
           case 'privacy':
             return <PrivacyPolicyPage onNavigate={handleNavigate} />;
           case 'terms':

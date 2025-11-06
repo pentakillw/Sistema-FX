@@ -1,25 +1,63 @@
 import React, { useState } from 'react';
-import { User, Lock, Mail, AtSign } from 'lucide-react';
+import { Lock, Mail, Loader2, AlertTriangle } from 'lucide-react';
+// Importamos el cliente de Supabase
+import { supabase } from '../supabaseClient.js'; // --- ¡RUTA CORREGIDA! ---
 
-const AuthPage = ({ onLoginSuccess }) => {
+const AuthPage = ({ onNavigate }) => {
     const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [message, setMessage] = useState(null);
 
-    // Placeholder for login logic
-    const handleLogin = (e) => {
+    // Manejador para Login o Sign Up con Email/Password
+    const handleEmailAuth = async (e) => {
         e.preventDefault();
-        // NOTE: This will call Supabase in the future
-        console.log("Attempting login...");
-        // Simulate a successful login for now
-        onLoginSuccess({ email: 'usuario@ejemplo.com', name: 'Usuario' });
+        setLoading(true);
+        setError(null);
+        setMessage(null);
+
+        try {
+            if (isLogin) {
+                // --- LOGIN CON SUPABASE ---
+                const { error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+                if (error) throw error;
+                // El onAuthStateChange en App.jsx se encargará de redirigir
+            } else {
+                // --- SIGN UP CON SUPABASE ---
+                const { error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+                if (error) throw error;
+                setMessage("¡Revisa tu correo para verificar tu cuenta!");
+            }
+        } catch (error) {
+            setError(error.message || "Ha ocurrido un error.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Placeholder for sign up logic
-    const handleSignUp = (e) => {
-        e.preventDefault();
-        // NOTE: This will call Supabase in the future
-        console.log("Attempting sign up...");
-        // Simulate a successful sign up & login
-        onLoginSuccess({ email: 'nuevo@ejemplo.com', name: 'Nuevo Usuario' });
+    // Manejador para Login con Google
+    const handleOAuthLogin = async (provider) => {
+        setError(null);
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: provider,
+            options: {
+                redirectTo: window.location.origin + '/generator' // Redirige al generador
+            }
+        });
+        if (error) {
+            setError(error.message);
+            setLoading(false);
+        }
+        // Supabase se encargará de la redirección
     };
 
     return (
@@ -31,28 +69,31 @@ const AuthPage = ({ onLoginSuccess }) => {
                         {isLogin ? 'Bienvenido de Nuevo' : 'Crea tu Cuenta'}
                     </h1>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                        {isLogin ? 'Ingresa para continuar.' : 'Guarda y sincroniza tus paletas.'}
+                        {isLogin ? 'Ingresa para guardar y cargar tus paletas.' : 'Guarda y sincroniza tus paletas.'}
                     </p>
                 </div>
 
-                <form onSubmit={isLogin ? handleLogin : handleSignUp} className="space-y-4">
-                    {!isLogin && (
-                         <div className="relative">
-                            <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            <input
-                                type="text"
-                                placeholder="Nombre de usuario"
-                                required
-                                className="w-full pl-10 pr-3 py-2.5 rounded-lg border bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-                            />
-                        </div>
-                    )}
+                {/* Mensajes de Error o Éxito */}
+                {error && (
+                    <div className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
+                        <AlertTriangle size={16} /> <span>{error}</span>
+                    </div>
+                )}
+                {message && (
+                    <div className="mb-4 p-3 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm">
+                        {message}
+                    </div>
+                )}
+
+                <form onSubmit={handleEmailAuth} className="space-y-4">
                     <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                         <input
                             type="email"
                             placeholder="correo@ejemplo.com"
                             required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="w-full pl-10 pr-3 py-2.5 rounded-lg border bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
                         />
                     </div>
@@ -62,21 +103,28 @@ const AuthPage = ({ onLoginSuccess }) => {
                             type="password"
                             placeholder="Contraseña"
                             required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             className="w-full pl-10 pr-3 py-2.5 rounded-lg border bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
                         />
                     </div>
                     
                     <button
                         type="submit"
-                        className="w-full font-bold py-2.5 px-4 rounded-lg text-white bg-purple-600 hover:bg-purple-700 transition-colors transform hover:scale-[1.02] active:scale-[0.98]"
+                        disabled={loading}
+                        className="w-full font-bold py-2.5 px-4 rounded-lg text-white bg-purple-600 hover:bg-purple-700 transition-colors transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center disabled:opacity-50"
                     >
-                        {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                        {loading ? <Loader2 size={20} className="animate-spin" /> : (isLogin ? 'Iniciar Sesión' : 'Crear Cuenta')}
                     </button>
                 </form>
 
                 <div className="text-center mt-6">
                     <button
-                        onClick={() => setIsLogin(!isLogin)}
+                        onClick={() => {
+                            setIsLogin(!isLogin);
+                            setError(null);
+                            setMessage(null);
+                        }}
                         className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
                     >
                         {isLogin ? '¿No tienes una cuenta? Crea una' : '¿Ya tienes una cuenta? Inicia sesión'}
@@ -97,7 +145,9 @@ const AuthPage = ({ onLoginSuccess }) => {
                 <div>
                     <button
                         type="button"
-                        className="w-full flex justify-center items-center gap-3 font-semibold py-2.5 px-4 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleOAuthLogin('google')}
+                        disabled={loading}
+                        className="w-full flex justify-center items-center gap-3 font-semibold py-2.5 px-4 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                     >
                         <svg className="w-5 h-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.3 512 0 398.8 0 256S110.3 0 244 0c73 0 134.3 29.4 179.8 74.4L352 144c-35.3-33.3-80-54.5-128-54.5-98.3 0-179.2 80.5-179.2 179.2s80.8 179.2 179.2 179.2c103.5 0 152.1-74.8 157-115.3H256V256h232v5.8z"></path></svg>
                         Google

@@ -8,8 +8,9 @@ import AccessibilityModal from './AccessibilityModal';
 import ComponentPreviewModal from './ComponentPreviewModal';
 import AIPaletteModal from './AIPaletteModal';
 import HistoryModal from './HistoryModal';
-// --- NUEVA IMPORTACIÓN ---
 import DisplayModeModal from './DisplayModeModal';
+// --- ¡NUEVO! ---
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export {
     HelpModal,
@@ -22,6 +23,7 @@ export {
     ComponentPreviewModal,
     AIPaletteModal,
     HistoryModal,
-    // --- NUEVA EXPORTACIÓN ---
-    DisplayModeModal
+    DisplayModeModal,
+    // --- ¡NUEVO! ---
+    ConfirmDeleteModal
 };

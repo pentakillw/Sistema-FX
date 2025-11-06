@@ -89,8 +89,8 @@ const ColorPickerPopover = ({ color, onChange, onClose }) => {
     );
 };
 
-// --- Componente de Menú Desplegable ---
-const PopoverMenu = ({ children, onClose, align = 'right' }) => {
+// --- ¡CORRECCIÓN! --- Añadido 'export' para que otros archivos puedan importarlo
+export const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     const menuRef = useRef(null);
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -113,8 +113,8 @@ const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     );
 };
 
-// --- Componente de Botón de Menú ---
-const MenuButton = ({ icon, label, onClick, className = "" }) => (
+// --- ¡CORRECCIÓN! --- Añadido 'export' para que otros archivos puedan importarlo
+export const MenuButton = ({ icon, label, onClick, className = "" }) => (
     <button
         onClick={onClick}
         className={`flex items-center w-full px-3 py-2 text-sm rounded-md text-[var(--text-default)] hover:bg-[var(--bg-muted)] transition-colors ${className}`}
@@ -132,10 +132,9 @@ const Explorer = (props) => {
         brandColor, updateBrandColor, themeData, insertColorInPalette,
         removeColorFromPalette, explorerMethod, setExplorerMethod, replaceColorInPalette,
         handleUndo, handleRedo, history, historyIndex, 
-        // --- MODIFICACIÓN --- simulationMode y applySimulationToPalette ya no se usan aquí directamente
         simulationMode,
         generatePaletteWithAI, showNotification,
-        applySimulationToPalette, // Lo necesitamos para el botón "Aplicar" del modo expandido
+        applySimulationToPalette, 
         onOpenAdjuster,
         onOpenAccessibilityModal,
         onOpenComponentPreviewModal,
@@ -143,7 +142,6 @@ const Explorer = (props) => {
         toggleLockColor,
         isAdjusterSidebarVisible,
         originalExplorerPalette,
-        // --- ¡NUEVO! ---
         isSimulationSidebarVisible,
         onOpenSimulationSidebar
     } = props;
@@ -158,7 +156,6 @@ const Explorer = (props) => {
     const [isAIModalVisible, setIsAIModalVisible] = useState(false);
     const [baseColorForShades, setBaseColorForShades] = useState(null);
     const [isMethodMenuVisible, setIsMethodMenuVisible] = useState(false);
-    // --- MODIFICACIÓN --- Estado de simulación eliminado
     const [pickerColor, setPickerColor] = useState(null); 
     const [activeColorMenu, setActiveColorMenu] = useState(null); 
     const paletteContainerRef = useRef(null);
@@ -166,7 +163,7 @@ const Explorer = (props) => {
     const [isToolsMenuVisible, setIsToolsMenuVisible] = useState(false);
     
     // Estado para el formato de texto del color
-    const [displayMode, setDisplayMode] = useState('name'); // 'name', 'rgb', 'hsl', 'hsb'
+    const [displayMode, setDisplayMode] = useState('name');
     const [isDisplayModeModalVisible, setIsDisplayModeModalVisible] = useState(false);
 
     // Devuelve el valor de texto inferior (Nombre, RGB, HSL, HSB)
@@ -224,15 +221,10 @@ const Explorer = (props) => {
         setColorModePreview(options[nextIndex]);
     };
 
-    // --- MODIFICACIÓN ---
-    // El estilo de filtro ahora depende del simulationMode del hook, 
-    // que es controlado por el nuevo sidebar
     const simulationFilterStyle = {
         filter: simulationMode !== 'none' ? `url(#${simulationMode})` : 'none'
     };
     
-    // --- MODIFICACIÓN ---
-    // La variable de vista dividida ahora depende de CUALQUIER sidebar abierto
     const isSplitView = isAdjusterSidebarVisible || isSimulationSidebarVisible;
 
 
@@ -263,42 +255,49 @@ const Explorer = (props) => {
                 className={`transition-all duration-300`} 
                 style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
             >
-                {/* --- BARRA DE CONTROL --- */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 px-4 sm:px-6 pt-4 sm:pt-6">
+                {/* --- ¡INICIO DE LA BARRA DE HERRAMIENTAS MODIFICADA! --- */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 px-4 sm:px-6 pt-3">
                     
-                    <div className="flex-1 min-w-0">
-                         <h2 className="font-bold text-lg" style={{ color: tinycolor(colorModeBg).isLight() ? '#000' : '#FFF' }}>Modo Color</h2>
-                        {isAdjusterSidebarVisible ? (
-                            <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Previsualizando ajustes...</p>
-                        ) : isSimulationSidebarVisible ? (
-                            <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Previsualizando simulación...</p>
+                    {/* --- MODIFICACIÓN --- Reemplaza Título por Texto de Ayuda */}
+                    <div className="flex-1 min-w-0 h-8 flex items-center">
+                        {!isAdjusterSidebarVisible && !isSimulationSidebarVisible ? (
+                            <p className="text-sm text-[var(--text-muted)] hidden md:block">
+                                ¡Pulsa la <kbd className="px-2 py-1 text-xs font-semibold text-[var(--text-default)] bg-[var(--bg-muted)] border border-[var(--border-default)] rounded-md">barra espaciadora</kbd> para generar colores!
+                            </p>
+                        ) : isAdjusterSidebarVisible ? (
+                            <p className="text-sm text-[var(--text-muted)]">Previsualizando ajustes...</p>
                         ) : (
-                            <p className="text-sm mt-1" style={{ color: tinycolor(colorModeBg).isLight() ? '#4B5563' : '#9CA3AF' }}>Arrastra, inserta o quita colores.</p>
+                            <p className="text-sm text-[var(--text-muted)]">Previsualizando simulación...</p>
                         )}
                     </div>
                     
-                    {/* Derecha: Botones de Acción */}
+                    {/* Derecha: Botones de Acción (SOLO ICONOS) */}
                     <div className="flex items-center flex-wrap justify-end gap-1.5 sm:gap-2 self-end sm:self-auto w-full sm:w-auto">
                         
                         <button
                             onClick={handleCyclePreviewMode}
-                            className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2"
+                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2"
                             style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                            title="Alternar fondo de vista previa"
+                            title={`Fondo: ${backgroundModeLabels[colorModePreview]}`}
                         >
-                            <Layers size={14} /> <span className="hidden sm:inline">{backgroundModeLabels[colorModePreview]}</span>
+                            <Layers size={16} />
                         </button>
 
-                        <button onClick={() => setIsAIModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" title="Generar con IA">
-                            <Sparkles size={14} /> <span className="hidden sm:inline">IA</span>
+                        <button 
+                            onClick={() => setIsAIModalVisible(true)} 
+                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" 
+                            title="Generar con IA"
+                        >
+                            <Sparkles size={16} />
                         </button>
 
-                        <select value={explorerMethod} onChange={(e) => setExplorerMethod(e.target.value)} className="hidden sm:block text-sm font-medium py-2 px-3 rounded-lg bg-[var(--bg-muted)] text-[var(--text-default)] border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--action-primary-default)]" title="Generar por Método">
-                            {generationMethods.map(method => (<option key={method.id} value={method.id}>{method.name}</option>))}
-                        </select>
-                        
-                        <div className="relative sm:hidden">
-                            <button onClick={() => setIsMethodMenuVisible(true)} className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
+                        <div className="relative">
+                            <button 
+                                onClick={() => setIsMethodMenuVisible(true)} 
+                                className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                                style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                                title="Método de Generación"
+                            >
                                 <Wand2 size={16}/>
                             </button>
                              {isMethodMenuVisible && (
@@ -312,23 +311,45 @@ const Explorer = (props) => {
                             )}
                         </div>
 
-                        <button onClick={() => setIsImageModalVisible(true)} className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}>
-                            <ImageIcon size={14} /> <span className="hidden sm:inline">Imagen</span>
+                        <button 
+                            onClick={() => setIsImageModalVisible(true)} 
+                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                            title="Extraer de Imagen"
+                        >
+                            <ImageIcon size={16} />
                         </button>
-                        
-                        {/* --- MODIFICACIÓN --- Botones de simulación eliminados de aquí */}
                         
                         <button 
                             onClick={() => setIsExpanded(true)} 
-                            className="text-sm font-medium py-2 px-3 rounded-lg flex items-center gap-2" 
+                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
                             style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
                             title="Expandir Paleta"
                         >
-                            <Maximize size={14} /> 
-                            <span className="hidden sm:inline">Expandir</span>
+                            <Maximize size={16} /> 
                         </button>
                         
                         <div className="h-5 w-px bg-[var(--border-default)] mx-1"></div>
+                        
+                        {/* --- ¡NUEVO! --- Iconos movidos fuera del menú '...' */}
+                        <button 
+                            onClick={onOpenAdjuster} 
+                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                            title="Ajustar Paleta"
+                        >
+                            <SlidersHorizontal size={16} /> 
+                        </button>
+
+                        <button 
+                            onClick={onOpenSimulationSidebar} 
+                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                            title="Daltonismo"
+                        >
+                            <Eye size={16} /> 
+                        </button>
+                        {/* --- FIN DE ICONOS MOVIDOS --- */}
 
                         {/* Menú de Herramientas (...) */}
                         <div className="relative">
@@ -342,9 +363,7 @@ const Explorer = (props) => {
                             </button>
                             {isToolsMenuVisible && (
                                 <PopoverMenu onClose={() => setIsToolsMenuVisible(false)}>
-                                    <MenuButton icon={<SlidersHorizontal size={16}/>} label="Ajustar Paleta" onClick={() => { onOpenAdjuster(); setIsToolsMenuVisible(false); }} />
-                                    {/* --- ¡NUEVO! --- Botón de Daltonismo */}
-                                    <MenuButton icon={<Eye size={16}/>} label="Daltonismo" onClick={() => { onOpenSimulationSidebar(); setIsToolsMenuVisible(false); }} />
+                                    {/* --- MODIFICACIÓN --- Botones de Ajustar y Daltonismo eliminados de aquí */}
                                     <MenuButton icon={<Accessibility size={16}/>} label="Accesibilidad" onClick={() => { onOpenAccessibilityModal(); setIsToolsMenuVisible(false); }} />
                                     <MenuButton icon={<TestTube2 size={16}/>} label="Componentes" onClick={() => { onOpenComponentPreviewModal(); setIsToolsMenuVisible(false); }} />
                                     <MenuButton icon={<Palette size={16}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
@@ -355,213 +374,212 @@ const Explorer = (props) => {
                         
                     </div>
                 </div>
+                {/* --- ¡FIN DE LA BARRA DE HERRAMIENTAS MODIFICADA! --- */}
+
                 
                 {/* --- CONTENEDOR DE LA PALETA PRINCIPAL --- */}
-                {/* --- MODIFICACIÓN --- El 'simulationFilterStyle' se aplica condicionalmente abajo */}
-                <div>
-                    {/* Vista "ANTES" (Paleta Original) */}
-                    {isSplitView && (
-                        <div 
-                            className="h-[37.5vh] overflow-hidden" 
-                            title="Paleta Original (Antes de ajustar)"
-                        >
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="palette-original" direction="horizontal">
-                                    {(provided) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            className="flex items-center h-full relative"
-                                        >
-                                            {originalExplorerPalette.map((shade, index) => (
-                                                <Draggable key={"original-" + shade + index} draggableId={"original-" + shade + index} index={index}>
-                                                    {(provided) => (
-                                                        <div
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}
-                                                            className="relative h-full flex-1 flex items-center justify-center group/item"
-                                                            style={{ 
-                                                                ...provided.draggableProps.style,
-                                                                backgroundColor: shade, 
-                                                                minWidth: '50px' 
-                                                            }}
-                                                        >
-                                                            {lockedColors.includes(shade) && (
-                                                                <div className="absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
-                                                                    <Lock size={12} strokeWidth={1.5} />
-                                                                </div>
-                                                            )}
-                                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 z-10">
-                                                                <span 
-                                                                    className="font-mono text-lg font-bold p-1 rounded-lg"
-                                                                    style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF', textShadow: tinycolor(shade).isLight() ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)' }}
-                                                                >
-                                                                    {getHexValue(shade)}
-                                                                </span>
+                
+                {/* Vista "ANTES" (Paleta Original) */}
+                {isSplitView && (
+                    <div 
+                        className="h-[37.5vh] overflow-hidden" 
+                        title="Paleta Original (Antes de ajustar)"
+                    >
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="palette-original" direction="horizontal">
+                                {(provided) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className="flex items-center h-full relative"
+                                    >
+                                        {originalExplorerPalette.map((shade, index) => (
+                                            <Draggable key={"original-" + shade + index} draggableId={"original-" + shade + index} index={index}>
+                                                {(provided) => (
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        className="relative h-full flex-1 flex items-center justify-center group/item"
+                                                        style={{ 
+                                                            ...provided.draggableProps.style,
+                                                            backgroundColor: shade, 
+                                                            minWidth: '50px' 
+                                                        }}
+                                                    >
+                                                        {lockedColors.includes(shade) && (
+                                                            <div className="absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
+                                                                <Lock size={12} strokeWidth={1.5} />
                                                             </div>
+                                                        )}
+                                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 z-10">
+                                                            <span 
+                                                                className="font-mono text-lg font-bold p-1 rounded-lg"
+                                                                style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF', textShadow: tinycolor(shade).isLight() ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)' }}
+                                                            >
+                                                                {getHexValue(shade)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    </div>
+                )}
+                
+                {/* "DESPUÉS" (Paleta Ajustada) o Paleta Única */}
+                <div 
+                    className={`overflow-hidden ${isSplitView ? 'h-[37.5vh]' : 'h-[75vh] rounded-b-md'}`}
+                    title={isAdjusterSidebarVisible ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
+                >
+                    
+                    {/* Si estamos ajustando, mostrar la paleta ajustada (draggable) */}
+                    {isAdjusterSidebarVisible && (
+                         <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="palette-main" direction="horizontal">
+                                {(provided) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
+                                    >
+                                        {explorerPalette.map((shade, index) => {
+                                            const originalColor = originalExplorerPalette[index];
+                                            const isLocked = lockedColors.includes(originalColor);
+                                            const displayShade = isLocked ? originalColor : shade;
+                                            
+                                            const isLight = tinycolor(displayShade).isLight();
+                                            const iconColor = isLight ? 'text-gray-900' : 'text-white';
+                                            const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
+                                            const textColor = isLight ? '#000' : '#FFF';
+                                            const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
+                                            
+                                            const hexValue = getHexValue(displayShade);
+                                            const displayValue = getDisplayValue(displayShade, displayMode);
+
+                                            return (
+                                                <Draggable key={"main-" + originalColor + index} draggableId={"main-" + originalColor + index} index={index}>
+                                                    {(provided) => (
+                                                        <div ref={provided.innerRef} {...provided.draggableProps} className="relative h-full flex-1 flex items-center justify-center group/color-wrapper" style={{...provided.draggableProps.style}}>
+                                                            <div className="relative group/item h-full w-full flex items-center justify-center transition-colors duration-100 ease-in-out" style={{ backgroundColor: displayShade, minWidth: '50px' }} title={displayShade.toUpperCase()}>
+                                                                {displayShade === brandColor && (<div className={`absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color de Marca Actual"><Star size={12} className="fill-current" strokeWidth={1.5} /></div>)}
+                                                                {isLocked && (<div className={`absolute top-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
+                                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
+                                                                    <div title="Arrastrar para mover" className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`} {...provided.dragHandleProps} onClick={(e) => e.stopPropagation()}>
+                                                                        <ArrowLeftRight size={18} strokeWidth={1.5} />
+                                                                    </div>
+                                                                    <ActionButtonHover title="Usar como Marca" onClick={() => handleExplorerColorPick(displayShade)} iconColor={iconColor} hoverBg={hoverBg}><Star size={18} strokeWidth={1.5} /></ActionButtonHover>
+                                                                    <ActionButtonHover title="Ver Tonalidades" onClick={() => toggleShades(index)} iconColor={iconColor} hoverBg={hoverBg}><Palette size={18} strokeWidth={1.5} /></ActionButtonHover>
+                                                                    <ActionButtonHover title="Copiar H E X" onClick={() => { navigator.clipboard.writeText(hexValue); showNotification(`H E X ${hexValue} copiado!`); }} iconColor={iconColor} hoverBg={hoverBg}><Copy size={18} strokeWidth={1.5} /></ActionButtonHover>
+                                                                    <ActionButtonHover title={isLocked ? "Desbloquear" : "Bloquear"} onClick={() => toggleLockColor(originalColor)} iconColor={iconColor} hoverBg={hoverBg}>{isLocked ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}</ActionButtonHover>
+                                                                    <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
+                                                                </div>
+                                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10">
+                                                                    <button className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setPickerColor({ index, color: displayShade }); }} title="Editar Color">{hexValue}</button>
+                                                                    <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}><button onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} className="bg-white/90 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform" title="Insertar color"><Plus size={16}/></button></div>
+                                                            {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
                                                         </div>
                                                     )}
                                                 </Draggable>
-                                            ))}
-                                            {provided.placeholder}
+                                            )
+                                        })}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    )}
+                    
+                    {/* Si estamos simulando, mostrar la paleta original con filtro (no-draggable) */}
+                    {isSimulationSidebarVisible && (
+                        <div 
+                            className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
+                            style={simulationFilterStyle} // ¡El filtro se aplica AQUÍ!
+                        >
+                            {originalExplorerPalette.map((shade, index) => {
+                                const isLight = tinycolor(shade).isLight();
+                                const textColor = isLight ? '#000' : '#FFF';
+                                const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
+                                const hexValue = getHexValue(shade);
+
+                                return (
+                                    <div key={`sim-${index}`} className="relative h-full flex-1 flex items-center justify-center" style={{ backgroundColor: shade, minWidth: '50px' }}>
+                                        {lockedColors.includes(shade) && (<div className="absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
+                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 z-10">
+                                            <span className="font-mono text-lg font-bold p-1 rounded-lg" style={{ color: textColor, textShadow: textShadow }}>
+                                                {hexValue}
+                                            </span>
                                         </div>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                     
-                    {/* "DESPUÉS" (Paleta Ajustada) o Paleta Única */}
-                    <div 
-                        className={`overflow-hidden ${isSplitView ? 'h-[37.5vh]' : 'h-[75vh] rounded-b-md'}`}
-                        title={isAdjusterSidebarVisible ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
-                    >
-                        {/* --- ¡LÓGICA CONDICIONAL AQUÍ! --- */}
-                        
-                        {/* Si estamos ajustando, mostrar la paleta ajustada (draggable) */}
-                        {isAdjusterSidebarVisible && (
-                             <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="palette-main" direction="horizontal">
-                                    {(provided) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
-                                        >
-                                            {explorerPalette.map((shade, index) => {
-                                                const originalColor = originalExplorerPalette[index];
-                                                const isLocked = lockedColors.includes(originalColor);
-                                                const displayShade = isLocked ? originalColor : shade;
-                                                
-                                                const isLight = tinycolor(displayShade).isLight();
-                                                const iconColor = isLight ? 'text-gray-900' : 'text-white';
-                                                const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
-                                                const textColor = isLight ? '#000' : '#FFF';
-                                                const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
-                                                
-                                                const hexValue = getHexValue(displayShade);
-                                                const displayValue = getDisplayValue(displayShade, displayMode);
+                    {/* Si no hay sidebar abierto, mostrar la paleta principal (draggable) */}
+                    {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
+                         <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="palette-main" direction="horizontal">
+                                {(provided) => (
+                                    <div ref={provided.innerRef} {...provided.droppableProps} className={`flex items-center h-full relative group rounded-md`}>
+                                        {explorerPalette.map((shade, index) => {
+                                            const originalColor = (originalExplorerPalette && originalExplorerPalette[index]) ? originalExplorerPalette[index] : shade;
+                                            const isLocked = lockedColors.includes(originalColor);
+                                            const displayShade = shade;
+                                            
+                                            const isLight = tinycolor(displayShade).isLight();
+                                            const iconColor = isLight ? 'text-gray-900' : 'text-white';
+                                            const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
+                                            const textColor = isLight ? '#000' : '#FFF';
+                                            const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
+                                            
+                                            const hexValue = getHexValue(displayShade);
+                                            const displayValue = getDisplayValue(displayShade, displayMode);
 
-                                                return (
-                                                    <Draggable key={"main-" + originalColor + index} draggableId={"main-" + originalColor + index} index={index}>
-                                                        {(provided) => (
-                                                            <div ref={provided.innerRef} {...provided.draggableProps} className="relative h-full flex-1 flex items-center justify-center group/color-wrapper" style={{...provided.draggableProps.style}}>
-                                                                <div className="relative group/item h-full w-full flex items-center justify-center transition-colors duration-100 ease-in-out" style={{ backgroundColor: displayShade, minWidth: '50px' }} title={displayShade.toUpperCase()}>
-                                                                    {displayShade === brandColor && (<div className={`absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color de Marca Actual"><Star size={12} className="fill-current" strokeWidth={1.5} /></div>)}
-                                                                    {isLocked && (<div className={`absolute top-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
-                                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
-                                                                        <div title="Arrastrar para mover" className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`} {...provided.dragHandleProps} onClick={(e) => e.stopPropagation()}>
-                                                                            <ArrowLeftRight size={18} strokeWidth={1.5} />
-                                                                        </div>
-                                                                        <ActionButtonHover title="Usar como Marca" onClick={() => handleExplorerColorPick(displayShade)} iconColor={iconColor} hoverBg={hoverBg}><Star size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                        <ActionButtonHover title="Ver Tonalidades" onClick={() => toggleShades(index)} iconColor={iconColor} hoverBg={hoverBg}><Palette size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                        <ActionButtonHover title="Copiar H E X" onClick={() => { navigator.clipboard.writeText(hexValue); showNotification(`H E X ${hexValue} copiado!`); }} iconColor={iconColor} hoverBg={hoverBg}><Copy size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                        <ActionButtonHover title={isLocked ? "Desbloquear" : "Bloquear"} onClick={() => toggleLockColor(originalColor)} iconColor={iconColor} hoverBg={hoverBg}>{isLocked ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}</ActionButtonHover>
-                                                                        <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
+                                            return (
+                                                <Draggable key={"main-" + originalColor + index} draggableId={"main-" + originalColor + index} index={index}>
+                                                    {(provided) => (
+                                                        <div ref={provided.innerRef} {...provided.draggableProps} className="relative h-full flex-1 flex items-center justify-center group/color-wrapper" style={{...provided.draggableProps.style}}>
+                                                            <div className="relative group/item h-full w-full flex items-center justify-center transition-colors duration-100 ease-in-out" style={{ backgroundColor: displayShade, minWidth: '50px' }} title={displayShade.toUpperCase()}>
+                                                                {displayShade === brandColor && (<div className={`absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color de Marca Actual"><Star size={12} className="fill-current" strokeWidth={1.5} /></div>)}
+                                                                {isLocked && (<div className={`absolute top-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
+                                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
+                                                                    <div title="Arrastrar para mover" className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`} {...provided.dragHandleProps} onClick={(e) => e.stopPropagation()}>
+                                                                        <ArrowLeftRight size={18} strokeWidth={1.5} />
                                                                     </div>
-                                                                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10">
-                                                                        <button className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setPickerColor({ index, color: displayShade }); }} title="Editar Color">{hexValue}</button>
-                                                                        <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
-                                                                    </div>
+                                                                    <ActionButtonHover title="Usar como Marca" onClick={() => handleExplorerColorPick(displayShade)} iconColor={iconColor} hoverBg={hoverBg}><Star size={18} strokeWidth={1.5} /></ActionButtonHover>
+                                                                    <ActionButtonHover title="Ver Tonalidades" onClick={() => toggleShades(index)} iconColor={iconColor} hoverBg={hoverBg}><Palette size={18} strokeWidth={1.5} /></ActionButtonHover>
+                                                                    <ActionButtonHover title="Copiar H E X" onClick={() => { navigator.clipboard.writeText(hexValue); showNotification(`H E X ${hexValue} copiado!`); }} iconColor={iconColor} hoverBg={hoverBg}><Copy size={18} strokeWidth={1.5} /></ActionButtonHover>
+                                                                    <ActionButtonHover title={isLocked ? "Desbloquear" : "Bloquear"} onClick={() => toggleLockColor(originalColor)} iconColor={iconColor} hoverBg={hoverBg}>{isLocked ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}</ActionButtonHover>
+                                                                    <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
                                                                 </div>
-                                                                <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}><button onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} className="bg-white/90 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform" title="Insertar color"><Plus size={16}/></button></div>
-                                                                {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
-                                                            </div>
-                                                        )}
-                                                    </Draggable>
-                                                )
-                                            })}
-                                            {provided.placeholder}
-                                        </div>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        )}
-                        
-                        {/* Si estamos simulando, mostrar la paleta original con filtro (no-draggable) */}
-                        {isSimulationSidebarVisible && (
-                            <div 
-                                className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
-                                style={simulationFilterStyle} // ¡El filtro se aplica AQUÍ!
-                            >
-                                {originalExplorerPalette.map((shade, index) => {
-                                    const isLight = tinycolor(shade).isLight();
-                                    const textColor = isLight ? '#000' : '#FFF';
-                                    const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
-                                    const hexValue = getHexValue(shade);
-
-                                    return (
-                                        <div key={`sim-${index}`} className="relative h-full flex-1 flex items-center justify-center" style={{ backgroundColor: shade, minWidth: '50px' }}>
-                                            {lockedColors.includes(shade) && (<div className="absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
-                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 z-10">
-                                                <span className="font-mono text-lg font-bold p-1 rounded-lg" style={{ color: textColor, textShadow: textShadow }}>
-                                                    {hexValue}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                        
-                        {/* Si no hay sidebar abierto, mostrar la paleta principal (draggable) */}
-                        {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
-                             <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="palette-main" direction="horizontal">
-                                    {(provided) => (
-                                        <div ref={provided.innerRef} {...provided.droppableProps} className={`flex items-center h-full relative group rounded-md`}>
-                                            {explorerPalette.map((shade, index) => {
-                                                const originalColor = originalExplorerPalette[index]; // Asumimos que explorerPalette y original son iguales aquí
-                                                const isLocked = lockedColors.includes(originalColor);
-                                                const displayShade = shade; // Es la paleta normal
-                                                
-                                                const isLight = tinycolor(displayShade).isLight();
-                                                const iconColor = isLight ? 'text-gray-900' : 'text-white';
-                                                const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
-                                                const textColor = isLight ? '#000' : '#FFF';
-                                                const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
-                                                
-                                                const hexValue = getHexValue(displayShade);
-                                                const displayValue = getDisplayValue(displayShade, displayMode);
-
-                                                return (
-                                                    <Draggable key={"main-" + originalColor + index} draggableId={"main-" + originalColor + index} index={index}>
-                                                        {(provided) => (
-                                                            <div ref={provided.innerRef} {...provided.draggableProps} className="relative h-full flex-1 flex items-center justify-center group/color-wrapper" style={{...provided.draggableProps.style}}>
-                                                                <div className="relative group/item h-full w-full flex items-center justify-center transition-colors duration-100 ease-in-out" style={{ backgroundColor: displayShade, minWidth: '50px' }} title={displayShade.toUpperCase()}>
-                                                                    {displayShade === brandColor && (<div className={`absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color de Marca Actual"><Star size={12} className="fill-current" strokeWidth={1.5} /></div>)}
-                                                                    {isLocked && (<div className={`absolute top-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
-                                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
-                                                                        <div title="Arrastrar para mover" className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`} {...provided.dragHandleProps} onClick={(e) => e.stopPropagation()}>
-                                                                            <ArrowLeftRight size={18} strokeWidth={1.5} />
-                                                                        </div>
-                                                                        <ActionButtonHover title="Usar como Marca" onClick={() => handleExplorerColorPick(displayShade)} iconColor={iconColor} hoverBg={hoverBg}><Star size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                        <ActionButtonHover title="Ver Tonalidades" onClick={() => toggleShades(index)} iconColor={iconColor} hoverBg={hoverBg}><Palette size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                        <ActionButtonHover title="Copiar H E X" onClick={() => { navigator.clipboard.writeText(hexValue); showNotification(`H E X ${hexValue} copiado!`); }} iconColor={iconColor} hoverBg={hoverBg}><Copy size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                        <ActionButtonHover title={isLocked ? "Desbloquear" : "Bloquear"} onClick={() => toggleLockColor(originalColor)} iconColor={iconColor} hoverBg={hoverBg}>{isLocked ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}</ActionButtonHover>
-                                                                        <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                    </div>
-                                                                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10">
-                                                                        <button className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setPickerColor({ index, color: displayShade }); }} title="Editar Color">{hexValue}</button>
-                                                                        <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
-                                                                    </div>
+                                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10">
+                                                                    <button className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setPickerColor({ index, color: displayShade }); }} title="Editar Color">{hexValue}</button>
+                                                                    <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
                                                                 </div>
-                                                                <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}><button onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} className="bg-white/90 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform" title="Insertar color"><Plus size={16}/></button></div>
-                                                                {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
                                                             </div>
-                                                        )}
-                                                    </Draggable>
-                                                )
-                                            })}
-                                            {provided.placeholder}
-                                        </div>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        )}
-                        
-                    </div>
+                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}><button onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} className="bg-white/90 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform" title="Insertar color"><Plus size={16}/></button></div>
+                                                            {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            )
+                                        })}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    )}
+                    
                 </div>
                 
                 <div className="mt-6 pt-4 border-t px-4 sm:px-6 pb-2" style={{ borderColor: tinycolor(colorModeBg).isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}>
