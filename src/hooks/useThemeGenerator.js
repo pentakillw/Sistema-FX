@@ -573,55 +573,62 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
     // --- ¡FUNCIÓN MODIFICADA! ---
     const handleRandomTheme = (baseColorHex = null) => {
         
-        // Si el método es 'auto' (el nuevo), dejamos que la función de generación
-        // maneje todo, incluidos los colores bloqueados y el color de marca.
+        // --- ¡NUEVA LÓGICA DE BLOQUEO! ---
+        // 1. Determinar el color base.
+        let effectiveBaseColor = baseColorHex; // Usar el color del clic (✨) si existe.
+        
+        // 2. Si no hay color base por clic (fue la barra espaciadora)
+        //    Y HAY colores bloqueados...
+        if (!effectiveBaseColor && lockedColors.length > 0) {
+            // ¡Usar el primer color bloqueado como el color base!
+            effectiveBaseColor = lockedColors[0]; 
+        }
+        // Si effectiveBaseColor sigue siendo null, la función de generación
+        // elegirá uno de la lista CURATED_BASE_COLORS (comportamiento correcto).
+        // --- FIN DE LÓGICA DE BLOQUEO ---
+
         if (explorerMethod === 'auto') {
             const { palette: newPalette, brandColor: newBrandColor } =
                 generateAdvancedRandomPalette(
                     originalExplorerPalette.length || 5,
-                    'auto', // Forzar 'auto'
-                    baseColorHex,
-                    lockedColors, // Pasar los colores bloqueados
-                    originalExplorerPalette // Pasar la paleta antigua para mantener el orden de los bloqueados
+                    'auto', 
+                    effectiveBaseColor, // <--- ¡USAR LA NUEVA VARIABLE!
+                    lockedColors,
+                    originalExplorerPalette
                 );
-            
-            // La nueva función 'generateAdvancedRandomPalette' ya respetó
-            // los colores bloqueados.
             updatePaletteState(newPalette, newBrandColor);
             
         } else {
             // --- LÓGICA ANTIGUA (para 'mono', 'triad', etc.) ---
-            // Esta lógica SÍ necesita mezclar la paleta nueva con los colores bloqueados.
+            // También debemos aplicar esta lógica aquí.
             const { palette: newRandomPalette, brandColor: newBrandColorSuggestion } = 
                 generateAdvancedRandomPalette(
                     originalExplorerPalette.length || 5, 
                     explorerMethod,
-                    baseColorHex
+                    effectiveBaseColor // <--- ¡USAR LA NUEVA VARIABLE!
                 ); 
             
             let randomColorsUsed = 0;
             let baseColorPlaced = false;
             
+            // Esta lógica de reemplazo ya respeta los lockedColors.
             const finalPalette = originalExplorerPalette.map((oldColor) => {
                 if (lockedColors.includes(oldColor)) {
                     return oldColor;
                 }
-                // Si se generó desde un color base, se reemplaza el primer color no bloqueado
-                if (baseColorHex && !baseColorPlaced) {
+                if (effectiveBaseColor && !baseColorPlaced) { // <-- Lógica actualizada
                     baseColorPlaced = true;
-                    return baseColorHex;
+                    return effectiveBaseColor;
                 }
-                // Ciclamos a través de los colores generados
                 const newColor = newRandomPalette[randomColorsUsed % newRandomPalette.length];
                 randomColorsUsed++;
                 return newColor;
             });
             
             let newBrandColor;
-            if (baseColorHex) {
-                newBrandColor = baseColorHex;
+            if (effectiveBaseColor) { // <-- Lógica actualizada
+                newBrandColor = effectiveBaseColor;
             } else {
-                // Elige el primer color no bloqueado como el nuevo color de marca
                 const unLockedColors = finalPalette.filter(c => !lockedColors.includes(c));
                 newBrandColor = unLockedColors.length > 0 ? unLockedColors[0] : (lockedColors.length > 0 ? lockedColors[0] : newBrandColorSuggestion);
             }
@@ -772,7 +779,7 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
         }
     };
 
-    const handleSavePalette = async (saveData) => {
+    const handleSavePalette = async (saveData = {}) => { // <-- ¡AQUÍ ESTÁ LA CORRECCIÓN!
         if (!user) {
             showNotification('Necesitas iniciar sesión para guardar paletas', 'error');
             return false;
