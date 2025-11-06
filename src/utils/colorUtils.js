@@ -52,7 +52,7 @@ export const generationMethods = [
 ];
 
 export const colorblindnessMatrices = {
-  protanopia: [0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0],
+  protanopia: [0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 0, 1, 0],
   deuteranopia: [0.625, 0.375, 0, 0, 0, 0.7, 0.3, 0, 0, 0, 0, 0.3, 0.7, 0, 0, 0, 0, 0, 1, 0],
   tritanopia: [0.95, 0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0],
   achromatopsia: [0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 1, 0],
@@ -304,26 +304,37 @@ export const generateAdvancedRandomPalette = (
 
     // --- PASO 2: Seleccionar un "Template" de Generación ---
     
-    // ¡NUESTRO ARSENAL DE 44 PLANTILLAS!
+    // ¡NUESTRO ARSENAL DE 79 PLANTILLAS (REORDENADAS)!
     const templates = [
-      // Perfiles (6)
-      'equilibrado', 'pastel', 'apagado', 'vibrante', 'profundo', 'monocromatico',
-      // Temperatura (2)
-      'calido', 'frio', 
-      // Teoría (4)
-      'gradiente-analogo', 'complementario-dividido', 'acentos-complementarios', 'tetrada',
-      // Plan 8.0 (10)
-      'pop-neon', 'vintage', 'earthy', 'oceanic', 'sunset',
-      'high-key', 'low-key', 'neutral-accent', 'triad-balanced', 'analogo-comp',
-      // Plan 9.0 (10)
-      'grayscale', 'faded', 'primary', 'secondary', 'metallic',
-      'themed-forest', 'themed-sweets', 'academic', 'southwestern', 'monotone-split',
-      // Plan 10.0 (2)
-      'acentos-dobles-neutros', 'gradiente-analogo-vibrante',
-      // ¡NUEVAS 10 PLANTILLAS!
-      'alto-contraste', 'bajo-contraste', 'rampa-saturacion', 'doble-complementario',
-      'dos-matices', 'complemento-neutros', 'tematico-fuego', 'tematico-hielo',
-      'tematico-desierto', 'caos'
+      // --- (Grupo 1) Temas Artísticos y Naturales (Más Atractivos) ---
+      'theme-nebula', 'theme-vaporwave', 'theme-cyber-noir', 'theme-tropical', 'theme-autumn', 
+      'theme-spring', 'theme-winter', 'theme-jungle', 'theme-coastal', 'theme-savanna', 
+      'theme-artdeco', 'theme-gothic', 'theme-impressionism', 'theme-gourmet', 'theme-bauhaus',
+      
+      // --- (Grupo 2) Medios (Películas y Juegos) ---
+      'movie-spiderverse', 'movie-barbie', 'movie-dune', 'movie-oppenheimer', 'movie-matrix', 
+      'movie-interstellar', 'movie-spiritedaway', 'game-cyberpunk', 'game-mario', 'game-zelda-botw', 
+      'game-minecraft', 'game-portal', 'game-witcher', 'game-animalcrossing',
+
+      // --- (Grupo 3) Marcas ---
+      'brand-google', 'brand-spotify', 'brand-microsoft', 'brand-ikea', 'brand-coke', 'brand-starbucks',
+
+      // --- (Grupo 4) Perfiles de Alto Impacto ---
+      'vibrante', 'pop-neon', 'profundo', 'sunset', 'oceanic', 'tematico-fuego', 'tematico-hielo', 
+      'tematico-desierto', 'themed-forest', 'themed-sweets', 'primary', 'secondary', 'metallic', 
+      'gradiente-analogo-vibrante', 'alto-contraste',
+
+      // --- (Grupo 5) Perfiles Equilibrados y Apagados ---
+      'equilibrado', 'pastel', 'apagado', 'vintage', 'faded', 'earthy', 'academic', 'southwestern',
+      'high-key', 'low-key', 'acentos-dobles-neutros',
+
+      // --- (Grupo 6) Teoría y Armonía ---
+      'complementario-dividido', 'acentos-complementarios', 'triad-balanced', 'analogo-comp', 
+      'tetrada', 'doble-complementario', 'dos-matices', 'complemento-neutros', 'neutral-accent', 
+      'gradiente-analogo', 'monotone-split', 'rampa-saturacion', 'bajo-contraste',
+      
+      // --- (Grupo 7) Básicos y Caos ---
+      'monocromatico', 'grayscale', 'calido', 'frio', 'caos'
     ];
     
     let selectedTemplate;
@@ -368,6 +379,14 @@ export const generateAdvancedRandomPalette = (
     if (method === 'mono' || method === 'monochromatic') {
         selectedTemplate = 'gradiente-mono'; // Reemplazamos 'monocromatico' por la mejor versión
     }
+    
+    // --- (INICIO) SELECCIÓN DE PLANTILLA MANUAL ---
+    // Si el método *NO* es 'auto' (ej. 'brand-google'), 
+    // lo usamos para forzar la plantilla seleccionada.
+    if (method !== 'auto' && templates.includes(method)) {
+        selectedTemplate = method;
+    }
+    // --- (FIN) SELECCIÓN DE PLANTILLA MANUAL ---
 
 
     let generatedHsbPalette = [];
@@ -849,6 +868,347 @@ export const generateAdvancedRandomPalette = (
             break;
         // --- FIN DE 10 NUEVAS PLANTILLAS ---
 
+
+        // --- (INICIO) 20 PLANTILLAS DE MARCAS/MEDIOS ---
+        case 'brand-google':
+            // Hues: Azul, Rojo, Amarillo, Verde, Gris
+            const hg = [rand(210, 230), rand(355, 5), rand(45, 55), rand(120, 140), rand(200, 220)];
+            const sg = [rand(80, 100), rand(80, 100), rand(90, 100), rand(80, 100), rand(10, 20)];
+            const bg = [rand(70, 90), rand(70, 90), rand(80, 100), rand(60, 80), rand(80, 90)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hg[i % hg.length], s: sg[i % sg.length], b: bg[i % bg.length] });
+            }
+            break;
+
+        case 'brand-microsoft':
+            // Hues: Rojo, Verde, Azul, Amarillo, Gris
+            const hm = [rand(5, 15), rand(80, 90), rand(195, 205), rand(45, 55), rand(0, 360)];
+            const sm = [rand(90, 100), rand(90, 100), rand(90, 100), rand(90, 100), rand(0, 10)];
+            const bm = [rand(70, 90), rand(60, 80), rand(80, 100), rand(80, 100), rand(60, 70)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hm[i % hm.length], s: sm[i % sm.length], b: bm[i % bm.length] });
+            }
+            break;
+
+        case 'brand-spotify':
+            // Hues: Verde, Negro, Blanco, Gris, Gris Oscuro
+            const hsp = [rand(140, 150), rand(0, 360), rand(0, 360), rand(0, 360), rand(0, 360)];
+            const ssp = [rand(80, 100), rand(0, 10), rand(0, 5), rand(0, 10), rand(0, 10)];
+            const bsp = [rand(60, 80), rand(10, 20), rand(95, 100), rand(70, 80), rand(30, 40)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hsp[i % hsp.length], s: ssp[i % ssp.length], b: bsp[i % bsp.length] });
+            }
+            break;
+
+        case 'brand-ikea':
+            // Hues: Azul, Amarillo, Blanco, Negro, Rojo
+            const hi = [rand(215, 225), rand(50, 60), rand(0, 360), rand(0, 360), rand(355, 5)];
+            const si = [rand(90, 100), rand(90, 100), rand(0, 5), rand(0, 10), rand(90, 100)];
+            const bi = [rand(60, 80), rand(80, 100), rand(95, 100), rand(10, 20), rand(70, 90)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hi[i % hi.length], s: si[i % si.length], b: bi[i % bi.length] });
+            }
+            break;
+
+        case 'brand-coke':
+            // Hues: Rojo, Blanco, Negro, Gris, Plata
+            const hc = [rand(355, 5), rand(0, 360), rand(0, 360), rand(0, 360), rand(0, 360)];
+            const sc = [rand(90, 100), rand(0, 5), rand(0, 10), rand(0, 5), rand(5, 15)];
+            const bc = [rand(70, 90), rand(95, 100), rand(10, 20), rand(80, 90), rand(60, 70)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hc[i % hc.length], s: sc[i % sc.length], b: bc[i % bc.length] });
+            }
+            break;
+
+        case 'brand-starbucks':
+            // Hues: Verde, Blanco, Negro, Gris, Crema
+            const hst = [rand(150, 160), rand(0, 360), rand(0, 360), rand(0, 360), rand(40, 50)];
+            const sst = [rand(80, 100), rand(0, 5), rand(0, 10), rand(0, 10), rand(10, 20)];
+            const bst = [rand(30, 50), rand(95, 100), rand(10, 20), rand(60, 70), rand(90, 95)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hst[i % hst.length], s: sst[i % sst.length], b: bst[i % bst.length] });
+            }
+            break;
+
+        case 'game-mario':
+            // Hues: Rojo, Azul, Amarillo, Verde, Marrón
+            const hma = [rand(355, 5), rand(215, 225), rand(50, 60), rand(110, 130), rand(20, 30)];
+            const sma = [rand(90, 100), rand(80, 100), rand(90, 100), rand(80, 100), rand(60, 80)];
+            const bma = [rand(70, 90), rand(70, 90), rand(80, 100), rand(60, 80), rand(40, 60)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hma[i % hma.length], s: sma[i % sma.length], b: bma[i % bma.length] });
+            }
+            break;
+
+        case 'game-zelda-botw':
+            // Hues: Cian, Crema, Rojo, Verde, Amarillo
+            const hz = [rand(185, 195), rand(50, 60), rand(355, 5), rand(130, 140), rand(50, 60)];
+            const sz = [rand(60, 80), rand(20, 30), rand(70, 90), rand(40, 60), rand(70, 90)];
+            const bz = [rand(60, 80), rand(90, 100), rand(50, 70), rand(40, 60), rand(70, 90)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hz[i % hz.length], s: sz[i % sz.length], b: bz[i % bz.length] });
+            }
+            break;
+
+        case 'game-cyberpunk':
+            // Hues: Amarillo, Cian, Rojo, Púrpura, Negro
+            const hcp = [rand(55, 65), rand(180, 190), rand(350, 360), rand(275, 285), rand(0, 360)];
+            const scp = [rand(90, 100), rand(90, 100), rand(90, 100), rand(90, 100), rand(0, 10)];
+            const bcp = [rand(90, 100), rand(80, 100), rand(80, 100), rand(80, 100), rand(10, 20)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hcp[i % hcp.length], s: scp[i % scp.length], b: bcp[i % bcp.length] });
+            }
+            break;
+
+        case 'game-minecraft':
+            // Hues: Marrón, Verde, Azul, Gris, Gris Oscuro
+            const hm_mc = [rand(25, 35), rand(85, 95), rand(195, 205), rand(0, 360), rand(0, 360)];
+            const sm_mc = [rand(60, 80), rand(50, 70), rand(60, 80), rand(0, 10), rand(0, 10)];
+            const bm_mc = [rand(30, 50), rand(40, 60), rand(70, 90), rand(60, 80), rand(20, 30)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hm_mc[i % hm_mc.length], s: sm_mc[i % sm_mc.length], b: bm_mc[i % bm_mc.length] });
+            }
+            break;
+
+        case 'game-portal':
+            // Hues: Azul, Naranja, Blanco, Gris Oscuro, Gris Claro
+            const hp = [rand(190, 200), rand(25, 35), rand(0, 360), rand(0, 360), rand(0, 360)];
+            const sp = [rand(90, 100), rand(90, 100), rand(0, 5), rand(0, 10), rand(0, 5)];
+            const bp = [rand(80, 100), rand(80, 100), rand(95, 100), rand(20, 30), rand(70, 80)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hp[i % hp.length], s: sp[i % sp.length], b: bp[i % bp.length] });
+            }
+            break;
+
+        case 'game-witcher':
+            // Hues: Rojo, Gris Oscuro, Crema, Marrón, Blanco
+            const hw = [rand(355, 5), rand(20, 40), rand(40, 50), rand(25, 35), rand(40, 50)];
+            const sw = [rand(70, 90), rand(10, 20), rand(20, 30), rand(30, 50), rand(5, 15)];
+            const bw = [rand(30, 50), rand(15, 25), rand(80, 90), rand(40, 60), rand(90, 100)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hw[i % hw.length], s: sw[i % sw.length], b: bw[i % bw.length] });
+            }
+            break;
+
+        case 'game-animalcrossing':
+            // Hues: Verde, Amarillo, Azul, Naranja, Marrón
+            const hac = [rand(85, 95), rand(50, 60), rand(185, 195), rand(25, 35), rand(25, 35)];
+            const sac = [rand(50, 70), rand(80, 100), rand(60, 80), rand(80, 100), rand(40, 60)];
+            const bac = [rand(60, 80), rand(90, 100), rand(80, 100), rand(80, 100), rand(50, 70)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hac[i % hac.length], s: sac[i % sac.length], b: bac[i % bac.length] });
+            }
+            break;
+
+        case 'movie-dune':
+            // Hues: Naranja, Arena, Negro, Marrón, Piedra
+            const hd = [rand(20, 30), rand(35, 45), rand(0, 360), rand(20, 30), rand(25, 35)];
+            const sd = [rand(70, 90), rand(30, 50), rand(0, 10), rand(40, 60), rand(10, 20)];
+            const bd = [rand(60, 80), rand(80, 95), rand(10, 20), rand(30, 50), rand(60, 70)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hd[i % hd.length], s: sd[i % sd.length], b: bd[i % bd.length] });
+            }
+            break;
+
+        case 'movie-barbie':
+            // Hues: Rosa Fuerte, Rosa Claro, Azul, Amarillo, Blanco
+            const hb = [rand(315, 325), rand(325, 335), rand(185, 195), rand(50, 60), rand(0, 360)];
+            const sb = [rand(90, 100), rand(30, 50), rand(80, 100), rand(90, 100), rand(0, 5)];
+            const bb = [rand(80, 100), rand(90, 100), rand(70, 90), rand(80, 100), rand(95, 100)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hb[i % hb.length], s: sb[i % sb.length], b: bb[i % bb.length] });
+            }
+            break;
+
+        case 'movie-oppenheimer':
+            // Hues: Naranja, Negro, Crema, Marrón, Gris
+            const ho = [rand(25, 35), rand(0, 360), rand(40, 50), rand(15, 25), rand(0, 360)];
+            const so = [rand(90, 100), rand(0, 10), rand(20, 30), rand(50, 70), rand(0, 10)];
+            const bo = [rand(80, 100), rand(10, 20), rand(90, 95), rand(20, 40), rand(60, 70)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: ho[i % ho.length], s: so[i % so.length], b: bo[i % bo.length] });
+            }
+            break;
+
+        case 'movie-matrix':
+            // Hues: Verde, Verde Oscuro, Negro, Gris1, Gris2
+            const hmx = [rand(115, 125), rand(115, 125), rand(0, 360), rand(0, 360), rand(0, 360)];
+            const smx = [rand(90, 100), rand(70, 90), rand(0, 5), rand(0, 5), rand(0, 5)];
+            const bmx = [rand(80, 100), rand(20, 40), rand(5, 10), rand(10, 20), rand(30, 40)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hmx[i % hmx.length], s: smx[i % smx.length], b: bmx[i % bmx.length] });
+            }
+            break;
+
+        case 'movie-interstellar':
+            // Hues: Azul Oscuro, Blanco, Amarillo, Gris, Gris Claro
+            const hin = [rand(205, 215), rand(35, 45), rand(45, 55), rand(0, 360), rand(0, 360)];
+            const sin = [rand(70, 90), rand(10, 20), rand(90, 100), rand(0, 10), rand(0, 10)];
+            const bin = [rand(10, 20), rand(90, 100), rand(80, 100), rand(30, 40), rand(60, 70)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hin[i % hin.length], s: sin[i % sin.length], b: bin[i % bin.length] });
+            }
+            break;
+
+        case 'movie-spiritedaway':
+            // Hues: Rojo, Crema, Teal, Púrpura, Durazno
+            const hsa = [rand(350, 360), rand(40, 50), rand(175, 185), rand(275, 285), rand(25, 35)];
+            const ssa = [rand(70, 90), rand(30, 50), rand(50, 70), rand(50, 70), rand(70, 90)];
+            const bsa = [rand(60, 80), rand(90, 100), rand(50, 70), rand(20, 40), rand(80, 95)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hsa[i % hsa.length], s: ssa[i % ssa.length], b: bsa[i % bsa.length] });
+            }
+            break;
+
+        case 'movie-spiderverse':
+            // Hues: Rojo, Azul, Amarillo, Púrpura, Negro
+            const hsv = [rand(355, 5), rand(200, 210), rand(50, 60), rand(285, 295), rand(0, 360)];
+            const ssv = [rand(90, 100), rand(90, 100), rand(90, 100), rand(90, 100), rand(0, 10)];
+            const bsv = [rand(80, 100), rand(70, 90), rand(80, 100), rand(60, 80), rand(10, 20)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hsv[i % hsv.length], s: ssv[i % ssv.length], b: bsv[i % bsv.length] });
+            }
+            break;
+        // --- (FIN) 20 PLANTILLAS DE MARCAS/MEDIOS ---
+
+        // --- (INICIO) 15 NUEVAS PLANTILLAS TEMÁTICAS ---
+        
+        case 'theme-autumn': // Otoño
+            const ha = [rand(15, 30), rand(35, 45), rand(0, 10), rand(20, 35), rand(50, 60)];
+            const sa = [rand(60, 90), rand(70, 100), rand(80, 100), rand(50, 70), rand(60, 80)];
+            const ba = [rand(40, 70), rand(50, 80), rand(60, 80), rand(30, 50), rand(70, 90)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: ha[i % ha.length], s: sa[i % sa.length], b: ba[i % ba.length] });
+            }
+            break;
+
+        case 'theme-spring': // Primavera
+            const hsp_ = [rand(90, 120), rand(330, 350), rand(50, 60), rand(190, 210), rand(40, 50)];
+            const ssp_ = [rand(40, 60), rand(40, 60), rand(50, 70), rand(30, 50), rand(20, 40)];
+            const bsp_ = [rand(85, 95), rand(90, 100), rand(90, 100), rand(90, 100), rand(95, 100)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hsp_[i % hsp_.length], s: ssp_[i % ssp_.length], b: bsp_[i % bsp_.length] });
+            }
+            break;
+
+        case 'theme-winter': // Invierno
+            const hwi = [rand(180, 220), rand(190, 230), rand(0, 360), rand(0, 360), rand(200, 240)];
+            const swi = [rand(5, 15), rand(10, 20), rand(0, 5), rand(0, 5), rand(20, 40)];
+            const bwi = [rand(80, 100), rand(60, 80), rand(95, 100), rand(70, 85), rand(40, 60)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hwi[i % hwi.length], s: swi[i % swi.length], b: bwi[i % bwi.length] });
+            }
+            break;
+
+        case 'theme-nebula': // Nebulosa
+            const hn = [rand(240, 270), rand(270, 300), rand(300, 330), rand(0, 360), rand(190, 220)];
+            const sn = [rand(70, 100), rand(80, 100), rand(60, 90), rand(0, 10), rand(30, 60)];
+            const bn = [rand(20, 40), rand(30, 50), rand(70, 90), rand(10, 20), rand(80, 100)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hn[i % hn.length], s: sn[i % sn.length], b: bn[i % bn.length] });
+            }
+            break;
+
+        case 'theme-coastal': // Costero
+            const hco = [rand(40, 50), rand(190, 210), rand(0, 360), rand(0, 10), rand(190, 210)];
+            const sco = [rand(15, 30), rand(30, 50), rand(0, 5), rand(70, 90), rand(20, 40)];
+            const bco = [rand(85, 95), rand(70, 90), rand(95, 100), rand(70, 80), rand(85, 95)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hco[i % hco.length], s: sco[i % sco.length], b: bco[i % bco.length] });
+            }
+            break;
+
+        case 'theme-jungle': // Jungla
+            const hj = [rand(90, 140), rand(100, 150), rand(20, 35), rand(45, 55), rand(350, 5)];
+            const sj = [rand(60, 90), rand(50, 80), rand(50, 70), rand(100, 100), rand(100, 100)];
+            const bj = [rand(30, 60), rand(20, 40), rand(30, 50), rand(80, 90), rand(70, 80)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hj[i % hj.length], s: sj[i % sj.length], b: bj[i % bj.length] });
+            }
+            break;
+
+        case 'theme-gothic': // Gótico
+            const hg_ = [rand(0, 360), rand(270, 290), rand(355, 5), rand(0, 360), rand(260, 280)];
+            const sg_ = [rand(0, 5), rand(50, 70), rand(80, 100), rand(0, 5), rand(30, 50)];
+            const bg_ = [rand(10, 15), rand(20, 30), rand(40, 60), rand(50, 60), rand(15, 25)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hg_[i % hg_.length], s: sg_[i % sg_.length], b: bg_[i % bg_.length] });
+            }
+            break;
+
+        case 'theme-vaporwave':
+            const hv = [rand(300, 330), rand(170, 190), rand(260, 280), rand(40, 60), rand(0, 360)];
+            const sv = [rand(70, 100), rand(70, 100), rand(60, 90), rand(80, 100), rand(0, 5)];
+            const bv = [rand(80, 100), rand(80, 100), rand(70, 90), rand(80, 100), rand(10, 20)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hv[i % hv.length], s: sv[i % sv.length], b: bv[i % bv.length] });
+            }
+            break;
+
+        case 'theme-cyber-noir':
+            const hcn = [rand(180, 220), rand(190, 230), rand(0, 360), rand(330, 350), rand(50, 60)];
+            const scn = [rand(30, 50), rand(40, 60), rand(0, 10), rand(100, 100), rand(100, 100)];
+            const bcn = [rand(10, 30), rand(20, 40), rand(10, 20), rand(80, 90), rand(80, 90)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hcn[i % hcn.length], s: scn[i % scn.length], b: bcn[i % bcn.length] });
+            }
+            break;
+
+        case 'theme-artdeco':
+            const had = [rand(40, 50), rand(0, 360), rand(160, 180), rand(0, 360), rand(200, 220)];
+            const sad = [rand(70, 90), rand(0, 5), rand(60, 80), rand(0, 5), rand(50, 70)];
+            const bad = [rand(70, 90), rand(10, 15), rand(20, 40), rand(95, 100), rand(30, 50)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: had[i % had.length], s: sad[i % sad.length], b: bad[i % bad.length] });
+            }
+            break;
+
+        case 'theme-bauhaus':
+            const hba = [rand(355, 5), rand(50, 60), rand(230, 250), rand(0, 360), rand(0, 360)];
+            const sba = [rand(90, 100), rand(90, 100), rand(90, 100), rand(0, 5), rand(0, 10)];
+            const bba = [rand(70, 90), rand(80, 100), rand(70, 90), rand(95, 100), rand(10, 20)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hba[i % hba.length], s: sba[i % sba.length], b: bba[i % bba.length] });
+            }
+            break;
+
+        case 'theme-impressionism': // Impresionismo
+            const him = [rand(180, 250), rand(40, 70), rand(300, 320), rand(100, 130), rand(50, 70)];
+            const sim = [rand(30, 60), rand(40, 70), rand(20, 40), rand(30, 50), rand(10, 30)];
+            const bim = [rand(80, 100), rand(90, 100), rand(90, 100), rand(85, 95), rand(95, 100)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: him[i % him.length], s: sim[i % sim.length], b: bim[i % bim.length] });
+            }
+            break;
+
+        case 'theme-gourmet': // Gourmet
+            const hg_o = [rand(15, 30), rand(30, 40), rand(350, 5), rand(20, 35), rand(35, 45)];
+            const sg_o = [rand(40, 70), rand(10, 20), rand(60, 80), rand(60, 80), rand(20, 40)];
+            const bg_o = [rand(20, 40), rand(90, 95), rand(30, 50), rand(50, 70), rand(80, 90)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hg_o[i % hg_o.length], s: sg_o[i % sg_o.length], b: bg_o[i % bg_o.length] });
+            }
+            break;
+
+        case 'theme-tropical': // Tropical
+            const ht = [rand(170, 190), rand(30, 45), rand(340, 360), rand(130, 150), rand(50, 60)];
+            const st = [rand(80, 100), rand(90, 100), rand(80, 100), rand(60, 80), rand(90, 100)];
+            const bt = [rand(70, 90), rand(80, 100), rand(70, 90), rand(60, 80), rand(80, 100)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: ht[i % ht.length], s: st[i % st.length], b: bt[i % bt.length] });
+            }
+            break;
+
+        case 'theme-savanna': // Savanna
+            const hsa_ = [rand(35, 45), rand(20, 35), rand(40, 50), rand(190, 210), rand(15, 25)];
+            const ssa_ = [rand(60, 90), rand(40, 70), rand(20, 40), rand(20, 40), rand(30, 50)];
+            const bsa_ = [rand(70, 90), rand(50, 70), rand(85, 95), rand(80, 95), rand(30, 50)];
+            for (let i = 0; i < effectiveCount; i++) {
+                generatedHsbPalette.push({ h: hsa_[i % hsa_.length], s: ssa_[i % ssa_.length], b: bsa_[i % bsa_.length] });
+            }
+            break;
+
+        // --- (FIN) 15 NUEVAS PLANTILLAS TEMÁTICAS ---
 
         case 'monocromatico':
             // TEMPLATE (fallback para 'mono' si no fue 'gradiente-mono')
