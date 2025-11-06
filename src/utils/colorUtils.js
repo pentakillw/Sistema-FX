@@ -2,30 +2,17 @@ import tinycolor from 'tinycolor2';
 import { colorNameList } from './colorNameList.js';
 
 /*
-  NOTA IMPORTANTE SOBRE LIBRERÍAS:
-  
-  Tu solicitud menciona espacios de color perceptuales como OKLab/LCH y cálculos 
-  de distancia de color (ΔE2000). Estas son características avanzadas que 
-  NO están incluidas en 'tinycolor2' (la librería de tu proyecto actual).
-  
-  Para implementar eso, necesitarías instalar 'colorjs.io':
-  1. Ejecutar: `npm install colorjs.io`
-  2. Importar: `import Color from "colorjs.io";`
-  3. Y luego podrías usar:
-     - `new Color(hex).oklch`
-     - `Color.deltaE(c1, c2, "2000")`
-  
-  Dado que no puedo modificar tu 'package.json', he reescrito la lógica 
-  de generación de paletas usando 'tinycolor2' (con HSL/HSV) como la 
-  MEJOR APROXIMACIÓN POSIBLE a los requisitos de Coolors.
-  
-  Esta nueva lógica es mucho más avanzada que la anterior y te dará
-  paletas significativamente más hermosas y balanceadas.
+  NOTA DE IMPLEMENTACIÓN:
+  Tu receta (HSB/HSV) es excelente. La he implementado
+  en la función `generateAdvancedRandomPalette` cuando el
+  método es 'auto'.
+
+  - `tinycolor(hex).toHsv()` devuelve S y B en el rango 0-100 (justo como tu receta).
+  - `tinycolor({ h, s, v })` espera S y V en el rango 0-1.
+  - He creado los ayudantes `hsbToHex` y `hexToHsb` para manejar esta conversión.
 */
 
 // --- FUNCIONES EXISTENTES (SIN CAMBIOS) ---
-// (Se mantienen para que el resto de la app siga funcionando)
-
 export const availableFonts = {
   'Segoe UI': '"Segoe UI", system-ui, sans-serif',
   'Poppins': '"Poppins", sans-serif',
@@ -141,13 +128,42 @@ export const applyAdjustments = (hex, adjustments) => {
   return color.toHexString();
 };
 
-// --- FIN DE FUNCIONES EXISTENTES ---
+// --- FIN FUNCIONES EXISTENTES ---
 
-// --- ¡NUEVA LÓGICA DE GENERACIÓN! ---
+// --- INICIO DE NUEVA LÓGICA DE GENERACIÓN ---
 
 /**
- * Genera un color aleatorio que cumple con los criterios de Coolors (buena saturación y brillo).
- * @returns {tinycolor.Instance} Un objeto tinycolor.
+ * Genera un número aleatorio en un rango.
+ * @param {number} min - Valor mínimo.
+ * @param {number} max - Valor máximo.
+ * @returns {number}
+ */
+const rand = (min, max) => min + Math.random() * (max - min);
+
+/**
+ * Convierte HSB/HSV (con S/V 0-100) a un string HEX.
+ * @param {number} h - Matiz (0-360)
+ * @param {number} s - Saturación (0-100)
+ * @param {number} b - Brillo (0-100)
+ * @returns {string}
+ */
+const hsbToHex = (h, s, b) => {
+    // tinycolor espera S y V como 0-1
+    return tinycolor({ h: h, s: s / 100, v: b / 100 }).toHexString();
+}
+
+/**
+ * Convierte un string HEX a HSB/HSV (con S/V 0-100).
+ * @param {string} hex - Color Hex
+ * @returns {{h: number, s: number, v: number}}
+ */
+const hexToHsb = (hex) => {
+    return tinycolor(hex).toHsv(); // tinycolor.toHsv() devuelve s y v como 0-100
+}
+
+/**
+ * Genera un color aleatorio base válido (ni muy oscuro, ni muy claro, ni gris).
+ * @returns {tinycolor.Instance}
  */
 function getValidRandomBaseColor() {
   let color;
@@ -158,95 +174,20 @@ function getValidRandomBaseColor() {
     hsl = color.toHsl();
     attempts++;
   } while (
-    // Evitar colores muy oscuros, muy claros o "grises"
     (hsl.l < 0.2 || hsl.l > 0.9 || hsl.s < 0.3) && attempts < 50
   );
-  
-  // Si falla después de 50 intentos, solo ajusta el último color
   if (hsl.l < 0.2) hsl.l = 0.2 + Math.random() * 0.1;
   if (hsl.l > 0.9) hsl.l = 0.9 - Math.random() * 0.1;
   if (hsl.s < 0.3) hsl.s = 0.3 + Math.random() * 0.2;
-
   return tinycolor(hsl);
 }
 
 /**
- * Función de utilidad para obtener un valor aleatorio en un rango.
- * @param {number} min - Valor mínimo.
- * @param {number} max - Valor máximo.
- * @returns {number}
- */
-const rand = (min, max) => min + Math.random() * (max - min);
-
-/**
- * Genera una paleta de colores al estilo "Auto" de Coolors.
- * @param {tinycolor.Instance} baseColor - El color base para generar la paleta.
- * @param {number} count - El número de colores a generar.
- * @returns {tinycolor.Instance[]} Un array de objetos tinycolor.
- */
-function generateAutoPalette(baseColor, count) {
-  const palette = [baseColor];
-  let currentColor = baseColor;
-
-  for (let i = 1; i < count; i++) {
-    const hsl = currentColor.toHsl();
-    
-    // 1. Variación de Tono (Hue): ±20° a ±60°
-    const hueShift = rand(20, 60) * (Math.random() > 0.5 ? 1 : -1);
-    
-    // 2. Variación de Brillo (Lightness): 20% - 90%
-    // Intenta un cambio, pero luego lo sujeta al rango
-    let newLightness = hsl.l + rand(-0.2, 0.2); // Cambia hasta un 20%
-    newLightness = Math.max(0.2, Math.min(0.9, newLightness)); // Sujeta al rango 20-90%
-
-    // 3. Variación de Saturación (Chroma/Saturation): 30% - 80%
-    let newSaturation = hsl.s + rand(-0.3, 0.3); // Cambia hasta un 30%
-    newSaturation = Math.max(0.3, Math.min(0.8, newSaturation)); // Sujeta al rango 30-80%
-
-    const newColor = tinycolor({
-      h: (hsl.h + hueShift) % 360,
-      s: newSaturation,
-      l: newLightness,
-    });
-    
-    palette.push(newColor);
-    currentColor = newColor; // El siguiente color se basa en el recién creado
-  }
-
-  // 4. Asegurar al menos un color claro y uno oscuro
-  const hasLight = palette.some(c => c.toHsl().l > 0.8);
-  const hasDark = palette.some(c => c.toHsl().l < 0.3);
-
-  if (!hasLight) {
-    // Hace el segundo color claro (índice 1)
-    if (palette[1]) {
-      const hsl = palette[1].toHsl();
-      hsl.l = rand(0.8, 0.95);
-      palette[1] = tinycolor(hsl);
-    }
-  }
-  if (!hasDark) {
-    // Hace el último color oscuro
-    if (palette[palette.length - 1]) {
-      const hsl = palette[palette.length - 1].toHsl();
-      hsl.l = rand(0.15, 0.3);
-      palette[palette.length - 1] = tinycolor(hsl);
-    }
-  }
-
-  return palette;
-}
-
-/**
- * Genera una paleta de armonía y la balancea.
- * @param {tinycolor.Instance} baseColor - El color base.
- * @param {string} method - El método de armonía.
- * @param {number} count - El número de colores.
- * @returns {tinycolor.Instance[]} Un array de objetos tinycolor.
+ * Lógica de generación de armonía (copiada de tu archivo original).
+ * Se usa para los modos 'mono', 'triad', etc.
  */
 function generateHarmonyPalette(baseColor, method, count) {
   let harmonyColors;
-
   switch (method) {
     case 'mono':
     case 'monochromatic':
@@ -256,7 +197,6 @@ function generateHarmonyPalette(baseColor, method, count) {
       harmonyColors = baseColor.analogous(count);
       break;
     case 'complement':
-      // Genera una interpolación entre el base y el complementario
       const complement = baseColor.complement();
       harmonyColors = [baseColor];
       for (let i = 1; i < count; i++) {
@@ -266,24 +206,20 @@ function generateHarmonyPalette(baseColor, method, count) {
       break;
     case 'split-complement':
     case 'splitcomplement':
-      harmonyColors = baseColor.splitcomplement(); // Devuelve 3
+      harmonyColors = baseColor.splitcomplement();
       break;
     case 'triad':
-      harmonyColors = baseColor.triad(); // Devuelve 3
+      harmonyColors = baseColor.triad();
       break;
     case 'tetrad':
-      harmonyColors = baseColor.tetrad(); // Devuelve 4
+      harmonyColors = baseColor.tetrad();
       break;
     default:
-      // Fallback a análogo si el método es desconocido
       harmonyColors = baseColor.analogous(count);
   }
-
-  // Rellenar o truncar la paleta para que coincida con `count`
   if (harmonyColors.length < count) {
     const originalLength = harmonyColors.length;
     for (let i = originalLength; i < count; i++) {
-      // Añade variaciones de brillo/saturación de los colores existentes
       const colorToVary = harmonyColors[i % originalLength].toHsl();
       colorToVary.l = (colorToVary.l + 0.2 * (i - originalLength + 1)) % 1.0;
       harmonyColors.push(tinycolor(colorToVary));
@@ -291,80 +227,202 @@ function generateHarmonyPalette(baseColor, method, count) {
   } else if (harmonyColors.length > count) {
     harmonyColors = harmonyColors.slice(0, count);
   }
-
-  // --- Normalización y Balanceo ---
-  // Ordena por matiz (hue) para que las armonías sean predecibles
   harmonyColors.sort((a, b) => a.toHsl().h - b.toHsl().h);
-
-  // Define un rango de luminosidad deseado (p.ej. de 0.25 a 0.85)
   const minLightness = 0.25;
   const maxLightness = 0.85;
   const lightnessStep = (maxLightness - minLightness) / (count - 1 || 1);
-  
-  // *** ¡AQUÍ ESTÁ EL CAMBIO! ***
-  // 1. Crea una lista de objetivos de luminosidad y saturación
   const targetLightness = [];
   const targetSaturation = [];
   for (let i = 0; i < count; i++) {
       targetLightness.push(minLightness + (i * lightnessStep));
-      // Genera saturaciones en un buen rango (p.ej. 0.4 a 0.8)
       targetSaturation.push(rand(0.4, 0.8)); 
   }
-
-  // 2. ¡Baraja (Shuffle) los objetivos!
-  // Esto rompe la conexión "hue-0 siempre es oscuro".
   const shuffledLightness = targetLightness.sort(() => 0.5 - Math.random());
   const shuffledSaturation = targetSaturation.sort(() => 0.5 - Math.random());
-  
-  // 3. Re-mapea la paleta (que está ordenada por matiz)
-  //    a los valores de luminosidad/saturación BARROJADOS.
   return harmonyColors.map((color, i) => {
     const hsl = color.toHsl();
-    
-    // Asigna la luminosidad y saturación barajada
     hsl.l = shuffledLightness[i];
     hsl.s = shuffledSaturation[i]; 
-    
-    // Asegura que la saturación no sea demasiado baja (fallback)
     if (hsl.s < 0.35) hsl.s = 0.35;
-    
     return tinycolor(hsl);
   });
 }
 
 
 /**
- * ¡¡FUNCIÓN PRINCIPAL REESCRITA!!
- * Genera una paleta de colores avanzada basada en un método (Auto o Armonía).
+ * ¡FUNCIÓN PRINCIPAL MODIFICADA!
+ * Genera una paleta de colores avanzada.
+ * - Si method='auto', usa tu nueva receta HSB/HSV (¡CORREGIDA!).
+ * - Si method!='auto', usa la lógica de armonía anterior.
+ *
  * @param {number} [count=5] - Número de colores en la paleta.
- * @param {string} [method='auto'] - 'auto', 'mono', 'analogous', 'complement', 'split-complement', 'triad', 'tetrad'.
- * @param {string | null} [baseColorHex=null] - Un color base opcional en formato H E X.
+ * @param {string} [method='auto'] - 'auto', 'mono', 'analogous', etc.
+ * @param {string | null} [baseColorHex=null] - Un color base opcional.
+ * @param {string[]} [lockedColors=[]] - Array de colores HEX bloqueados.
+ * @param {string[]} [originalPalette=[]] - La paleta actual (para mantener posiciones).
  * @returns {{palette: string[], brandColor: string}}
  */
-export const generateAdvancedRandomPalette = (count = 5, method = 'auto', baseColorHex = null) => {
-  
-  const baseColor = baseColorHex ? tinycolor(baseColorHex) : getValidRandomBaseColor();
-  let paletteColors; // Array de objetos tinycolor
+export const generateAdvancedRandomPalette = (
+    count = 5, 
+    method = 'auto', 
+    baseColorHex = null, 
+    lockedColors = [], 
+    originalPalette = []
+) => {
 
-  if (method === 'auto') {
-    paletteColors = generateAutoPalette(baseColor, count);
-  } else {
-    paletteColors = generateHarmonyPalette(baseColor, method, count);
-  }
+    // --- CASO 1: Armonía Específica (mono, triad, etc.) ---
+    // Si el método NO es 'auto', usamos la lógica de armonía anterior.
+    if (method !== 'auto') {
+        const baseColor = baseColorHex ? tinycolor(baseColorHex) : getValidRandomBaseColor();
+        let paletteColors = generateHarmonyPalette(baseColor, method, count);
+        const finalPalette = paletteColors.map(c => c.toHexString());
+        return {
+            palette: finalPalette,
+            brandColor: baseColor.toHexString()
+        };
+    }
 
-  // Si el método era 'auto', desordena la paleta para que parezca aleatoria
-  if (method === 'auto') {
-    paletteColors.sort(() => 0.5 - Math.random());
-  }
-  
-  // Convierte la paleta final a H E X
-  const finalPalette = paletteColors.map(c => c.toHexString());
-  
-  return {
-    palette: finalPalette,
-    brandColor: baseColor.toHexString() // El color base siempre se devuelve como brandColor
-  };
-};
+    // --- CASO 2: Método 'auto' (Tu Nueva Receta CORREGIDA) ---
+    // Forzamos un mínimo de 3 colores para esta lógica.
+    const effectiveCount = Math.max(3, count);
+
+    // --- PASO 1: Seleccionar Modelo de Armonía ---
+    const harmonyModels = ['Análogo', 'Complementario', 'Triádico', 'Monocromático'];
+    const selectedModel = harmonyModels[Math.floor(rand(0, harmonyModels.length))];
+    
+    const baseHsb = baseColorHex ? hexToHsb(baseColorHex) : hexToHsb(getValidRandomBaseColor().toHexString());
+    const baseHue = baseHsb.h;
+
+    let hues = []; // Almacenará los matices funcionales
+
+    switch (selectedModel) {
+        case 'Monocromático':
+            hues = [baseHue, baseHue, baseHue];
+            break;
+        case 'Análogo':
+            hues = [baseHue, (baseHue + 30) % 360, (baseHue - 30 + 360) % 360];
+            break;
+        case 'Complementario':
+            hues = [baseHue, (baseHue + 180) % 360, (baseHue + 30) % 360];
+            break;
+        case 'Triádico':
+        default:
+            hues = [baseHue, (baseHue + 120) % 360, (baseHue + 240) % 360];
+            break;
+    }
+    const [h1, ...remainingHues] = hues;
+    const shuffledRemaining = remainingHues.sort(() => 0.5 - Math.random());
+    hues = [h1, ...shuffledRemaining];
+
+
+    // --- PASO 2: Definir Perfil de Cohesión ---
+    const profiles = [
+        { name: "Pastel", s: [25, 50], b: [85, 95] },
+        { name: "Apagado / Terroso", s: [30, 60], b: [40, 75] },
+        { name: "Profundo / Joya", s: [60, 100], b: [20, 50] },
+        { name: "Vibrante / Limpio", s: [80, 100], b: [80, 100] }
+    ];
+    
+    let selectedProfile;
+    if (baseColorHex) {
+        const { s, v: b } = baseHsb;
+        if (b > 80 && s < 60) selectedProfile = profiles[0]; // Pastel
+        else if (b < 60 && s > 50) selectedProfile = profiles[2]; // Profundo
+        else if (b > 75 && s > 75) selectedProfile = profiles[3]; // Vibrante
+        else selectedProfile = profiles[1]; // Apagado (default)
+    } else {
+        selectedProfile = profiles[Math.floor(rand(0, profiles.length))];
+    }
+    const [minS, maxS] = selectedProfile.s;
+    const [minB, maxB] = selectedProfile.b;
+
+    // --- PASO 3: Generar y Asignar Roles (¡CORREGIDO!) ---
+    // Ya NO generamos neutros. Generamos 'count' colores del perfil.
+    let generatedHsbPalette = []; 
+
+    // 1. Color Primario (Marca)
+    const primaryHsb = baseColorHex 
+        ? { ...baseHsb, role: 'primary' } 
+        : { role: 'primary', h: hues[0], s: rand(minS, maxS), b: rand(minB, maxB) };
+    generatedHsbPalette.push(primaryHsb);
+    
+    // 2. Color Secundario (Soporte)
+    generatedHsbPalette.push({
+        role: 'secondary', h: hues[1], s: rand(minS, maxS), b: rand(minB, maxB)
+    });
+    
+    // 3. Color de Acento (CTA)
+    let accentS = rand(minS, maxS);
+    let accentB = rand(minB, maxB);
+    if (selectedProfile.name !== "Vibrante / Limpio" && Math.random() > 0.5) {
+        accentS = Math.min(100, accentS + rand(10, 20));
+        accentB = Math.min(100, accentB + rand(10, 20));
+    }
+    generatedHsbPalette.push({
+        role: 'accent', h: hues[2], s: accentS, b: accentB
+    });
+    
+    // 4. Rellenar con colores "Extra" HASTA 'count'
+    // Usamos los matices de la armonía para cohesión
+    while (generatedHsbPalette.length < effectiveCount) {
+        generatedHsbPalette.push({
+            role: 'extra',
+            h: hues[generatedHsbPalette.length % hues.length], // Cicla los matices
+            s: rand(minS, maxS),
+            b: rand(minB, maxB)
+        });
+    }
+    // Truncar si es necesario (no debería pasar si count >= 3)
+    generatedHsbPalette = generatedHsbPalette.slice(0, effectiveCount);
+
+
+    // --- Integración de Colores Bloqueados ---
+    let finalHsbPalette = [...generatedHsbPalette]; 
+    let generatedColorsUsed = 0; 
+
+    if (lockedColors.length > 0 && originalPalette.length === effectiveCount) {
+        
+        finalHsbPalette = originalPalette.map((oldHex) => {
+            // Si el color estaba bloqueado, lo mantenemos.
+            if (lockedColors.includes(oldHex)) {
+                return hexToHsb(oldHex);
+            }
+
+            // Si no está bloqueado, tomamos el siguiente color generado
+            // (Nos aseguramos de no re-usar colores)
+            let replacement = generatedHsbPalette[generatedColorsUsed % generatedHsbPalette.length];
+            generatedColorsUsed++;
+            return replacement;
+        });
+        
+    } else {
+        // --- PASO 4: Ordenar y Formatear (¡CORREGIDO!) ---
+        // Ya NO ordenamos por brillo.
+        // Solo barajamos la paleta generada si no hay bloqueos.
+        finalHsbPalette.sort(() => 0.5 - Math.random());
+    }
+
+    // Convertir a HEX
+    const finalPalette = finalHsbPalette.map(c => {
+      // Asegurarnos de que c es un objeto {h,s,b} antes de convertir
+      if (c && typeof c.h === 'number') {
+        return hsbToHex(c.h, c.s, c.b)
+      }
+      // Fallback por si algo sale mal (ej. un color bloqueado inválido)
+      return tinycolor.random().toHexString();
+    });
+
+    // Determinar el color de marca
+    const brandColor = baseColorHex 
+        ? baseColorHex 
+        : hsbToHex(primaryHsb.h, primaryHsb.s, primaryHsb.b);
+
+    return {
+        palette: finalPalette,
+        brandColor: brandColor
+    };
+}
+
 
 /**
  * Función anterior que ahora solo se usa como fallback si la nueva falla.
