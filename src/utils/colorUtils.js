@@ -30,6 +30,18 @@ const CURATED_BASE_COLORS = [
 // --- (FIN) PLAN ASTUTO ---
 
 
+// --- (INICIO) NUEVO HELPER ---
+// Lista de los métodos de armonía "clásicos"
+const CLASSIC_HARMONY_METHODS = [
+    'analogous', 
+    'complement', 
+    'split-complement', 
+    'triad', 
+    'tetrad'
+];
+// --- (FIN) NUEVO HELPER ---
+
+
 // --- FUNCIONES EXISTENTES (SIN CAMBIOS) ---
 export const availableFonts = {
   'Segoe UI': '"Segoe UI", system-ui, sans-serif',
@@ -48,7 +60,20 @@ export const generationMethods = [
     { id: 'complement', name: 'Complementario' },
     { id: 'split-complement', name: 'Comp. Dividido' },
     { id: 'triad', name: 'Triádico' },
-    { id: 'tetrad', name: 'Tetrádico' }
+    { id: 'tetrad', name: 'Tetrádico' },
+    // --- ¡NUEVOS MÉTODOS AÑADIDOS! ---
+    { id: 'pastel', name: 'Temático: Pastel' },
+    { id: 'vibrante', name: 'Temático: Vibrante' },
+    { id: 'profundo', name: 'Temático: Profundo (Joya)' },
+    { id: 'vintage', name: 'Temático: Vintage' },
+    { id: 'earthy', name: 'Temático: Tierra' },
+    { id: 'oceanic', name: 'Temático: Océano' },
+    { id: 'sunset', name: 'Temático: Atardecer' },
+    { id: 'theme-nebula', name: 'Temático: Nebulosa' },
+    { id: 'theme-vaporwave', name: 'Temático: Vaporwave' },
+    { id: 'game-cyberpunk', name: 'Estilo: Cyber' },
+    { id: 'movie-dune', name: 'Estilo: Desierto Arena' },
+    { id: 'brand-google', name: 'Estilo: Digital' },
 ];
 
 export const colorblindnessMatrices = {
@@ -264,8 +289,9 @@ export const generateAdvancedRandomPalette = (
 ) => {
 
     // --- CASO 1: Armonía Específica (triad, analogous, etc.) ---
-    // Si el método NO es 'auto' O 'mono', usamos la lógica de armonía simple.
-    if (method !== 'auto' && method !== 'mono' && method !== 'monochromatic') {
+    // ¡AQUÍ ESTÁ LA MODIFICACIÓN!
+    // Si el método es uno de los "clásicos", usa la lógica de armonía simple.
+    if (CLASSIC_HARMONY_METHODS.includes(method)) {
         const baseColor = baseColorHex ? tinycolor(baseColorHex) : tinycolor(CURATED_BASE_COLORS[Math.floor(rand(0, CURATED_BASE_COLORS.length))]);
         let paletteColors = generateHarmonyPalette(baseColor, method, count);
         const finalPalette = paletteColors.map(c => c.toHexString());
@@ -275,7 +301,9 @@ export const generateAdvancedRandomPalette = (
         };
     }
 
-    // --- CASO 2: Método 'auto' o 'mono' (¡Plan Monstruoso 11.0!) ---
+    // --- CASO 2: Método 'auto', 'mono', o TEMÁTICO (¡Plan Monstruoso 11.0!) ---
+    // Todos los demás métodos (incluyendo 'auto', 'mono', 'theme-vaporwave', etc.)
+    // caen aquí.
     const effectiveCount = Math.max(3, count);
 
     // --- PASO 1: Seleccionar Color Base y Matices de Armonía ---
@@ -339,8 +367,20 @@ export const generateAdvancedRandomPalette = (
     
     let selectedTemplate;
 
-    // --- ¡INICIO DE LA CORRECCIÓN DEL BUG 1! ---
-    if (baseColorHex && lockedColors.length === 0) {
+    // --- ¡MODIFICACIÓN CLAVE! ---
+    // Prioridad 1: ¿El usuario seleccionó un método específico (que no sea 'auto')?
+    if (method !== 'auto') {
+        if (method === 'mono' || method === 'monochromatic') {
+            selectedTemplate = 'gradiente-mono'; // Usar la plantilla mono
+        } else if (templates.includes(method)) {
+            selectedTemplate = method; // Usar la plantilla temática (ej: 'theme-vaporwave')
+        } else {
+            // Fallback por si acaso (aunque no debería pasar por el CASO 1)
+            selectedTemplate = 'equilibrado';
+        }
+    } 
+    // Prioridad 2: Si el método es 'auto', inferir o elegir aleatoriamente.
+    else if (baseColorHex && lockedColors.length === 0) {
         // --- INFERIR PLANTILLA ---
         // Solo inferimos la plantilla si el usuario NO está bloqueando.
         // (Es decir, si hizo clic en ✨ sobre un color, o lo pasó la IA).
@@ -373,20 +413,7 @@ export const generateAdvancedRandomPalette = (
         // No hay color base, no hay bloqueos. Elegir CUALQUIER plantilla.
         selectedTemplate = templates[Math.floor(rand(0, templates.length))];
     }
-    // --- ¡FIN DE LA CORRECCIÓN DEL BUG 1! ---
-    
-    // Si el método de generación era 'mono', forzar el template 'gradiente-mono'
-    if (method === 'mono' || method === 'monochromatic') {
-        selectedTemplate = 'gradiente-mono'; // Reemplazamos 'monocromatico' por la mejor versión
-    }
-    
-    // --- (INICIO) SELECCIÓN DE PLANTILLA MANUAL ---
-    // Si el método *NO* es 'auto' (ej. 'brand-google'), 
-    // lo usamos para forzar la plantilla seleccionada.
-    if (method !== 'auto' && templates.includes(method)) {
-        selectedTemplate = method;
-    }
-    // --- (FIN) SELECCIÓN DE PLANTILLA MANUAL ---
+    // --- ¡FIN DE LA CORRECCIÓN! ---
 
 
     let generatedHsbPalette = [];
@@ -870,6 +897,7 @@ export const generateAdvancedRandomPalette = (
 
 
         // --- (INICIO) 20 PLANTILLAS DE MARCAS/MEDIOS ---
+        
         case 'brand-google':
             // Hues: Azul, Rojo, Amarillo, Verde, Gris
             const hg = [rand(210, 230), rand(355, 5), rand(45, 55), rand(120, 140), rand(200, 220)];
