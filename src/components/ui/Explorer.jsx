@@ -133,7 +133,7 @@ const ColorSlider = ({ label, value, min, max, onChange, gradientStyle }) => {
 
 
 // --- Pop-over para el selector de color (Con Sliders, Eyedropper, y corrección de CMYK) ---
-const ColorPickerPopover = ({ color, onClose, style, onRealtimeChange }) => {
+const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange }) => {
     const [localColor, setLocalColor] = useState(color);
     const [inputMode, setInputMode] = useState('hex');
     const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
@@ -145,6 +145,7 @@ const ColorPickerPopover = ({ color, onClose, style, onRealtimeChange }) => {
 
     const handlePickerChange = (newColor) => {
         setLocalColor(newColor);
+        // --- ¡AÑADIDO! --- Actualiza en tiempo real
         if (onRealtimeChange) {
             onRealtimeChange(newColor);
         }
@@ -154,6 +155,7 @@ const ColorPickerPopover = ({ color, onClose, style, onRealtimeChange }) => {
     const handleTextChange = (e) => {
         const newColorStr = e.target.value;
         setLocalColor(newColorStr);
+        // --- ¡AÑADIDO! --- Actualiza en tiempo real
         if (tinycolor(newColorStr).isValid() && onRealtimeChange) {
             onRealtimeChange(newColorStr);
         }
@@ -161,14 +163,14 @@ const ColorPickerPopover = ({ color, onClose, style, onRealtimeChange }) => {
     const handleTextBlur = (e) => {
         if (!tinycolor(e.target.value).isValid()) {
             setLocalColor(color); 
-        } else {
-            onRealtimeChange(e.target.value); 
         }
+        // --- ¡ELIMINADO! --- Ya no se confirma al salir
     };
     const handleTextKeyDown = (e) => {
         if (e.key === 'Enter') {
             if (tinycolor(e.target.value).isValid()) {
-                onRealtimeChange(e.target.value);
+                // --- ¡MODIFICADO! --- Al presionar Enter, confirmamos y cerramos
+                onConfirm(e.target.value); // Llama a onConfirm (Aceptar)
                 onClose();
             }
         }
@@ -202,15 +204,12 @@ const ColorPickerPopover = ({ color, onClose, style, onRealtimeChange }) => {
         } else if (mode === 'hsv') {
             const newHsv = { ...hsv, [channel]: value / (channel === 'h' ? 1 : 100) };
             newColor = tinycolor(newHsv);
-        // --- ¡ELIMINADO! --- Se quita el bloque CMYK
-        // } else if (mode === 'cmyk') {
-        //     const newCmyk = { ...cmyk, [channel]: value };
-        //     newColor = tinycolor(newCmyk);
         }
         
         if (newColor && newColor.isValid()) {
             const newHex = newColor.toHexString();
             setLocalColor(newHex);
+            // --- ¡AÑADIDO! --- Actualiza en tiempo real
             if (onRealtimeChange) onRealtimeChange(newHex);
         }
     };
@@ -225,11 +224,6 @@ const ColorPickerPopover = ({ color, onClose, style, onRealtimeChange }) => {
         red: `linear-gradient(to right, ${tinycolor({...rgb, r: 0}).toHexString()}, ${tinycolor({...rgb, r: 255}).toHexString()})`,
         green: `linear-gradient(to right, ${tinycolor({...rgb, g: 0}).toHexString()}, ${tinycolor({...rgb, g: 255}).toHexString()})`,
         blue: `linear-gradient(to right, ${tinycolor({...rgb, b: 0}).toHexString()}, ${tinycolor({...rgb, b: 255}).toHexString()})`,
-        // --- ¡ELIMINADO! --- Se quitan los gradientes CMYK
-        // cyan: `linear-gradient(to right, ${tinycolor({...cmyk, c: 0}).toHexString()}, ${tinycolor({...cmyk, c: 100}).toHexString()})`,
-        // magenta: `linear-gradient(to right, ${tinycolor({...cmyk, m: 0}).toHexString()}, ${tinycolor({...cmyk, m: 100}).toHexString()})`,
-        // yellow: `linear-gradient(to right, ${tinycolor({...cmyk, y: 0}).toHexString()}, ${tinycolor({...cmyk, y: 100}).toHexString()})`,
-        // key: `linear-gradient(to right, ${tinycolor({...cmyk, k: 0}).toHexString()}, ${tinycolor({...cmyk, k: 100}).toHexString()})`,
     };
 
     // --- ¡MODIFICADO! ---
@@ -359,29 +353,62 @@ const ColorPickerPopover = ({ color, onClose, style, onRealtimeChange }) => {
                         </div>
                     </div>
 
-                    {inputMode === 'rgb' && (
-                        <div className="space-y-2 pt-2">
-                            <ColorSlider label="R" min={0} max={255} value={rgb.r} onChange={(v) => handleSliderChange('rgb', 'r', v)} gradientStyle={gradients.red} />
-                            <ColorSlider label="G" min={0} max={255} value={rgb.g} onChange={(v) => handleSliderChange('rgb', 'g', v)} gradientStyle={gradients.green} />
-                            <ColorSlider label="B" min={0} max={255} value={rgb.b} onChange={(v) => handleSliderChange('rgb', 'b', v)} gradientStyle={gradients.blue} />
-                        </div>
-                    )}
-                    {inputMode === 'hsl' && (
-                        <div className="space-y-2 pt-2">
-                            <ColorSlider label="H" min={0} max={360} value={Math.round(hsl.h)} onChange={(v) => handleSliderChange('hsl', 'h', v)} gradientStyle={gradients.hue} />
-                            <ColorSlider label="S" min={0} max={100} value={Math.round(hsl.s * 100)} onChange={(v) => handleSliderChange('hsl', 's', v)} gradientStyle={gradients.saturationHsl} />
-                            <ColorSlider label="L" min={0} max={100} value={Math.round(hsl.l * 100)} onChange={(v) => handleSliderChange('hsl', 'l', v)} gradientStyle={gradients.luminance} />
-                        </div>
-                    )}
-                    {inputMode === 'hsv' && (
-                        <div className="space-y-2 pt-2">
-                            <ColorSlider label="H" min={0} max={360} value={Math.round(hsv.h)} onChange={(v) => handleSliderChange('hsv', 'h', v)} gradientStyle={gradients.hue} />
-                            <ColorSlider label="S" min={0} max={100} value={Math.round(hsv.s * 100)} onChange={(v) => handleSliderChange('hsv', 's', v)} gradientStyle={gradients.saturationHsv} />
-                            <ColorSlider label="V" min={0} max={100} value={Math.round(hsv.v * 100)} onChange={(v) => handleSliderChange('hsv', 'v', v)} gradientStyle={gradients.brightness} />
-                        </div>
-                    )}
-                    {/* --- ¡ELIMINADO! --- Se quita el bloque de sliders CMYK */}
-                    {/* {inputMode === 'cmyk' && ( ... )} */}
+                    {/* --- ¡MODIFICADO! Botones de Cancelar/Aceptar --- */}
+                    <div className="flex items-center gap-2 mt-3">
+                        <button
+                            onClick={onClose} // "Cancelar" ahora solo llama a onClose
+                            className="w-full text-center font-semibold text-sm py-2 rounded-md border"
+                            style={{ 
+                                backgroundColor: 'var(--bg-muted)', 
+                                borderColor: 'var(--border-default)', 
+                                color: 'var(--text-default)'
+                            }}
+                            title="Cancelar cambios"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={() => {
+                                onConfirm(localColor); // "Aceptar" llama a onConfirm
+                                onClose();
+                            }}
+                            className="w-full text-center font-semibold text-sm py-2 rounded-md border"
+                            style={{ 
+                                backgroundColor: 'var(--action-primary-default)', 
+                                borderColor: 'transparent', 
+                                color: 'white'
+                            }}
+                            title="Confirmar cambio"
+                        >
+                            Aceptar
+                        </button>
+                    </div>
+                    {/* --- FIN MODIFICADO --- */}
+
+                    {/* --- Sliders (con un 'pt-2' añadido para separar) --- */}
+                    <div className="pt-2">
+                        {inputMode === 'rgb' && (
+                            <div className="space-y-2 pt-2">
+                                <ColorSlider label="R" min={0} max={255} value={rgb.r} onChange={(v) => handleSliderChange('rgb', 'r', v)} gradientStyle={gradients.red} />
+                                <ColorSlider label="G" min={0} max={255} value={rgb.g} onChange={(v) => handleSliderChange('rgb', 'g', v)} gradientStyle={gradients.green} />
+                                <ColorSlider label="B" min={0} max={255} value={rgb.b} onChange={(v) => handleSliderChange('rgb', 'b', v)} gradientStyle={gradients.blue} />
+                            </div>
+                        )}
+                        {inputMode === 'hsl' && (
+                            <div className="space-y-2 pt-2">
+                                <ColorSlider label="H" min={0} max={360} value={Math.round(hsl.h)} onChange={(v) => handleSliderChange('hsl', 'h', v)} gradientStyle={gradients.hue} />
+                                <ColorSlider label="S" min={0} max={100} value={Math.round(hsl.s * 100)} onChange={(v) => handleSliderChange('hsl', 's', v)} gradientStyle={gradients.saturationHsl} />
+                                <ColorSlider label="L" min={0} max={100} value={Math.round(hsl.l * 100)} onChange={(v) => handleSliderChange('hsl', 'l', v)} gradientStyle={gradients.luminance} />
+                            </div>
+                        )}
+                        {inputMode === 'hsv' && (
+                            <div className="space-y-2 pt-2">
+                                <ColorSlider label="H" min={0} max={360} value={Math.round(hsv.h)} onChange={(v) => handleSliderChange('hsv', 'h', v)} gradientStyle={gradients.hue} />
+                                <ColorSlider label="S" min={0} max={100} value={Math.round(hsv.s * 100)} onChange={(v) => handleSliderChange('hsv', 's', v)} gradientStyle={gradients.saturationHsv} />
+                                <ColorSlider label="V" min={0} max={100} value={Math.round(hsv.v * 100)} onChange={(v) => handleSliderChange('hsv', 'v', v)} gradientStyle={gradients.brightness} />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -902,9 +929,19 @@ const Explorer = (props) => {
                 <ColorPickerPopover 
                     color={pickerColor.color}
                     style={pickerColor.style} 
-                    onClose={() => setPickerColor(null)}
+                    onClose={() => {
+                        // --- ¡MODIFICADO! --- Al cerrar (Cancelar), revertimos al color original
+                        replaceColorInPalette(pickerColor.index, pickerColor.color);
+                        setPickerColor(null);
+                    }}
+                    // --- ¡AÑADIDO! --- Pasa la función de tiempo real
                     onRealtimeChange={(newColor) => {
                         replaceColorInPalette(pickerColor.index, newColor);
+                    }}
+                    // --- ¡MODIFICADO! --- onConfirm es Aceptar
+                    onConfirm={(newColor) => { 
+                        replaceColorInPalette(pickerColor.index, newColor);
+                        // (onClose se llama dentro del popover, así que no necesitamos setPickerColor(null) aquí)
                     }}
                 />
             )}
