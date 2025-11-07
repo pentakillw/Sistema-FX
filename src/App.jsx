@@ -33,7 +33,7 @@ import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx';
 import TermsOfServicePage from './components/TermsOfServicePage.jsx'; 
 import { supabase } from './supabaseClient.js';
 
-// --- Componentes de Menú (sin cambios) ---
+// --- Componentes de Menú (MODIFICADO) ---
 const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     const menuRef = useRef(null);
     useEffect(() => {
@@ -49,13 +49,14 @@ const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     return (
         <div
             ref={menuRef}
-            className={`absolute top-full ${align === 'right' ? 'right-0' : 'left-0'} mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-xl z-50 p-2 space-y-1`}
+            className={`absolute top-full ${align === 'right' ? 'right-0' : 'left-0'} mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-xl z-50 p-2 space-y-1 max-h-[60vh] overflow-y-auto`}
             onClick={(e) => { e.stopPropagation(); }}
         >
             {children}
         </div>
     );
 };
+// --- FIN MODIFICACIÓN ---
 
 const MenuButton = ({ icon, label, onClick, className = "" }) => (
     <button
@@ -460,15 +461,30 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               >
                   <Wand2 size={16}/>
               </button>
+                {/* --- MODIFICACIÓN: Lógica de Menú Clasificado --- */}
                 {isMethodMenuVisible && (
                   <PopoverMenu onClose={() => setIsMethodMenuVisible(false)}>
                       {generationMethods.map(method => (
-                          <button key={method.id} onClick={() => { setExplorerMethod(method.id); setIsMethodMenuVisible(false); }} className={`w-full text-left px-4 py-2 text-sm ${explorerMethod === method.id ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)] rounded-md`}>
-                              {method.name}
-                          </button>
+                          method.isHeader ? (
+                              <div 
+                                  key={method.name} 
+                                  className="px-3 pt-2 pb-1 text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider"
+                              >
+                                  {method.name}
+                              </div>
+                          ) : (
+                              <button 
+                                  key={method.id} 
+                                  onClick={() => { setExplorerMethod(method.id); setIsMethodMenuVisible(false); }} 
+                                  className={`w-full text-left px-3 py-1.5 text-sm ${explorerMethod === method.id ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)] rounded-md`}
+                              >
+                                  {method.name}
+                              </button>
+                          )
                       ))}
                   </PopoverMenu>
               )}
+              {/* --- FIN MODIFICACIÓN --- */}
           </div>
           <button 
               onClick={() => setIsImageModalVisible(true)} 
@@ -908,6 +924,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         {/* --- FIN MODALES MOVIDOS --- */}
 
         {/* --- Botón Flotante (Solo Generar) --- */}
+        {/* --- MODIFICACIÓN: Añadido lg:hidden --- */}
         {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && (
           <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 lg:hidden">
             <button
@@ -920,6 +937,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             </button>
           </div>
         )}
+        {/* --- FIN MODIFICACIÓN --- */}
     </div>
   );
 });

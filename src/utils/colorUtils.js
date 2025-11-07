@@ -30,18 +30,6 @@ const CURATED_BASE_COLORS = [
 // --- (FIN) PLAN ASTUTO ---
 
 
-// --- (INICIO) NUEVO HELPER ---
-// Lista de los métodos de armonía "clásicos"
-const CLASSIC_HARMONY_METHODS = [
-    'analogous', 
-    'complement', 
-    'split-complement', 
-    'triad', 
-    'tetrad'
-];
-// --- (FIN) NUEVO HELPER ---
-
-
 // --- FUNCIONES EXISTENTES (SIN CAMBIOS) ---
 export const availableFonts = {
   'Segoe UI': '"Segoe UI", system-ui, sans-serif',
@@ -53,27 +41,108 @@ export const availableFonts = {
   'Lato': '"Lato", sans-serif',
 };
 
+// --- LISTA COMPLETA Y CLASIFICADA DE MÉTODOS ---
 export const generationMethods = [
-    { id: 'auto', name: 'Auto (Coolors)' }, // Nombre actualizado
+    // --- Grupo: Métodos Clásicos ---
+    { isHeader: true, name: 'Métodos Clásicos' },
+    { id: 'auto', name: 'Auto (Coolors)' },
     { id: 'mono', name: 'Monocromo' },
-    { id: 'analogous', name: 'Análogo' },
-    { id: 'complement', name: 'Complementario' },
-    { id: 'split-complement', name: 'Comp. Dividido' },
-    { id: 'triad', name: 'Triádico' },
-    { id: 'tetrad', name: 'Tetrádico' },
-    // --- ¡NUEVOS MÉTODOS AÑADIDOS! ---
-    { id: 'pastel', name: 'Temático: Pastel' },
-    { id: 'vibrante', name: 'Temático: Vibrante' },
-    { id: 'profundo', name: 'Temático: Profundo (Joya)' },
-    { id: 'vintage', name: 'Temático: Vintage' },
-    { id: 'earthy', name: 'Temático: Tierra' },
-    { id: 'oceanic', name: 'Temático: Océano' },
-    { id: 'sunset', name: 'Temático: Atardecer' },
-    { id: 'theme-nebula', name: 'Temático: Nebulosa' },
-    { id: 'theme-vaporwave', name: 'Temático: Vaporwave' },
+    { id: 'analogous', name: 'Análogo (Clásico)' },
+    { id: 'complement', name: 'Complementario (Clásico)' },
+    { id: 'split-complement', name: 'Comp. Dividido (Clásico)' },
+    { id: 'triad', name: 'Triádico (Clásico)' },
+    { id: 'tetrad', name: 'Tetrádico (Clásico)' },
+
+    // --- Grupo: Perfiles de Color ---
+    { isHeader: true, name: 'Perfiles de Color' },
+    { id: 'vibrante', name: 'Perfil: Vibrante' },
+    { id: 'pop-neon', name: 'Perfil: Neón Pop' },
+    { id: 'profundo', name: 'Perfil: Profundo (Joya)' },
+    { id: 'pastel', name: 'Perfil: Pastel' },
+    { id: 'faded', name: 'Perfil: Desvaído' },
+    { id: 'vintage', name: 'Perfil: Vintage' },
+    { id: 'grayscale', name: 'Perfil: Escala de Grises' },
+    { id: 'metallic', name: 'Perfil: Metálico' },
+
+    // --- Grupo: Temas Naturales ---
+    { isHeader: true, name: 'Temas Naturales' },
+    { id: 'theme-autumn', name: 'Tema: Otoño' },
+    { id: 'theme-spring', name: 'Tema: Primavera' },
+    { id: 'theme-winter', name: 'Tema: Invierno' },
+    { id: 'earthy', name: 'Tema: Tierra' },
+    { id: 'oceanic', name: 'Tema: Océano' },
+    { id: 'sunset', name: 'Tema: Atardecer' },
+    { id: 'tematico-fuego', name: 'Tema: Fuego' },
+    { id: 'tematico-hielo', name: 'Tema: Hielo' },
+    { id: 'tematico-desierto', name: 'Tema: Desierto' },
+    { id: 'themed-forest', name: 'Tema: Bosque' },
+    { id: 'theme-jungle', name: 'Tema: Jungla' },
+    { id: 'theme-coastal', name: 'Tema: Costero' },
+    { id: 'theme-tropical', name: 'Tema: Tropical' },
+    { id: 'theme-savanna', name: 'Tema: Sabana' },
+
+    // --- Grupo: Temas de Cultura y Estilo (Genéricos) ---
+    { isHeader: true, name: 'Estilos y Cultura' },
+    { id: 'theme-nebula', name: 'Estilo: Nebulosa' },
+    { id: 'theme-vaporwave', name: 'Estilo: Vaporwave' },
     { id: 'game-cyberpunk', name: 'Estilo: Cyber' },
+    { id: 'theme-cyber-noir', name: 'Estilo: Cyber Noir' },
     { id: 'movie-dune', name: 'Estilo: Desierto Arena' },
     { id: 'brand-google', name: 'Estilo: Digital' },
+    { id: 'theme-artdeco', name: 'Estilo: Art Deco' },
+    { id: 'theme-bauhaus', name: 'Estilo: Bauhaus' },
+    { id: 'theme-gothic', name: 'Estilo: Gótico' },
+    { id: 'theme-impressionism', name: 'Estilo: Impresionismo' },
+    { id: 'academic', name: 'Estilo: Académico' },
+    { id: 'southwestern', name: 'Estilo: Suroeste' },
+    { id: 'themed-sweets', name: 'Estilo: Dulces / Pasteles' },
+    { id: 'theme-gourmet', name: 'Estilo: Gourmet' },
+    { id: 'movie-spiderverse', name: 'Estilo: Comic' },
+    { id: 'movie-barbie', name: 'Estilo: Muñeca' },
+    { id: 'movie-oppenheimer', name: 'Estilo: Fisión' },
+    { id: 'movie-matrix', name: 'Estilo: Matriz' },
+    { id: 'movie-interstellar', name: 'Estilo: Interestelar' },
+    { id: 'movie-spiritedaway', name: 'Estilo: Anime' },
+    { id: 'game-mario', name: 'Estilo: Reino Champiñón' },
+    { id: 'game-zelda-botw', name: 'Estilo: Fantasía' },
+    { id: 'game-minecraft', name: 'Estilo: Bloques' },
+    { id: 'game-portal', name: 'Estilo: Laboratorio' },
+    { id: 'game-witcher', name: 'Estilo: Medieval' },
+    { id: 'game-animalcrossing', name: 'Estilo: Isla' },
+    { id: 'brand-spotify', name: 'Estilo: Musical' },
+    { id: 'brand-microsoft', name: 'Estilo: Oficina' },
+    { id: 'brand-ikea', name: 'Estilo: Nórdico' },
+    { id: 'brand-coke', name: 'Estilo: Clásico' },
+    { id: 'brand-starbucks', name: 'Estilo: Cafetería' },
+
+    // --- Grupo: Armonías Avanzadas y Contraste ---
+    { isHeader: true, name: 'Armonías y Contraste' },
+    { id: 'calido', name: 'Armonía: Cálida' },
+    { id: 'frio', name: 'Armonía: Fría' },
+    { id: 'primary', name: 'Armonía: Primaria' },
+    { id: 'secondary', name: 'Armonía: Secundaria' },
+    { id: 'alto-contraste', name: 'Contraste: Alto' },
+    { id: 'bajo-contraste', name: 'Contraste: Bajo' },
+    { id: 'high-key', name: 'Contraste: Clave Alta' },
+    { id: 'low-key', name: 'Contraste: Clave Baja' },
+    { id: 'gradiente-analogo', name: 'Gradiente: Análogo' },
+    { id: 'gradiente-analogo-vibrante', name: 'Gradiente: Vibrante' },
+    { id: 'rampa-saturacion', name: 'Gradiente: Saturación' },
+    { id: 'complementario-dividido', name: 'Armonía: Comp. Dividido (Temp)' },
+    { id: 'acentos-complementarios', name: 'Armonía: Acentos Comp.' },
+    { id: 'tetrada', name: 'Armonía: Tétrada (Bal.)' },
+    { id: 'triad-balanced', name: 'Armonía: Triada (Bal.)' },
+    { id: 'analogo-comp', name: 'Armonía: Análogo+Comp.' },
+    { id: 'monotone-split', name: 'Armonía: Mono+Acento' },
+    { id: 'neutral-accent', name: 'Armonía: Neutros+Acento' },
+    { id: 'acentos-dobles-neutros', name: 'Armonía: Doble Acento' },
+    { id: 'doble-complementario', name: 'Armonía: Doble Comp.' },
+    { id: 'dos-matices', name: 'Armonía: Dos Matices' },
+    { id: 'complemento-neutros', name: 'Armonía: Comp+Neutros' },
+
+    // --- Grupo: Otros ---
+    { isHeader: true, name: 'Otros' },
+    { id: 'caos', name: 'Aleatorio (Caos)' },
 ];
 
 export const colorblindnessMatrices = {
@@ -288,10 +357,12 @@ export const generateAdvancedRandomPalette = (
     originalPalette = []
 ) => {
 
+    // Lista de métodos "Clásicos" que usan la lógica antigua
+    const classicMethods = ['analogous', 'complement', 'split-complement', 'splitcomplement', 'triad', 'tetrad'];
+
     // --- CASO 1: Armonía Específica (triad, analogous, etc.) ---
-    // ¡AQUÍ ESTÁ LA MODIFICACIÓN!
-    // Si el método es uno de los "clásicos", usa la lógica de armonía simple.
-    if (CLASSIC_HARMONY_METHODS.includes(method)) {
+    // Si el método es uno de los "clásicos", usamos la lógica de armonía simple.
+    if (classicMethods.includes(method)) {
         const baseColor = baseColorHex ? tinycolor(baseColorHex) : tinycolor(CURATED_BASE_COLORS[Math.floor(rand(0, CURATED_BASE_COLORS.length))]);
         let paletteColors = generateHarmonyPalette(baseColor, method, count);
         const finalPalette = paletteColors.map(c => c.toHexString());
@@ -301,9 +372,7 @@ export const generateAdvancedRandomPalette = (
         };
     }
 
-    // --- CASO 2: Método 'auto', 'mono', o TEMÁTICO (¡Plan Monstruoso 11.0!) ---
-    // Todos los demás métodos (incluyendo 'auto', 'mono', 'theme-vaporwave', etc.)
-    // caen aquí.
+    // --- CASO 2: Método 'auto' o 'mono' o TEMÁTICO (¡Plan Monstruoso 11.0!) ---
     const effectiveCount = Math.max(3, count);
 
     // --- PASO 1: Seleccionar Color Base y Matices de Armonía ---
@@ -367,53 +436,56 @@ export const generateAdvancedRandomPalette = (
     
     let selectedTemplate;
 
-    // --- ¡MODIFICACIÓN CLAVE! ---
-    // Prioridad 1: ¿El usuario seleccionó un método específico (que no sea 'auto')?
-    if (method !== 'auto') {
-        if (method === 'mono' || method === 'monochromatic') {
-            selectedTemplate = 'gradiente-mono'; // Usar la plantilla mono
-        } else if (templates.includes(method)) {
-            selectedTemplate = method; // Usar la plantilla temática (ej: 'theme-vaporwave')
-        } else {
-            // Fallback por si acaso (aunque no debería pasar por el CASO 1)
-            selectedTemplate = 'equilibrado';
-        }
-    } 
-    // Prioridad 2: Si el método es 'auto', inferir o elegir aleatoriamente.
-    else if (baseColorHex && lockedColors.length === 0) {
-        // --- INFERIR PLANTILLA ---
-        // Solo inferimos la plantilla si el usuario NO está bloqueando.
-        // (Es decir, si hizo clic en ✨ sobre un color, o lo pasó la IA).
-        const { h, s, v: b } = baseHsb; // s y b (brillo) están en 0-100
-        
-        if (s < 5) selectedTemplate = 'grayscale';
-        else if (s > 90 && b > 80) selectedTemplate = 'pop-neon';
-        else if (s > 60 && b < 50) selectedTemplate = 'profundo';       // Profundo/Joya
-        else if (s > 70 && b > 70) selectedTemplate = 'gradiente-analogo-vibrante'; // vibrante
-        else if (s < 20 && b > 75) selectedTemplate = 'faded';
-        else if (s < 30 && b > 85) selectedTemplate = 'pastel';      // Pastel
-        else if (s < 40 && b > 60) selectedTemplate = 'vintage';
-        else if (s < 50 && b < 80) selectedTemplate = 'gradiente-analogo'; // apagado
-        else selectedTemplate = 'equilibrado'; // Default
-        
-    } else if (baseColorHex && lockedColors.length > 0) {
-        // --- MODO BLOQUEADO ---
-        // El usuario bloqueó un color y presionó espacio.
-        // ¡No queremos inferir! ¡Queremos balancear!
-        // Elegimos una plantilla que NO sea 'grayscale' o 'pastel' para forzar variedad.
-        const balancingTemplates = [
-            'equilibrado', 'complementario-dividido', 'acentos-complementarios', 'tetrada',
-            'neutral-accent', 'triad-balanced', 'analogo-comp', 'acentos-dobles-neutros',
-            'alto-contraste', 'dos-matices', 'complemento-neutros'
-        ];
-        selectedTemplate = balancingTemplates[Math.floor(rand(0, balancingTemplates.length))];
-
-    } else {
-        // --- MODO ALEATORIO PURO ---
-        // No hay color base, no hay bloqueos. Elegir CUALQUIER plantilla.
-        selectedTemplate = templates[Math.floor(rand(0, templates.length))];
+    // --- (INICIO) SELECCIÓN DE PLANTILLA MANUAL ---
+    // Si el método *NO* es 'auto' (ej. 'brand-google'), 
+    // lo usamos para forzar la plantilla seleccionada.
+    if (method !== 'auto' && templates.includes(method)) {
+        selectedTemplate = method;
     }
-    // --- ¡FIN DE LA CORRECCIÓN! ---
+    // --- (FIN) SELECCIÓN DE PLANTILLA MANUAL ---
+    
+    // --- (INICIO) INFERENCIA/ALEATORIO PARA 'auto' ---
+    // Si el método es 'auto', decidimos qué hacer
+    else if (method === 'auto') {
+        if (baseColorHex && lockedColors.length === 0) {
+            // --- INFERIR PLANTILLA ---
+            const { h, s, v: b } = baseHsb; // s y b (brillo) están en 0-100
+            
+            if (s < 5) selectedTemplate = 'grayscale';
+            else if (s > 90 && b > 80) selectedTemplate = 'pop-neon';
+            else if (s > 60 && b < 50) selectedTemplate = 'profundo';       // Profundo/Joya
+            else if (s > 70 && b > 70) selectedTemplate = 'gradiente-analogo-vibrante'; // vibrante
+            else if (s < 20 && b > 75) selectedTemplate = 'faded';
+            else if (s < 30 && b > 85) selectedTemplate = 'pastel';      // Pastel
+            else if (s < 40 && b > 60) selectedTemplate = 'vintage';
+            else if (s < 50 && b < 80) selectedTemplate = 'gradiente-analogo'; // apagado
+            else selectedTemplate = 'equilibrado'; // Default
+            
+        } else if (baseColorHex && lockedColors.length > 0) {
+            // --- MODO BLOQUEADO ---
+            const balancingTemplates = [
+                'equilibrado', 'complementario-dividido', 'acentos-complementarios', 'tetrada',
+                'neutral-accent', 'triad-balanced', 'analogo-comp', 'acentos-dobles-neutros',
+                'alto-contraste', 'dos-matices', 'complemento-neutros'
+            ];
+            selectedTemplate = balancingTemplates[Math.floor(rand(0, balancingTemplates.length))];
+
+        } else {
+            // --- MODO ALEATORIO PURO ---
+            selectedTemplate = templates[Math.floor(rand(0, templates.length))];
+        }
+    }
+    // --- (FIN) INFERENCIA/ALEATORIO ---
+
+    // Si el método de generación era 'mono', forzar el template 'gradiente-mono'
+    if (method === 'mono' || method === 'monochromatic') {
+        selectedTemplate = 'gradiente-mono'; // Reemplazamos 'monocromatico' por la mejor versión
+    }
+
+    // Fallback si algo salió mal
+    if (!selectedTemplate) {
+        selectedTemplate = 'equilibrado';
+    }
 
 
     let generatedHsbPalette = [];
@@ -548,7 +620,6 @@ export const generateAdvancedRandomPalette = (
             generatedHsbPalette.push({ h: rand(0, 360), s: rand(5, 15), b: rand(80, 95) });
             break;
 
-        // --- ¡NUESTRAS 10 NUEVAS PLANTILLAS! ---
         case 'pop-neon':
             // TEMPLATE 13: Hyper-vibrante
             for (let i = 0; i < effectiveCount; i++) {
@@ -651,7 +722,6 @@ export const generateAdvancedRandomPalette = (
             generatedHsbPalette.push({ h: h_an_1, s: rand(5, 15), b: rand(90, 98) }); // Neutro
             break;
 
-        // --- ¡NUESTRAS 10 NUEVAS PLANTILLAS (TOTAL 32)! ---
         case 'grayscale':
             // TEMPLATE 23: Escala de Grises
             for (let i = 0; i < effectiveCount; i++) {
@@ -781,7 +851,6 @@ export const generateAdvancedRandomPalette = (
             }
             break;
 
-        // --- ¡NUESTRAS 10 NUEVAS PLANTILLAS (TOTAL 44)! ---
         case 'alto-contraste':
             // TEMPLATE 35: Alto Contraste
             generatedHsbPalette.push({ h: shuffledHues[0], s: rand(5, 30), b: rand(90, 98) }); // Claro 1
@@ -893,11 +962,7 @@ export const generateAdvancedRandomPalette = (
                 });
             }
             break;
-        // --- FIN DE 10 NUEVAS PLANTILLAS ---
 
-
-        // --- (INICIO) 20 PLANTILLAS DE MARCAS/MEDIOS ---
-        
         case 'brand-google':
             // Hues: Azul, Rojo, Amarillo, Verde, Gris
             const hg = [rand(210, 230), rand(355, 5), rand(45, 55), rand(120, 140), rand(200, 220)];
@@ -1097,10 +1162,7 @@ export const generateAdvancedRandomPalette = (
                 generatedHsbPalette.push({ h: hsv[i % hsv.length], s: ssv[i % ssv.length], b: bsv[i % bsv.length] });
             }
             break;
-        // --- (FIN) 20 PLANTILLAS DE MARCAS/MEDIOS ---
-
-        // --- (INICIO) 15 NUEVAS PLANTILLAS TEMÁTICAS ---
-        
+            
         case 'theme-autumn': // Otoño
             const ha = [rand(15, 30), rand(35, 45), rand(0, 10), rand(20, 35), rand(50, 60)];
             const sa = [rand(60, 90), rand(70, 100), rand(80, 100), rand(50, 70), rand(60, 80)];
@@ -1236,8 +1298,6 @@ export const generateAdvancedRandomPalette = (
             }
             break;
 
-        // --- (FIN) 15 NUEVAS PLANTILLAS TEMÁTICAS ---
-
         case 'monocromatico':
             // TEMPLATE (fallback para 'mono' si no fue 'gradiente-mono')
             const monoHue_fallback = baseHue;
@@ -1345,17 +1405,12 @@ export const generateAdvancedRandomPalette = (
     }
 
     // Convertir a HEX
-    // --- ¡INICIO DE LA CORRECCIÓN DEL BUG 2! ---
     const finalPalette = finalHsbPalette.map(c => {
       if (c && typeof c.h === 'number') {
-        // ¡HEMOS ELIMINADO EL BLOQUE 'IF' PROBLEMÁTICO!
-        // Ya no comprobamos si el matiz (h) es similar al
-        // color base, lo que causaba la repetición de colores.
-        return hsbToHex(c.h, c.s, c.b); // Solo convertir
+        return hsbToHex(c.h, c.s, c.b);
       }
       return tinycolor.random().toHexString(); // Fallback
     });
-    // --- ¡FIN DE LA CORRECCIÓN DEL BUG 2! ---
 
     // Determinar el color de marca
     const brandColor = baseColorHex 
@@ -1381,4 +1436,364 @@ export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 2
     const harmonicGrayShades = generateShades(tinycolor(baseForGray).desaturate(85).toHexString());
 
     return { palette: palette, gray: harmonicGrayShades };
+};
+
+// --- (INICIO) CÓDIGO DE EXPORTACIÓN (SIN CAMBIOS) ---
+// Función interna para generar las paletas semánticas para un tema específico (claro u oscuro).
+// (Sin cambios)
+const generateSemanticPalettesForTheme = (theme, brandShades, grayShades, grayColor) => {
+    const infoBase = '#0ea5e9', successBase = '#22c55e', attentionBase = '#f97316', criticalBase = '#ef4444',
+          purpleBase = '#a855f7', tealBase = '#14b8a6', pinkBase = '#ec4899';
+
+    const info = tinycolor.mix(infoBase, grayColor, 15).saturate(10).toHexString(),
+          success = tinycolor.mix(successBase, grayColor, 15).saturate(10).toHexString(),
+          attention = tinycolor.mix(attentionBase, grayColor, 15).saturate(10).toHexString(),
+          critical = tinycolor.mix(criticalBase, grayColor, 15).saturate(10).toHexString(),
+          purple = tinycolor.mix(purpleBase, grayColor, 15).saturate(10).toHexString(),
+          teal = tinycolor.mix(tealBase, grayColor, 15).saturate(10).toHexString(),
+          pink = tinycolor.mix(pinkBase, grayColor, 15).saturate(10).toHexString();
+    
+    let stylePalette = {
+      decorateColors: [
+        { name: 'Azul1', color: info }, { name: 'Azul2', color: tinycolor(info).lighten(15).toHexString() },
+        { name: 'Verde1', color: success }, { name: 'Verde2', color: tinycolor(success).lighten(15).toHexString() },
+        { name: 'Neutro1', color: grayShades[5] }, { name: 'Neutro2', color: grayShades[4] },
+        { name: 'Naranja1', color: attention }, { name: 'Naranja2', color: tinycolor(attention).lighten(15).toHexString() },
+        { name: 'Violeta1', color: purple }, { name: 'Violeta2', color: tinycolor(purple).lighten(15).toHexString() },
+        { name: 'Turquesa1', color: teal }, { name: 'Turquesa2', color: tinycolor(teal).lighten(15).toHexString() },
+        { name: 'Rosa1', color: pink }, { name: 'Rosa2', color: tinycolor(pink).lighten(15).toHexString() },
+      ],
+      fullActionColors: [
+        { name: 'Primario', color: brandShades[4] }, { name: 'PrimarioFlotante', color: brandShades[5] },
+        { name: 'PrimarioPresionado', color: brandShades[6] }, { name: 'Secundario', color: grayShades[4] },
+        { name: 'SecundarioPresionado', color: grayShades[5] }, { name: 'Critico', color: critical },
+        { name: 'CriticoFlotante', color: tinycolor(critical).lighten(10).toHexString() }, { name: 'CriticoPresionado', color: tinycolor(critical).darken(10).toHexString() },
+      ],
+    };
+
+    if (theme === 'dark') {
+      stylePalette.fullBackgroundColors = [
+        { name: 'Predeterminado', color: grayShades[0] }, { name: 'Apagado', color: grayShades[1] },
+        { name: 'Debil', color: grayShades[2] }, { name: 'Fuerte', color: grayShades[9] },
+        { name: 'Inverso', color: grayShades[19] }, { name: 'MarcaDebil', color: brandShades[1] },
+        { name: 'InfoDebil', color: tinycolor(info).darken(25).toHexString() },
+        { name: 'ExitoDebil', color: tinycolor(success).darken(25).toHexString() },
+        { name: 'AtencionDebil', color: tinycolor(attention).darken(25).toHexString() },
+        { name: 'CriticoDebil', color: tinycolor(critical).darken(25).toHexString() }, 
+      ];
+      stylePalette.fullForegroundColors = [
+        { name: 'Predeterminado', color: grayShades[19] }, { name: 'Apagado', color: grayShades[6] },
+        { name: 'Debil', color: grayShades[4] }, { name: 'Fuerte', color: grayShades[19] },
+        { name: 'Inverso', color: grayShades[0] }, { name: 'Info', color: info },
+        { name: 'Critico', color: critical }, { name: 'Atencion', color: attention },
+        { name: 'Exito', color: success }, { name: 'SobreAccento', color: '#FFFFFF' },
+      ];
+      stylePalette.fullBorderColors = [
+        { name: 'Predeterminado', color: grayShades[2] }, { name: 'Fuerte', color: grayShades[4] },
+        { name: 'Inverso', color: grayShades[0] }, { name: 'InfoFuerte', color: info },
+        { name: 'CriticoFuerte', color: critical }, { name: 'AtencionFuerte', color: attention },
+        { name: 'ExitoFuerte', color: success },
+      ];
+    } else { // light theme
+       stylePalette.fullBackgroundColors = [
+        { name: 'Predeterminado', color: grayShades[19] }, { name: 'Apagado', color: grayShades[18] },
+        { name: 'Debil', color: grayShades[17] }, { name: 'Fuerte', color: grayShades[0] },
+        { name: 'Inverso', color: grayShades[0] }, { name: 'MarcaDebil', color: brandShades[18] },
+        { name: 'InfoDebil', color: tinycolor(info).lighten(25).toHexString() },
+        { name: 'ExitoDebil', color: tinycolor(success).lighten(25).toHexString() },
+        { name: 'AtencionDebil', color: tinycolor(attention).lighten(25).toHexString() },
+        { name: 'CriticoDebil', color: tinycolor(critical).lighten(25).toHexString() },
+      ];
+       stylePalette.fullForegroundColors = [
+        { name: 'Predeterminado', color: grayShades[0] }, { name: 'Apagado', color: grayShades[3] },
+        { name: 'Debil', color: grayShades[5] }, { name: 'Fuerte', color: grayShades[0] },
+        { name: 'Inverso', color: grayShades[19] }, { name: 'Info', color: info },
+        { name: 'Critico', color: critical }, { name: 'Atencion', color: attention },
+        { name: 'Exito', color: success }, { name: 'SobreAccento', color: '#FFFFFF' },
+      ];
+       stylePalette.fullBorderColors = [
+        { name: 'Predeterminado', color: grayShades[17] }, { name: 'Fuerte', color: grayShades[5] },
+        { name: 'Inverso', color: grayShades[19] }, { name: 'InfoFuerte', color: info },
+        { name: 'CriticoFuerte', color: critical }, { name: 'AtencionFuerte', color: attention },
+        { name: 'ExitoFuerte', color: success },
+      ];
+    }
+    return stylePalette;
+};
+
+// Configuración de estilos de fuente (sin cambios)
+const displayStylesConfig = {
+  'Título Grande': { fontSize: '2rem', fontWeight: '700' },
+  'Título Mediano': { fontSize: '1.75rem', fontWeight: '700' },
+  'Título Pequeño': { fontSize: '1.5rem', fontWeight: '700' },
+  'Cuerpo Grande Negrita': { fontSize: '1.125rem', fontWeight: '700' },
+  'Cuerpo Grande': { fontSize: '1.125rem', fontWeight: '400' },
+  'Cuerpo Mediano Negrita': { fontSize: '1rem', fontWeight: '700' },
+  'Cuerpo Mediano': { fontSize: '1rem', fontWeight: '400' },
+  'Cuerpo Pequeño': { fontSize: '0.875rem', fontWeight: '400' },
+  'Subtítulo': { fontSize: '0.75rem', fontWeight: '400' },
+};
+
+export const generatePowerFxCode = (themeData, separator, useQuotes) => {
+  if (!themeData || !themeData.brandShades) return "// Generando código...";
+
+  const { brandShades, grayShades, grayColor, font = "Segoe UI", explorerPalette } = themeData;
+
+  const formatKey = (key) => {
+    if (useQuotes) return `"${key}"`;
+    return key.replace(/ /g, '');
+  };
+
+  const formatShades = (shades) => {
+    return shades.map((s, i) => `    ${formatKey(`t${i * 50}`)}: ColorValue("${s.toUpperCase()}")`).join(`${separator}\n`);
+  };
+
+  const formatPalette = (palette) => {
+    return (palette || []).map(item => `    ${formatKey(item.name)}: ColorValue("${item.color.toUpperCase()}")`).join(`${separator}\n`);
+  };
+
+  const formatExplorerPalette = (palette) => {
+      return (palette || []).map((color, index) => `    ${formatKey(`Color${index + 1}`)}: ColorValue("${color.toUpperCase()}")`).join(`${separator}\n`);
+  };
+
+  const fontStylesRecord = Object.entries(displayStylesConfig)
+    .map(([name, styles]) => `    ${formatKey(name)}: { Font: Font.'${font.split(',')[0].replace(/"/g, '')}'${separator} Size: ${Math.round(parseFloat(styles.fontSize) * 10)}${separator} Bold: ${styles.fontWeight === '700'} }`)
+    .join(`${separator}\n`);
+
+  const lightPalettes = generateSemanticPalettesForTheme('light', brandShades, grayShades, grayColor);
+  const darkPalettes = generateSemanticPalettesForTheme('dark', brandShades, grayShades, grayColor);
+
+  const createThemeRecord = (themeName, palettes) => {
+    return `{
+    // --- Tema ${themeName} ---
+    Marca: {
+${formatShades(brandShades)}
+    }${separator}
+    Gris: {
+${formatShades(grayShades)}
+    }${separator}
+    ModoColor: {
+${formatExplorerPalette(explorerPalette)}
+    }${separator}
+    Fondos: {
+${formatPalette(palettes.fullBackgroundColors)}
+    }${separator}
+    Textos: {
+${formatPalette(palettes.fullForegroundColors)}
+    }${separator}
+    Bordes: {
+${formatPalette(palettes.fullBorderColors)}
+    }${separator}
+    Acciones: {
+${formatPalette(palettes.fullActionColors)}
+    }${separator}
+    Decorativos: {
+${formatPalette(palettes.decorateColors)}
+    }
+}`;
+  };
+
+  const lightThemeRecord = createThemeRecord('Claro', lightPalettes);
+  const darkThemeRecord = createThemeRecord('Oscuro', darkPalettes);
+
+  return `// --- GUÍA RÁPIDA PARA POWER APPS ---
+// 1. Pega este código en la propiedad 'OnStart' de tu App.
+// 2. Para cambiar de tema, usa una variable: Set(gblIsDarkMode, Self.Value)
+// 3. Para USAR un color: LookUp(colDesignSystem, Tema = If(gblIsDarkMode, "Oscuro", "Claro")).Colores.Acciones.Primario
+// 4. Para USAR una fuente: First(colFonts).Fuentes.CuerpoMediano.Font
+
+ClearCollect(
+    colDesignSystem${separator}
+    {
+        Tema: "Claro"${separator}
+        Colores: ${lightThemeRecord}
+    }${separator}
+    {
+        Tema: "Oscuro"${separator}
+        Colores: ${darkThemeRecord}
+    }
+)${separator}
+
+ClearCollect(
+    colFonts${separator}
+    {
+        Fuentes: {
+${fontStylesRecord}
+        }
+    }
+)${separator}`;
+};
+
+
+export const generateCssCode = (themeData) => {
+  if (!themeData || !themeData.stylePalette) return "/* Generando CSS... */";
+  const { brandShades, grayShades, stylePalette, theme } = themeData;
+
+  const formatShades = (shades, prefix) => 
+    shades.map((s, i) => `    --${prefix}-t${i * 50}: ${s.toUpperCase()};`).join('\n');
+  
+  const formatPalette = (palette, prefix) =>
+    (palette || []).map(item => `    --${prefix}-${item.name.toLowerCase().replace(/ /g, '-')}: ${item.color.toUpperCase()};`).join('\n');
+
+  return `
+/* --- TEMA DE DISEÑO GENERADO --- */
+/* Modo: ${theme === 'light' ? 'Claro' : 'Oscuro'} */
+
+:root {
+    /* --- Colores de Marca --- */
+${formatShades(brandShades, 'brand')}
+
+    /* --- Escala de Grises --- */
+${formatShades(grayShades, 'gray')}
+
+    /* --- Fondos --- */
+${formatPalette(stylePalette.fullBackgroundColors, 'bg')}
+
+    /* --- Textos --- */
+${formatPalette(stylePalette.fullForegroundColors, 'text')}
+
+    /* --- Bordes --- */
+${formatPalette(stylePalette.fullBorderColors, 'border')}
+
+    /* --- Acciones --- */
+${formatPalette(stylePalette.fullActionColors, 'action')}
+
+    /* --- Decorativos --- */
+${formatPalette(stylePalette.decorateColors, 'deco')}
+}`;
+};
+
+export const generateTailwindCode = (themeData) => {
+    if (!themeData || !themeData.brandShades) return "// Generando Tailwind Config...";
+    const { brandShades, grayShades } = themeData;
+    const formatShades = (shades) => {
+        let shadeObject = '';
+        shades.forEach((s, i) => {
+            shadeObject += `          '${i * 50}': '${s.toUpperCase()}',\n`;
+        });
+        return shadeObject.slice(0, -1);
+    };
+
+    return `
+// In your tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+${formatShades(brandShades)}
+        },
+        gray: {
+${formatShades(grayShades)}
+        }
+      }
+    }
+  }
+};`;
+};
+
+// --- NUEVA FUNCIÓN ---
+// Genera un objeto JSON limpio para exportar.
+export const generateJsonCode = (themeData) => {
+    if (!themeData) return "{}";
+
+    const { brandShades, grayShades, grayColor, font, theme, explorerPalette } = themeData;
+
+    // Función auxiliar para convertir array de sombras a objeto
+    const formatShadesForJson = (shades) => {
+        const shadeObj = {};
+        shades.forEach((s, i) => {
+            shadeObj[`t${i * 50}`] = s.toUpperCase();
+        });
+        return shadeObj;
+    };
+    
+    // Función auxiliar para convertir paleta semántica a objeto
+    const formatPaletteForJson = (palette) => {
+        const paletteObj = {};
+        (palette || []).forEach(item => {
+            paletteObj[item.name.toLowerCase().replace(/ /g, '-')] = item.color.toUpperCase();
+        });
+        return paletteObj;
+    };
+
+    const lightPalettes = generateSemanticPalettesForTheme('light', brandShades, grayShades, grayColor);
+    const darkPalettes = generateSemanticPalettesForTheme('dark', brandShades, grayShades, grayColor);
+
+    const exportData = {
+        meta: {
+            themeActual: theme,
+            font: font,
+            brandColor: themeData.brandColor,
+            grayColor: themeData.grayColor,
+            isGrayAuto: themeData.isGrayAuto,
+        },
+        palettes: {
+            brand: formatShadesForJson(brandShades),
+            gray: formatShadesForJson(grayShades),
+            explorer: explorerPalette.map(c => c.toUpperCase()),
+        },
+        themes: {
+            light: {
+                backgrounds: formatPaletteForJson(lightPalettes.fullBackgroundColors),
+                foregrounds: formatPaletteForJson(lightPalettes.fullForegroundColors),
+                borders: formatPaletteForJson(lightPalettes.fullBorderColors),
+                actions: formatPaletteForJson(lightPalettes.fullActionColors),
+                decorative: formatPaletteForJson(lightPalettes.decorateColors),
+            },
+            dark: {
+                backgrounds: formatPaletteForJson(darkPalettes.fullBackgroundColors),
+                foregrounds: formatPaletteForJson(darkPalettes.fullForegroundColors),
+                borders: formatPaletteForJson(darkPalettes.fullBorderColors),
+                actions: formatPaletteForJson(darkPalettes.fullActionColors),
+                decorative: formatPaletteForJson(darkPalettes.decorateColors),
+            }
+        }
+    };
+
+    return JSON.stringify(exportData, null, 2);
+};
+
+// --- NUEVA FUNCIÓN ---
+// Genera variables SCSS (Sass).
+export const generateScssCode = (themeData) => {
+  if (!themeData || !themeData.stylePalette) return "/* Generando SCSS... */";
+  const { brandShades, grayShades, stylePalette, theme } = themeData;
+
+  // Modificamos las funciones de formato para SCSS
+  const formatShades = (shades, prefix) => 
+    shades.map((s, i) => `$${prefix}-t${i * 50}: ${s.toUpperCase()};`).join('\n');
+  
+  const formatPalette = (palette, prefix) =>
+    (palette || []).map(item => `$${prefix}-${item.name.toLowerCase().replace(/ /g, '-')}: ${item.color.toUpperCase()};`).join('\n');
+
+  // El tema actual (light/dark) se usa para generar las paletas semánticas
+  const semanticPrefix = theme === 'light' ? 'light' : 'dark';
+  
+  return `
+// --- TEMA DE DISEÑO GENERADO ---
+// Modo: ${theme === 'light' ? 'Claro' : 'Oscuro'}
+
+// --- Colores de Marca ---
+${formatShades(brandShades, 'brand')}
+
+// --- Escala de Grises ---
+${formatShades(grayShades, 'gray')}
+
+// --- Paletas Semánticas (basadas en el modo '${semanticPrefix}') ---
+// --- Fondos ---
+${formatPalette(stylePalette.fullBackgroundColors, 'bg')}
+
+// --- Textos ---
+${formatPalette(stylePalette.fullForegroundColors, 'text')}
+
+// --- Bordes ---
+${formatPalette(stylePalette.fullBorderColors, 'border')}
+
+// --- Acciones ---
+${formatPalette(stylePalette.fullActionColors, 'action')}
+
+// --- Decorativos ---
+${formatPalette(stylePalette.decorateColors, 'deco')}
+`;
 };
