@@ -2,21 +2,25 @@ import React, { useEffect, useState, memo, useCallback, useRef } from 'react';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import { availableFonts, generationMethods } from './utils/colorUtils.js';
 import Explorer from './components/ui/Explorer.jsx';
-import FloatingActionButtons from './components/FloatingActionButtons.jsx';
+// Se elimina la importación de FloatingActionButtons ya que no se usará
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
-// Importar ConfirmDeleteModal
 import { 
     ExportModal, AccessibilityModal, ComponentPreviewModal, 
-    HistoryModal, HelpModal, ConfirmDeleteModal 
+    HistoryModal, HelpModal, ConfirmDeleteModal,
+    // --- MODALES MOVIDOS DE EXPLORER ---
+    AIPaletteModal, ImagePaletteModal, VariationsModal, PaletteContrastChecker
 } from './components/modals/index.jsx';
 import { 
     Settings, Type, Upload, Download, RefreshCcw, HelpCircle, 
-    User, LogOut, LogIn, Save, FolderOpen 
+    User, LogOut, LogIn, Save, FolderOpen,
+    Undo2, Redo2, Clock, Sun, Moon, FileCode, Sparkles,
+    // --- ICONOS MOVIDOS DE EXPLORER ---
+    Layers, Wand2, Image as ImageIcon, Maximize, SlidersHorizontal, Eye, 
+    MoreHorizontal, Palette, ShieldCheck, Accessibility, TestTube2
 } from 'lucide-react';
 import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
 import ColorBlindnessSidebar from './components/ui/ColorBlindnessSidebar.jsx';
-// Importar los nuevos Sidebars
 import SavePaletteSidebar from './components/ui/SavePaletteSidebar.jsx';
 import MyPalettesSidebar from './components/ui/MyPalettesSidebar.jsx';
 import AuthPage from './components/AuthPage.jsx';
@@ -74,6 +78,17 @@ const Share = {
 };
 // --- Fin de funciones simuladas ---
 
+// --- LÓGICA MOVIDA DE EXPLORER ---
+const backgroundModeLabels = {
+    'T950': 'Fondo T950',
+    'T0': 'Fondo T0',
+    'white': 'Fondo Blanco',
+    'black': 'Fondo Negro',
+    'default': 'Fondo Armonía',
+    'card': 'Fondo Tarjeta'
+};
+// --- FIN LÓGICA MOVIDA ---
+
 const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const { 
     themeData, font, setFont, brandColor, grayColor, isGrayAuto,
@@ -107,7 +122,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     handleDuplicatePalette,
     handleUpdatePaletteName,
     handleLoadSpecificPalette,
-    // --- ¡NUEVAS PROPS DEL HOOK! ---
     projects,
     collections,
     filters,
@@ -121,6 +135,17 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     tags, 
     handleCreateTag 
   } = hook;
+
+  // --- ESTADO MOVIDO DE EXPLORER ---
+  const [isVariationsVisible, setIsVariationsVisible] = useState(false);
+  const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
+  const [colorModePreview, setColorModePreview] = useState('card');
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+  const [isAIModalVisible, setIsAIModalVisible] = useState(false);
+  const [isMethodMenuVisible, setIsMethodMenuVisible] = useState(false);
+  const [isToolsMenuVisible, setIsToolsMenuVisible] = useState(false);
+  // --- FIN ESTADO MOVIDO ---
 
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
@@ -168,8 +193,17 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     };
   }, [handleRandomTheme]);
 
+  // --- HANDLER MOVIDO DE EXPLORER ---
+  const handleCyclePreviewMode = () => {
+    const options = ['card', 'white', 'black', 'T0', 'T950'];
+    const currentIndex = options.indexOf(colorModePreview);
+    const nextIndex = (currentIndex + 1) % options.length;
+    setColorModePreview(options[nextIndex]);
+  };
+  // --- FIN HANDLER MOVIDO ---
 
   const handleNativeExport = async () => {
+    // ... (código sin cambios) ...
     const data = { 
       brandColor: brandColor, 
       grayColor: grayColor, 
@@ -197,6 +231,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
 
   const handleWebExport = () => {
+    // ... (código sin cambios) ...
     const data = { 
       brandColor: brandColor, 
       grayColor: grayColor, 
@@ -214,33 +249,40 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
 
   const handleFontSelect = (fontName) => {
+      // ... (código sin cambios) ...
       setFont(fontName);
       setIsFontMenuVisible(false);
       setIsConfigMenuVisible(false);
   };
   const handleImportClick = () => {
+      // ... (código sin cambios) ...
       importFileRef.current.click();
       setIsConfigMenuVisible(false);
   };
   const handleExportClick = () => {
+      // ... (código sin cambios) ...
       setExportingPaletteData(themeData);
       setIsExportModalVisible(true);
       setIsConfigMenuVisible(false);
   };
   const handleResetClick = () => {
+      // ... (código sin cambios) ...
       handleReset();
       setIsConfigMenuVisible(false);
   };
   const handleHelpClick = () => {
+      // ... (código sin cambios) ...
       setIsHelpModalVisible(true);
       setIsConfigMenuVisible(false);
   };
   const handleLogoutClick = () => {
+      // ... (código sin cambios) ...
       onLogout();
       setIsUserMenuVisible(false);
   };
   
   const closeAllSidebars = () => {
+    // ... (código sin cambios) ...
     setIsAdjusterSidebarVisible(false);
     setIsSimulationSidebarVisible(false);
     setIsSaveSidebarVisible(false);
@@ -250,38 +292,44 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
 
   const handleOpenSimulationSidebar = () => {
+    // ... (código sin cambios) ...
     closeAllSidebars();
     setIsSimulationSidebarVisible(true);
   };
 
   const handleOpenAdjusterSidebar = () => {
+    // ... (código sin cambios) ...
     closeAllSidebars();
     setIsAdjusterSidebarVisible(true);
   };
 
   const handleOpenSaveSidebar = () => {
+    // ... (código sin cambios) ...
     closeAllSidebars();
     setIsSaveSidebarVisible(true);
   };
 
   const handleOpenMyPalettesSidebar = () => {
+    // ... (código sin cambios) ...
     closeAllSidebars();
     setIsMyPalettesSidebarVisible(true);
   };
   
   const handleCancelSimulation = () => {
+    // ... (código sin cambios) ...
     setSimulationMode('none');
     setIsSimulationSidebarVisible(false);
   };
 
   const handleApplySimulation = () => {
+    // ... (código sin cambios) ...
     applySimulationToPalette();
     setSimulationMode('none');
     setIsSimulationSidebarVisible(false);
   };
   
-  // Recibe el objeto 'saveData' completo
   const onSavePalette = async (saveData) => {
+    // ... (código sin cambios) ...
     const success = await handleSavePalette(saveData);
     if (success) {
         setIsSaveSidebarVisible(false); 
@@ -289,12 +337,13 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
   
   const onLoadPalette = (palette) => {
+    // ... (código sin cambios) ...
     handleLoadPalette(palette);
     setIsMyPalettesSidebarVisible(false); 
   };
   
-  // Abre el modal de confirmación
   const onDeletePalette = (paletteId) => {
+    // ... (código sin cambios) ...
     const palette = savedPalettes.find(p => p.id === paletteId);
     setConfirmModalState({
         isOpen: true,
@@ -308,21 +357,24 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
 
   const handleExportSpecificPalette = (palette) => {
+    // ... (código sin cambios) ...
     const specificThemeData = handleLoadSpecificPalette(palette);
     setExportingPaletteData(specificThemeData);
     setIsExportModalVisible(true);
   };
   
   const handleDuplicateClick = (paletteId) => {
+    // ... (código sin cambios) ...
     handleDuplicatePalette(paletteId);
   };
 
   const handleUpdateNameClick = (paletteId, newName) => {
+    // ... (código sin cambios) ...
     handleUpdatePaletteName(paletteId, newName);
   };
   
-  // --- ¡NUEVO! --- Handlers para el modal de confirmación de Proyectos/Colecciones
   const onDeleteProject = (projectId, projectName) => {
+    // ... (código sin cambios) ...
     setConfirmModalState({
         isOpen: true,
         title: "Eliminar Proyecto",
@@ -335,6 +387,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
   
   const onDeleteCollection = (collectionId, collectionName) => {
+    // ... (código sin cambios) ...
     setConfirmModalState({
         isOpen: true,
         title: "Eliminar Colección",
@@ -345,7 +398,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         }
     });
   };
-  // --- FIN ---
 
 
   if (!themeData || !themeData.stylePalette || !themeData.stylePalette.fullActionColors) {
@@ -358,6 +410,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   }
 
   const pageThemeStyle = {
+    // ... (código sin cambios) ...
     backgroundColor: themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Predeterminado').color,
     color: themeData.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color,
     transition: 'background-color 0.3s ease, color 0.3s ease',
@@ -366,6 +419,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
 
   return (
     <div className="flex flex-col min-h-screen w-full" style={pageThemeStyle}>
+      {/* ... (SVG filters sin cambios) ... */}
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
           <filter id="protanopia"><feColorMatrix in="SourceGraphic" type="matrix" values="0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0" /></filter>
@@ -388,20 +442,163 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
           <img src="https://raw.githubusercontent.com/pentakillw/sistema-de-diseno-react/main/Icono_FX.png" alt="Sistema FX Logo" className="h-10 w-10 rounded-lg"/>
           <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text-default)' }}>Sistema FX</h1>
+          
+          {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
+            <p className="text-sm text-[var(--text-muted)] hidden lg:block ml-4">
+                ¡Pulsa la <kbd className="px-2 py-1 text-xs font-semibold text-[var(--text-default)] bg-[var(--bg-muted)] border border-[var(--border-default)] rounded-md">barra espaciadora</kbd> para generar colores!
+            </p>
+          )}
         </div>
         
         <div className="flex items-center gap-1.5 sm:gap-2">
+          
+          {/* --- INICIO DE MODIFICACIÓN: Iconos de Explorer movidos aquí --- */}
+          <button
+              onClick={handleCyclePreviewMode}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2"
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title={`Fondo: ${backgroundModeLabels[colorModePreview]}`}
+          >
+              <Layers size={16} />
+          </button>
+          <button 
+              onClick={() => setIsAIModalVisible(true)} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" 
+              title="Generar con IA"
+          >
+              <Sparkles size={16} />
+          </button>
+          <div className="relative">
+              <button 
+                  onClick={() => setIsMethodMenuVisible(true)} 
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  title="Método de Generación"
+              >
+                  <Wand2 size={16}/>
+              </button>
+                {isMethodMenuVisible && (
+                  <PopoverMenu onClose={() => setIsMethodMenuVisible(false)}>
+                      {generationMethods.map(method => (
+                          <button key={method.id} onClick={() => { setExplorerMethod(method.id); setIsMethodMenuVisible(false); }} className={`w-full text-left px-4 py-2 text-sm ${explorerMethod === method.id ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)] rounded-md`}>
+                              {method.name}
+                          </button>
+                      ))}
+                  </PopoverMenu>
+              )}
+          </div>
+          <button 
+              onClick={() => setIsImageModalVisible(true)} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Extraer de Imagen"
+          >
+              <ImageIcon size={16} />
+          </button>
+          <button 
+              onClick={() => setIsExpanded(true)} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Expandir Paleta"
+          >
+              <Maximize size={16} /> 
+          </button>
+          <button 
+              onClick={handleOpenAdjusterSidebar} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Ajustar Paleta"
+          >
+              <SlidersHorizontal size={16} /> 
+          </button>
+          <button 
+              onClick={handleOpenSimulationSidebar} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Daltonismo"
+          >
+              <Eye size={16} /> 
+          </button>
+          <div className="relative">
+              <button 
+                  onClick={() => setIsToolsMenuVisible(p => !p)}
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  title="Más herramientas"
+              >
+                  <MoreHorizontal size={16}/>
+              </button>
+              {isToolsMenuVisible && (
+                  <PopoverMenu onClose={() => setIsToolsMenuVisible(false)}>
+                      <MenuButton icon={<Accessibility size={16}/>} label="Accesibilidad" onClick={() => { setIsAccessibilityModalVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<TestTube2 size={16}/>} label="Componentes" onClick={() => { setIsComponentPreviewModalVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<Palette size={16}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<ShieldCheck size={16}/>} label="Matriz de Contraste" onClick={() => { setIsContrastCheckerVisible(true); setIsToolsMenuVisible(false); }} />
+                  </PopoverMenu>
+              )}
+          </div>
+          <div className="h-6 w-px bg-[var(--border-default)] mx-1"></div>
+          {/* --- FIN DE MODIFICACIÓN --- */}
+
+          <button 
+              onClick={handleUndo} 
+              disabled={!history || historyIndex <= 0}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Deshacer"
+          >
+              <Undo2 size={16} />
+          </button>
+          <button 
+              onClick={handleRedo} 
+              disabled={!history || historyIndex >= history.length - 1}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Rehacer"
+          >
+              <Redo2 size={16} />
+          </button>
+          <button 
+              onClick={() => setIsHistoryModalVisible(true)} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Historial"
+          >
+              <Clock size={16} />
+          </button>
+          <button 
+              onClick={handleThemeToggle} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Alternar tema"
+          >
+              {themeData.theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
+          <button 
+              onClick={() => {
+                setExportingPaletteData(themeData);
+                setIsExportModalVisible(true);
+              }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              title="Exportar"
+          >
+              <FileCode size={16} />
+          </button>
+
+          <div className="h-6 w-px bg-[var(--border-default)] mx-1"></div>
+
           {user ? (
             <>
               <button 
                   onClick={handleOpenSaveSidebar}
-                  className="text-sm font-semibold py-2 px-3 rounded-lg flex items-center gap-2"
-                  style={{ backgroundColor: 'var(--action-primary-default)', color: 'white' }}
-                  title="Guardar paleta actual"
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
+                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  title={currentPaletteId ? "Actualizar Paleta" : "Guardar Paleta"}
               >
-                  <Save size={14} />
-                  <span className="hidden sm:inline">{currentPaletteId ? "Actualizar" : "Guardar"}</span>
+                  <Save size={16} />
               </button>
+
               <button 
                   onClick={handleOpenMyPalettesSidebar}
                   className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
@@ -531,6 +728,11 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 originalExplorerPalette={originalExplorerPalette}
                 isSimulationSidebarVisible={isSimulationSidebarVisible}
                 onOpenSimulationSidebar={handleOpenSimulationSidebar}
+                // --- PROPS MOVIDAS ---
+                isExpanded={isExpanded}
+                setIsExpanded={setIsExpanded}
+                colorModePreview={colorModePreview}
+                // --- FIN PROPS MOVIDAS ---
               />
               
               <div className="px-4 md:px-8">
@@ -602,7 +804,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             />
           )}
           
-          {/* --- ¡INICIO DE ACTUALIZACIÓN DE PROPS! --- */}
           {isSaveSidebarVisible && (
             <SavePaletteSidebar
               onClose={closeAllSidebars}
@@ -610,7 +811,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               isSaving={isSavingPalette}
               initialName={savedPalettes.find(p => p.id === currentPaletteId)?.name || ''}
               currentPaletteId={currentPaletteId}
-              // ¡NUEVO! Pasa proyectos y colecciones
               projects={projects}
               collections={collections}
               tags={tags} 
@@ -623,7 +823,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           {isMyPalettesSidebarVisible && (
             <MyPalettesSidebar
               onClose={closeAllSidebars}
-              palettes={savedPalettes} // ¡Importante! Pasa las paletas filtradas
+              palettes={savedPalettes} 
               isLoading={isLoadingPalettes}
               onLoadPalette={onLoadPalette}
               onDeletePalette={onDeletePalette}
@@ -631,7 +831,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               onExportPalette={handleExportSpecificPalette}
               onUpdatePaletteName={handleUpdateNameClick}
               deletingId={deletingPaletteId}
-              // ¡NUEVO! Pasa los filtros y gestores
               projects={projects}
               collections={collections}
               filters={filters}
@@ -644,7 +843,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               onDeleteCollection={onDeleteCollection}
             />
           )}
-          {/* --- ¡FIN DE ACTUALIZACIÓN DE PROPS! --- */}
 
 
         </div>
@@ -703,7 +901,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             />
         }
         {isAccessibilityModalVisible && <AccessibilityModal onClose={() => setIsAccessibilityModalVisible(false)} accessibility={themeData.accessibility} colors={themeData.accessibilityColors} onCopy={showNotification} />}
-        {isComponentPreviewModalVisible && <ComponentPreviewModal onClose={() => setIsComponentPreviewModal(false)} primaryButtonTextColor={themeData.primaryButtonTextColor} />}
+        {isComponentPreviewModalVisible && <ComponentPreviewModal onClose={() => setIsComponentPreviewModalVisible(false)} primaryButtonTextColor={themeData.primaryButtonTextColor} />}
         {isHistoryModalVisible && <HistoryModal history={history} onSelect={goToHistoryState} onClose={() => setIsHistoryModalVisible(false)} />}
         {isHelpModalVisible && <HelpModal onClose={() => setIsHelpModalVisible(false)} />}
         
@@ -717,21 +915,25 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             />
         )}
         
+        {/* --- MODALES MOVIDOS DE EXPLORER --- */}
+        {isAIModalVisible && ( <AIPaletteModal onClose={() => setIsAIModalVisible(false)} onGenerate={generatePaletteWithAI} /> )}
+        {isImageModalVisible && ( <ImagePaletteModal onColorSelect={updateBrandColor} onClose={() => setIsImageModalVisible(false)} /> )}
+        {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={updateBrandColor} />}
+        {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
+        {/* --- FIN MODALES MOVIDOS --- */}
+
+        {/* --- Botón Flotante (Solo Generar) --- */}
         {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && (
-          <FloatingActionButtons 
-            onRandomClick={() => handleRandomTheme()} 
-            onThemeToggle={handleThemeToggle} 
-            currentTheme={themeData.theme} 
-            onUndo={handleUndo} 
-            onRedo={handleRedo} 
-            canUndo={historyIndex > 0} 
-            canRedo={historyIndex < history.length - 1}
-            onOpenHistoryModal={() => setIsHistoryModalVisible(true)}
-            onOpenExportModal={() => {
-              setExportingPaletteData(themeData);
-              setIsExportModalVisible(true);
-            }} 
-          />
+          <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40">
+            <button
+              onClick={() => handleRandomTheme()}
+              title="Generar Tema Aleatorio"
+              className="h-12 w-12 rounded-full flex items-center justify-center shadow-lg text-white transform transition-all duration-200 hover:shadow-xl hover:-translate-y-1"
+              style={{ background: 'linear-gradient(to right, var(--action-primary-default), #e11d48)' }}
+            >
+              <Sparkles size={22} />
+            </button>
+          </div>
         )}
     </div>
   );
@@ -743,7 +945,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   
-  const hook = useThemeGenerator(user); // ¡El hook ahora tiene toda la lógica nueva!
+  const hook = useThemeGenerator(user); 
   
   const [isNative, setIsNative] = useState(false);
   const [route, setRoute] = useState('landing'); 
@@ -786,7 +988,7 @@ function App() {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []); // El array de dependencias vacío está bien aquí
+  }, []); 
 
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());
@@ -831,7 +1033,6 @@ function App() {
           case 'auth':
             return <AuthPage onNavigate={handleNavigate} />;
           case 'generator':
-            // Pasamos el 'hook' completo que contiene todo
             return <MainApp hook={hook} isNative={isNative} user={user} onLogout={handleLogout} onNavigate={handleNavigate}/>;
           
           case 'privacy':

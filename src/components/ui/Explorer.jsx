@@ -1,19 +1,18 @@
 import React, { useState, memo, useRef, useEffect } from 'react';
 import { 
-    Layers, Settings, Palette, ShieldCheck, Maximize, X, Plus, Image as ImageIcon, 
-    Undo2, Redo2, Eye, Sparkles, Accessibility, TestTube2, Pipette, Wand2, 
+    // --- Iconos conservados para la paleta ---
+    Palette, X, Plus, 
     Lock, Star, Unlock, Copy, Trash2, 
-    ArrowLeftRight, SlidersHorizontal,
-    MoreHorizontal
+    ArrowLeftRight
 } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from '../ColorPalette.jsx';
 import { 
-    VariationsModal, PaletteContrastChecker, ImagePaletteModal, 
-    AIPaletteModal, DisplayModeModal
+    // --- Modales conservados ---
+    DisplayModeModal
 } from '../modals/index.jsx'; 
-import { generationMethods, generateShades, findClosestColorName } from '../../utils/colorUtils.js'; 
+import { generateShades, findClosestColorName } from '../../utils/colorUtils.js'; 
 import { HexColorPicker } from 'react-colorful';
 import ColorActionMenu from './ColorActionMenu.jsx';
 
@@ -29,15 +28,6 @@ const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMou
     </button>
 );
 
-
-const backgroundModeLabels = {
-    'T950': 'Fondo T950',
-    'T0': 'Fondo T0',
-    'white': 'Fondo Blanco',
-    'black': 'Fondo Negro',
-    'default': 'Fondo Armonía',
-    'card': 'Fondo Tarjeta'
-};
 
 // Función helper para obtener el color de fondo correcto
 const getPreviewBgColor = (mode, shades, cardColor) => {
@@ -89,7 +79,8 @@ const ColorPickerPopover = ({ color, onChange, onClose }) => {
     );
 };
 
-// --- ¡CORRECCIÓN! --- Añadido 'export' para que otros archivos puedan importarlo
+// --- IMPORTANTE: Se conservan PopoverMenu y MenuButton ---
+// Se exportan porque MyPalettesSidebar.jsx depende de ellos
 export const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     const menuRef = useRef(null);
     useEffect(() => {
@@ -113,7 +104,6 @@ export const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     );
 };
 
-// --- ¡CORRECCIÓN! --- Añadido 'export' para que otros archivos puedan importarlo
 export const MenuButton = ({ icon, label, onClick, className = "" }) => (
     <button
         onClick={onClick}
@@ -130,39 +120,34 @@ const Explorer = (props) => {
         explorerPalette, reorderExplorerPalette, explorerGrayShades, 
         handleExplorerColorPick, setGrayColor,
         brandColor, updateBrandColor, themeData, insertColorInPalette,
-        removeColorFromPalette, explorerMethod, setExplorerMethod, replaceColorInPalette,
+        removeColorFromPalette, 
+        // Ya no se necesitan: explorerMethod, setExplorerMethod,
+        // generatePaletteWithAI, showNotification, applySimulationToPalette
+        // onOpenAdjuster, onOpenAccessibilityModal, onOpenComponentPreviewModal
+        // onOpenSimulationSidebar
+        // --- Props conservadas ---
+        replaceColorInPalette,
         handleUndo, handleRedo, history, historyIndex, 
         simulationMode,
-        generatePaletteWithAI, showNotification,
-        applySimulationToPalette, 
-        onOpenAdjuster,
-        onOpenAccessibilityModal,
-        onOpenComponentPreviewModal,
+        showNotification, // Se conserva para el botón de copiar
         lockedColors,
         toggleLockColor,
         isAdjusterSidebarVisible,
         originalExplorerPalette,
         isSimulationSidebarVisible,
-        onOpenSimulationSidebar
+        // --- PROPS MOVIDAS ---
+        isExpanded,
+        setIsExpanded,
+        colorModePreview
+        // --- FIN PROPS MOVIDAS ---
     } = props;
     
-    // Estado para los modales
-    const [isVariationsVisible, setIsVariationsVisible] = useState(false);
-    const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
-    const [colorModePreview, setColorModePreview] = useState('card');
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+    // --- Estado local conservado ---
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
-    const [isAIModalVisible, setIsAIModalVisible] = useState(false);
     const [baseColorForShades, setBaseColorForShades] = useState(null);
-    const [isMethodMenuVisible, setIsMethodMenuVisible] = useState(false);
     const [pickerColor, setPickerColor] = useState(null); 
     const [activeColorMenu, setActiveColorMenu] = useState(null); 
     const paletteContainerRef = useRef(null);
-    
-    const [isToolsMenuVisible, setIsToolsMenuVisible] = useState(false);
-    
-    // Estado para el formato de texto del color
     const [displayMode, setDisplayMode] = useState('name');
     const [isDisplayModeModalVisible, setIsDisplayModeModalVisible] = useState(false);
 
@@ -197,6 +182,7 @@ const Explorer = (props) => {
     
     // Asignación de colores y funciones
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
+    // Usa 'colorModePreview' (prop) para calcular 'colorModeBg'
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
 
     const onDragEnd = (result) => {
@@ -212,13 +198,6 @@ const Explorer = (props) => {
             setActiveShadeIndex(index);
             setBaseColorForShades(explorerPalette[index]);
         }
-    };
-    
-    const handleCyclePreviewMode = () => {
-        const options = ['card', 'white', 'black', 'T0', 'T950'];
-        const currentIndex = options.indexOf(colorModePreview);
-        const nextIndex = (currentIndex + 1) % options.length;
-        setColorModePreview(options[nextIndex]);
     };
 
     const simulationFilterStyle = {
@@ -255,134 +234,14 @@ const Explorer = (props) => {
                 className={`transition-all duration-300`} 
                 style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
             >
-                {/* --- ¡INICIO DE LA BARRA DE HERRAMIENTAS MODIFICADA! --- */}
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 px-4 sm:px-6 pt-3">
-                    
-                    {/* --- MODIFICACIÓN --- Reemplaza Título por Texto de Ayuda */}
-                    <div className="flex-1 min-w-0 h-8 flex items-center">
-                        {!isAdjusterSidebarVisible && !isSimulationSidebarVisible ? (
-                            <p className="text-sm text-[var(--text-muted)] hidden md:block">
-                                ¡Pulsa la <kbd className="px-2 py-1 text-xs font-semibold text-[var(--text-default)] bg-[var(--bg-muted)] border border-[var(--border-default)] rounded-md">barra espaciadora</kbd> para generar colores!
-                            </p>
-                        ) : isAdjusterSidebarVisible ? (
-                            <p className="text-sm text-[var(--text-muted)]">Previsualizando ajustes...</p>
-                        ) : (
-                            <p className="text-sm text-[var(--text-muted)]">Previsualizando simulación...</p>
-                        )}
-                    </div>
-                    
-                    {/* Derecha: Botones de Acción (SOLO ICONOS) */}
-                    <div className="flex items-center flex-wrap justify-end gap-1.5 sm:gap-2 self-end sm:self-auto w-full sm:w-auto">
-                        
-                        <button
-                            onClick={handleCyclePreviewMode}
-                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2"
-                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                            title={`Fondo: ${backgroundModeLabels[colorModePreview]}`}
-                        >
-                            <Layers size={16} />
-                        </button>
-
-                        <button 
-                            onClick={() => setIsAIModalVisible(true)} 
-                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" 
-                            title="Generar con IA"
-                        >
-                            <Sparkles size={16} />
-                        </button>
-
-                        <div className="relative">
-                            <button 
-                                onClick={() => setIsMethodMenuVisible(true)} 
-                                className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                                style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                                title="Método de Generación"
-                            >
-                                <Wand2 size={16}/>
-                            </button>
-                             {isMethodMenuVisible && (
-                                <PopoverMenu onClose={() => setIsMethodMenuVisible(false)}>
-                                    {generationMethods.map(method => (
-                                       <button key={method.id} onClick={() => { setExplorerMethod(method.id); setIsMethodMenuVisible(false); }} className={`w-full text-left px-4 py-2 text-sm ${explorerMethod === method.id ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)] rounded-md`}>
-                                           {method.name}
-                                       </button>
-                                   ))}
-                                </PopoverMenu>
-                            )}
-                        </div>
-
-                        <button 
-                            onClick={() => setIsImageModalVisible(true)} 
-                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                            title="Extraer de Imagen"
-                        >
-                            <ImageIcon size={16} />
-                        </button>
-                        
-                        <button 
-                            onClick={() => setIsExpanded(true)} 
-                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                            title="Expandir Paleta"
-                        >
-                            <Maximize size={16} /> 
-                        </button>
-                        
-                        <div className="h-5 w-px bg-[var(--border-default)] mx-1"></div>
-                        
-                        {/* --- ¡NUEVO! --- Iconos movidos fuera del menú '...' */}
-                        <button 
-                            onClick={onOpenAdjuster} 
-                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                            title="Ajustar Paleta"
-                        >
-                            <SlidersHorizontal size={16} /> 
-                        </button>
-
-                        <button 
-                            onClick={onOpenSimulationSidebar} 
-                            className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                            style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                            title="Daltonismo"
-                        >
-                            <Eye size={16} /> 
-                        </button>
-                        {/* --- FIN DE ICONOS MOVIDOS --- */}
-
-                        {/* Menú de Herramientas (...) */}
-                        <div className="relative">
-                            <button 
-                                onClick={() => setIsToolsMenuVisible(p => !p)}
-                                className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                                style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-                                title="Más herramientas"
-                            >
-                                <MoreHorizontal size={16}/>
-                            </button>
-                            {isToolsMenuVisible && (
-                                <PopoverMenu onClose={() => setIsToolsMenuVisible(false)}>
-                                    {/* --- MODIFICACIÓN --- Botones de Ajustar y Daltonismo eliminados de aquí */}
-                                    <MenuButton icon={<Accessibility size={16}/>} label="Accesibilidad" onClick={() => { onOpenAccessibilityModal(); setIsToolsMenuVisible(false); }} />
-                                    <MenuButton icon={<TestTube2 size={16}/>} label="Componentes" onClick={() => { onOpenComponentPreviewModal(); setIsToolsMenuVisible(false); }} />
-                                    <MenuButton icon={<Palette size={16}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
-                                    <MenuButton icon={<ShieldCheck size={16}/>} label="Matriz de Contraste" onClick={() => { setIsContrastCheckerVisible(true); setIsToolsMenuVisible(false); }} />
-                                </PopoverMenu>
-                            )}
-                        </div>
-                        
-                    </div>
-                </div>
-                {/* --- ¡FIN DE LA BARRA DE HERRAMIENTAS MODIFICADA! --- */}
-
+                {/* --- La barra de herramientas se eliminó --- */}
                 
                 {/* --- CONTENEDOR DE LA PALETA PRINCIPAL --- */}
                 
                 {/* Vista "ANTES" (Paleta Original) */}
                 {isSplitView && (
                     <div 
-                        className="h-[37.5vh] overflow-hidden" 
+                        className="h-[calc((100vh-80px)/2)] overflow-hidden" 
                         title="Paleta Original (Antes de ajustar)"
                     >
                         <DragDropContext onDragEnd={onDragEnd}>
@@ -433,8 +292,9 @@ const Explorer = (props) => {
                 )}
                 
                 {/* "DESPUÉS" (Paleta Ajustada) o Paleta Única */}
+                {/* --- MODIFICACIÓN --- Altura y padding actualizados --- */}
                 <div 
-                    className={`overflow-hidden ${isSplitView ? 'h-[37.5vh]' : 'h-[75vh] rounded-b-md'}`}
+                    className={`overflow-hidden pt-4 ${isSplitView ? 'h-[calc((100vh-80px)/2)]' : 'h-[calc(100vh-80px)] rounded-b-md'}`}
                     title={isAdjusterSidebarVisible ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
                 >
                     
@@ -721,13 +581,9 @@ const Explorer = (props) => {
                 </div>
             )}
             
-            {/* --- MODALES --- */}
-            {isAIModalVisible && ( <AIPaletteModal onClose={() => setIsAIModalVisible(false)} onGenerate={generatePaletteWithAI} /> )}
-            {isImageModalVisible && ( <ImagePaletteModal onColorSelect={updateBrandColor} onClose={() => setIsImageModalVisible(false)} /> )}
-            {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={updateBrandColor} />}
-            {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
+            {/* --- MODALES MOVIDOS A APP.JSX --- */}
             
-            {/* Modal de Formato de Visualización */}
+            {/* Modal de Formato de Visualización (Conservado) */}
             {isDisplayModeModalVisible && (
                 <DisplayModeModal
                     currentMode={displayMode}
