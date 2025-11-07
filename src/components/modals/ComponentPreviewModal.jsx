@@ -3,26 +3,26 @@ import { Eye, Info, CheckCircle, AlertTriangle, AlertCircle, X } from 'lucide-re
 
 const ComponentPreviewModal = ({ primaryButtonTextColor, onClose }) => {
     return (
-        // --- MODIFICACIÓN --- Backdrop responsivo
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
-            {/* --- MODIFICACIÓN ---
-              - Panel responsivo (bottom sheet en móvil)
-              - Padding inferior con 'safe-area-inset'.
+        // --- ¡MODIFICADO! --- Fondo centrado
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            {/* --- ¡MODIFICADO! ---
+              - Cambiado a 'bg-white' y 'rounded-xl'
+              - Eliminado padding de safe-area y handle visual
+              - Ajustado max-h
             */}
             <div 
-                className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-4xl w-full relative flex flex-col bg-[var(--bg-card)] max-h-[90vh] md:max-h-[70vh]" 
+                className="p-6 rounded-xl border border-gray-200 max-w-4xl w-full relative flex flex-col bg-white max-h-[90vh]" 
                 onClick={(e) => e.stopPropagation()}
             >
-                 {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
-                <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+                 {/* --- ELIMINADO --- Handle visual de móvil */}
                  
                  <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                    <h2 className="text-xl font-bold flex items-center gap-2 text-[var(--text-default)]">
-                        <Eye size={24} /> Vista Previa de Componentes
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+                        <Eye size={24} strokeWidth={1.75} /> Vista Previa de Componentes
                     </h2>
-                    <button onClick={onClose} className="text-[var(--text-muted)]"><X size={24} /></button>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X size={24} /></button>
                 </div>
-                <div className="mt-4 pt-4 border-t border-[var(--border-default)] overflow-y-auto">
+                <div className="mt-4 pt-4 border-t border-gray-200 overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Columna Izquierda: Controles y Botones */}
                         <div className="space-y-6">
@@ -45,9 +45,10 @@ const ComponentPreviewModal = ({ primaryButtonTextColor, onClose }) => {
                                 />
                             </div>
                             <div className="space-y-3">
+                                {/* --- ¡BOTÓN CON GRADIENTE! --- */}
                                 <button 
-                                    className="w-full font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]" 
-                                    style={{ backgroundColor: 'var(--action-primary-default)', color: primaryButtonTextColor }}
+                                    className="w-full font-bold py-2 px-4 rounded-lg transition-all transform hover:opacity-90 active:scale-95" 
+                                    style={{ background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)', color: primaryButtonTextColor }}
                                 >
                                     Botón Primario
                                 </button>

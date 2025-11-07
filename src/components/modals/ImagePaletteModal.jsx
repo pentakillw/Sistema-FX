@@ -173,6 +173,8 @@ const ImagePaletteModal = ({ onColorSelect, onClose }) => {
         }
     };
 
+    // --- ¡¡¡FUNCIÓN RESTAURADA!!! ---
+    // Esta es la función que faltaba y causaba el error
     const handleImageUpload = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -186,6 +188,7 @@ const ImagePaletteModal = ({ onColorSelect, onClose }) => {
             reader.readAsDataURL(file);
         }
     };
+    // --- FIN DE LA FUNCIÓN RESTAURADA ---
 
     const handleFinalSelect = () => {
         if(selectedColor) {
@@ -197,55 +200,54 @@ const ImagePaletteModal = ({ onColorSelect, onClose }) => {
     const triggerFileInput = () => fileInputRef.current.click();
 
     return (
-        // --- MODIFICACIÓN --- Backdrop responsivo
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
+        // --- ¡MODIFICADO! --- Fondo centrado
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <canvas ref={hiddenCanvasRef} className="hidden" />
-            {/* --- MODIFICACIÓN ---
-              - Panel responsivo (bottom sheet en móvil)
-              - Padding inferior con 'safe-area-inset'.
+            {/* --- ¡MODIFICADO! ---
+              - Cambiado a 'bg-white' y 'rounded-xl'
+              - Eliminado padding de safe-area y handle visual
+              - Ajustado max-h
             */}
             <div 
-                className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-2xl w-full relative flex flex-col max-h-[90vh]" 
-                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }} 
+                className="p-6 rounded-xl border border-gray-200 max-w-2xl w-full relative flex flex-col max-h-[90vh] bg-white" 
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
-                <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+                {/* --- ELIMINADO --- Handle visual de móvil */}
                 
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-                    <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-default)' }}>
-                        <Palette size={24} /> Extraer Paleta de Imagen
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+                        <Palette size={24} strokeWidth={1.75} /> Extraer Paleta de Imagen
                     </h2>
                      <div className="flex items-center gap-2 self-end sm:self-center">
+                         {/* --- ¡BOTÓN CON GRADIENTE! --- */}
                          <button 
                             onClick={handleFinalSelect}
                             disabled={!selectedColor}
-                            className="text-sm font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                            style={{ backgroundColor: selectedColor || 'var(--bg-muted)', color: selectedColor ? tinycolor.mostReadable(selectedColor, ['#fff', '#000']).toHexString() : 'var(--text-muted)' }}
+                            className="text-sm font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-white transition-all hover:opacity-90 active:scale-95"
+                            style={{ background: selectedColor ? 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)' : '#d1d5db' }}
                          >
                             Seleccionar
                             {selectedColor && <span className='ml-2 font-mono text-xs'>{selectedColor.toUpperCase()}</span>}
                          </button>
-                        <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+                        <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X size={24} /></button>
                      </div>
                 </div>
                 
                 <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 
-                {/* --- MODIFICACIÓN --- Contenedor con overflow para el contenido */}
                 <div className="overflow-y-auto">
                     {!imageUrl && (
-                        <div className="w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[var(--action-primary-default)] transition-colors" style={{ borderColor: 'var(--border-default)' }} onClick={triggerFileInput}>
-                            <UploadCloud size={48} style={{ color: 'var(--text-muted)' }} />
-                            <p className="mt-4 text-lg font-semibold" style={{ color: 'var(--text-default)' }}>Haz clic para subir una imagen</p>
+                        <div className="w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 transition-colors border-gray-300" onClick={triggerFileInput}>
+                            <UploadCloud size={48} className="text-gray-400" />
+                            <p className="mt-4 text-lg font-semibold text-gray-800">Haz clic para subir una imagen</p>
                         </div>
                     )}
 
                     {imageUrl && (
                         <div className="space-y-4">
-                            <div className="flex border-b mb-4" style={{ borderColor: 'var(--border-default)'}}>
-                                <button onClick={() => setMode('palette')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex items-center gap-2 ${mode === 'palette' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}><Palette size={16}/> Paleta Automática</button>
-                                <button onClick={() => setMode('picker')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex items-center gap-2 ${mode === 'picker' ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}><Pipette size={16}/> Selector</button>
+                            <div className="flex border-b mb-4 border-gray-200">
+                                <button onClick={() => setMode('palette')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex items-center gap-2 ${mode === 'palette' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500'}`}><Palette size={16} strokeWidth={1.75}/> Paleta Automática</button>
+                                <button onClick={() => setMode('picker')} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex items-center gap-2 ${mode === 'picker' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500'}`}><Pipette size={16} strokeWidth={1.75}/> Selector</button>
                             </div>
                             
                             <ImagePreview 
@@ -259,16 +261,16 @@ const ImagePaletteModal = ({ onColorSelect, onClose }) => {
 
                             {mode === 'palette' && (
                             <div className='mt-4'>
-                                {loading && <div className="flex items-center justify-center p-4"><Loader2 size={32} className="animate-spin" style={{ color: 'var(--action-primary-default)' }}/><p className="ml-4 font-semibold" style={{ color: 'var(--text-muted)'}}>Extrayendo colores...</p></div>}
-                                {error && <div className="text-center p-2 rounded-md" style={{ backgroundColor: 'var(--bg-critical-weak)', color: 'var(--text-critical)' }}><p className="text-sm font-semibold">{error}</p></div>}
+                                {loading && <div className="flex items-center justify-center p-4"><Loader2 size={32} className="animate-spin text-purple-500" /><p className="ml-4 font-semibold text-gray-500">Extrayendo colores...</p></div>}
+                                {error && <div className="text-center p-2 rounded-md bg-red-100 text-red-700"><p className="text-sm font-semibold">{error}</p></div>}
                                 {colorPalette && (
                                     <div>
                                         <div className='flex justify-between items-center mb-2'>
-                                            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>Paleta Extraída (toca un color)</h3>
+                                            <h3 className="text-sm font-semibold text-gray-500">Paleta Extraída (toca un color)</h3>
                                             <div className='flex items-center gap-2'>
-                                                <button onClick={() => setColorCount(c => Math.max(2, c - 1))} className="p-1 rounded-md" style={{ backgroundColor: 'var(--bg-muted)'}}><Minus size={14}/></button>
+                                                <button onClick={() => setColorCount(c => Math.max(2, c - 1))} className="p-1 rounded-md bg-gray-100 hover:bg-gray-200"><Minus size={14}/></button>
                                                 <span className='text-xs font-mono w-6 text-center'>{colorCount}</span>
-                                                <button onClick={() => setColorCount(c => Math.min(20, c + 1))} className="p-1 rounded-md" style={{ backgroundColor: 'var(--bg-muted)'}}><Plus size={14}/></button>
+                                                <button onClick={() => setColorCount(c => Math.min(20, c + 1))} className="p-1 rounded-md bg-gray-100 hover:bg-gray-200"><Plus size={14}/></button>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
@@ -282,7 +284,7 @@ const ImagePaletteModal = ({ onColorSelect, onClose }) => {
                             </div>
                             )}
                              <div className="flex justify-center mt-4">
-                                <button onClick={triggerFileInput} className="text-sm font-medium py-2 px-4 rounded-lg" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)'}}>Cambiar Imagen</button>
+                                <button onClick={triggerFileInput} className="text-sm font-medium py-2 px-4 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Cambiar Imagen</button>
                             </div>
                         </div>
                     )}

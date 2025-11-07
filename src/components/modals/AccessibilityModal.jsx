@@ -22,8 +22,8 @@ const ContrastMeter = ({ title, ratio, bgColor, fgColor, onCopy }) => {
     };
 
     return (
-        <div className="p-4 rounded-lg flex flex-col bg-[var(--bg-muted)]">
-            <h3 className="text-sm font-semibold mb-3 text-[var(--text-default)]">{title}</h3>
+        <div className="p-4 rounded-lg flex flex-col bg-gray-50 border border-gray-200">
+            <h3 className="text-sm font-semibold mb-3 text-gray-800">{title}</h3>
             <div className="flex items-center gap-4">
                 <div 
                     className="w-20 h-14 rounded-md flex items-center justify-center font-bold text-2xl shadow-inner select-none"
@@ -33,13 +33,13 @@ const ContrastMeter = ({ title, ratio, bgColor, fgColor, onCopy }) => {
                 </div>
                 <div className="flex-1">
                     <div className="flex justify-between items-baseline mb-1">
-                        <span className="font-bold text-lg text-[var(--text-default)]">{ratio}:1</span>
+                        <span className="font-bold text-lg text-gray-900">{ratio}:1</span>
                         <div className="flex items-center gap-1.5 font-semibold text-xs" style={{ color: levelInfo.color }}>
                             {levelInfo.icon}
                             <span>{levelInfo.text}</span>
                         </div>
                     </div>
-                    <div className="w-full bg-[var(--border-default)] rounded-full h-2.5 relative overflow-hidden">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 relative overflow-hidden">
                         <div 
                             className="h-full rounded-full transition-all duration-300" 
                             style={{ width: `${progress}%`, backgroundColor: levelInfo.color }}
@@ -51,25 +51,25 @@ const ContrastMeter = ({ title, ratio, bgColor, fgColor, onCopy }) => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4 text-xs flex-grow">
                 <div 
-                    className="flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors hover:bg-[var(--border-default)]" 
+                    className="flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors hover:bg-gray-200" 
                     onClick={() => handleCopy(bgColor)}
                     title={`Copiar Fondo: ${bgColor.toUpperCase()}`}
                 >
                     <div className="w-4 h-4 rounded border" style={{ backgroundColor: bgColor, borderColor: 'var(--border-strong)' }}></div>
                     <div className='flex flex-col'>
-                        <span className="font-semibold text-[var(--text-default)]">Fondo</span>
-                        <span className="font-mono text-[var(--text-muted)]">{bgColor.toUpperCase()}</span>
+                        <span className="font-semibold text-gray-800">Fondo</span>
+                        <span className="font-mono text-gray-500">{bgColor.toUpperCase()}</span>
                     </div>
                 </div>
                 <div 
-                    className="flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors hover:bg-[var(--border-default)]" 
+                    className="flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors hover:bg-gray-200" 
                     onClick={() => handleCopy(fgColor)}
                     title={`Copiar Texto: ${fgColor.toUpperCase()}`}
                 >
                     <div className="w-4 h-4 rounded border" style={{ backgroundColor: fgColor, borderColor: 'var(--border-strong)' }}></div>
                     <div className='flex flex-col'>
-                        <span className="font-semibold text-[var(--text-default)]">Texto</span>
-                        <span className="font-mono text-[var(--text-muted)]">{fgColor.toUpperCase()}</span>
+                        <span className="font-semibold text-gray-800">Texto</span>
+                        <span className="font-mono text-gray-500">{fgColor.toUpperCase()}</span>
                     </div>
                 </div>
             </div>
@@ -79,29 +79,29 @@ const ContrastMeter = ({ title, ratio, bgColor, fgColor, onCopy }) => {
 
 const AccessibilityModal = ({ accessibility, colors, onCopy, onClose }) => {
     return (
-        // --- MODIFICACIÓN ---
-        // 'items-center justify-center p-4' cambiado a 'items-end md:items-center justify-center p-0 md:p-4'
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
-            {/* --- MODIFICACIÓN ---
-              - Añadido 'rounded-t-2xl md:rounded-xl' para esquinas responsivas.
-              - Añadido 'max-h-[90vh] md:max-h-[70vh]' para altura responsiva.
-              - Añadido 'pb-[env(safe-area-inset-bottom)]' para padding en móvil.
+        // --- ¡MODIFICADO! ---
+        // 'items-end md:items-center p-0 md:p-4' cambiado a 'items-center justify-center p-4'
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            {/* --- ¡MODIFICADO! ---
+              - Cambiado a 'bg-white' y 'rounded-xl'
+              - Eliminado 'rounded-t-2xl md:rounded-xl'
+              - Eliminado 'pb-[env(safe-area-inset-bottom)]'
+              - Cambiado 'bg-[var(--bg-card)]' a 'bg-white'
             */}
             <div 
-                className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-3xl w-full relative flex flex-col bg-[var(--bg-card)] max-h-[90vh] md:max-h-[70vh]" 
+                className="p-6 rounded-xl border border-gray-200 max-w-3xl w-full relative flex flex-col bg-white max-h-[90vh]" 
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
-                <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+                {/* --- ELIMINADO --- Handle visual de móvil */}
                 
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold flex items-center gap-2 text-[var(--text-default)]">
-                        <Eye size={24} /> Verificación de Accesibilidad
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+                        <Eye size={24} strokeWidth={1.75} /> Verificación de Accesibilidad
                     </h2>
-                    <button onClick={onClose} className="text-[var(--text-muted)]"><X size={24} /></button>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X size={24} /></button>
                 </div>
-                {/* --- MODIFICACIÓN --- Añadido 'overflow-y-auto' para el contenido */}
-                <div className="mt-4 pt-4 border-t border-[var(--border-default)] overflow-y-auto">
+                {/* --- MODIFICADO --- 'overflow-y-auto' para el contenido */}
+                <div className="mt-4 pt-4 border-t border-gray-200 overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <ContrastMeter 
                             title="Contraste del Color de Marca"
@@ -118,8 +118,8 @@ const AccessibilityModal = ({ accessibility, colors, onCopy, onClose }) => {
                             onCopy={onCopy}
                         />
                     </div>
-                     <p className="text-xs text-center mt-6 text-[var(--text-muted)]">
-                        Los ratios de contraste se basan en las <a href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--action-primary-default)]">guías WCAG</a>.
+                     <p className="text-xs text-center mt-6 text-gray-500">
+                        Los ratios de contraste se basan en las <a href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" target="_blank" rel="noopener noreferrer" className="underline hover:text-purple-600">guías WCAG</a>.
                     </p>
                 </div>
             </div>

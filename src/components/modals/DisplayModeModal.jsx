@@ -17,26 +17,27 @@ const DisplayModeModal = ({ currentMode, onModeChange, onClose }) => {
     };
 
     return (
-        // Fondo responsivo
-        <div className="fixed inset-0 bg-black/60 z-[70] flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
-            {/* Panel responsivo (bottom sheet en móvil) */}
+        // --- ¡MODIFICADO! --- Fondo centrado
+        <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4" onClick={onClose}>
+            {/* --- ¡MODIFICADO! ---
+              - Cambiado a 'bg-white' y 'rounded-xl'
+              - Eliminado padding de safe-area y handle visual
+            */}
             <div
-                className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-xs w-full relative flex flex-col"
-                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+                className="p-6 rounded-xl border border-gray-200 max-w-xs w-full relative flex flex-col bg-white"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Handle visual para el bottom sheet en móvil */}
-                <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+                {/* --- ELIMINADO --- Handle visual de móvil */}
                 
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold" style={{ color: 'var(--text-default)' }}>
+                    <h2 className="text-xl font-bold text-gray-900">
                         Formato Secundario
                     </h2>
-                    <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X size={24} /></button>
                 </div>
 
                 <div className="mt-2 space-y-2">
-                    <p className="text-sm" style={{ color: 'var(--text-muted)'}}>
+                    <p className="text-sm text-gray-600">
                         Elige el formato del texto secundario en la paleta.
                     </p>
                     <div className="flex flex-col gap-2 pt-2">
@@ -46,8 +47,8 @@ const DisplayModeModal = ({ currentMode, onModeChange, onClose }) => {
                                 onClick={() => handleSelectMode(mode.id)}
                                 className={`w-full text-left flex justify-between items-center p-3 rounded-lg text-sm font-medium transition-colors
                                     ${currentMode === mode.id 
-                                        ? 'bg-[var(--action-primary-default)] text-white' 
-                                        : 'bg-[var(--bg-muted)] text-[var(--text-default)] hover:bg-[var(--border-default)]'
+                                        ? 'bg-purple-600 text-white' 
+                                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                                     }`}
                             >
                                 <span>{mode.label}</span>

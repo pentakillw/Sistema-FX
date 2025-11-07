@@ -49,7 +49,7 @@ const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     return (
         <div
             ref={menuRef}
-            className={`absolute top-full ${align === 'right' ? 'right-0' : 'left-0'} mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-xl z-50 p-2 space-y-1 max-h-[60vh] overflow-y-auto`}
+            className={`absolute top-full ${align === 'right' ? 'right-0' : 'left-0'} mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2 space-y-1 max-h-[60vh] overflow-y-auto`}
             onClick={(e) => { e.stopPropagation(); }}
         >
             {children}
@@ -61,7 +61,7 @@ const PopoverMenu = ({ children, onClose, align = 'right' }) => {
 const MenuButton = ({ icon, label, onClick, className = "" }) => (
     <button
         onClick={onClick}
-        className={`flex items-center w-full px-3 py-2 text-sm rounded-md text-[var(--text-default)] hover:bg-[var(--bg-muted)] transition-colors ${className}`}
+        className={`flex items-center w-full px-3 py-2 text-sm rounded-md text-gray-800 hover:bg-gray-100 transition-colors ${className}`}
     >
         {icon}
         <span className="ml-3">{label}</span>
@@ -395,12 +395,17 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     );
   }
 
+  // --- ¡MODIFICACIÓN! ---
+  // Cambiamos el fondo de la página a blanco (#FFFFFF) para un look minimalista.
+  // También forzamos el color de texto principal a oscuro (#111827) para
+  // asegurar que el header y otro texto sigan siendo legibles.
   const pageThemeStyle = {
-    backgroundColor: themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Predeterminado').color,
-    color: themeData.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color,
+    backgroundColor: '#FFFFFF', // ¡MODIFICADO! - Fondo blanco minimalista
+    color: '#111827', // ¡MODIFICADO! - Color de texto oscuro
     transition: 'background-color 0.3s ease, color 0.3s ease',
     fontFamily: availableFonts[font],
   };
+  // --- FIN DE MODIFICACIÓN ---
 
   return (
     <div className="flex flex-col min-h-screen w-full" style={pageThemeStyle}>
@@ -435,8 +440,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           {/* --- FIN DE LA MODIFICACIÓN --- */}
           
           {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
-            <p className="text-sm text-[var(--text-muted)] hidden lg:block ml-4">
-                ¡ <kbd className="px-2 py-1 text-xs font-semibold text-[var(--text-default)] bg-[var(--bg-muted)] border border-[var(--border-default)] rounded-md">barra espaciadora</kbd> para generar colores!
+            <p className="text-sm text-gray-500 hidden lg:block ml-4">
+                ¡ <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-md">barra espaciadora</kbd> para generar colores!
             </p>
           )}
         </div>
@@ -453,21 +458,25 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               <Layers size={16} />
           </button> 
           */}
+          
+          {/* --- ¡BOTÓN IA CON GRADIENTE! --- */}
           <button 
               onClick={() => setIsAIModalVisible(true)} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-white transition-all hover:opacity-90 active:scale-95" 
+              style={{ background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)' }}
               title="Generar con IA"
           >
-              <Sparkles size={16} />
+              <Sparkles size={16} strokeWidth={1.75} />
           </button>
+          
+          {/* --- ¡BOTONES DE ICONOS "FINITOS" Y MINIMALISTAS! --- */}
           <div className="relative">
               <button 
                   onClick={() => setIsMethodMenuVisible(true)} 
-                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
                   title="Método de Generación"
               >
-                  <Wand2 size={16}/>
+                  <Wand2 size={16} strokeWidth={1.75}/>
               </button>
                 {/* --- MODIFICACIÓN: Lógica de Menú Clasificado --- */}
                 {isMethodMenuVisible && (
@@ -476,7 +485,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                           method.isHeader ? (
                               <div 
                                   key={method.name} 
-                                  className="px-3 pt-2 pb-1 text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider"
+                                  className="px-3 pt-2 pb-1 text-xs font-bold uppercase text-gray-400 tracking-wider"
                               >
                                   {method.name}
                               </div>
@@ -484,7 +493,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                               <button 
                                   key={method.id} 
                                   onClick={() => { setExplorerMethod(method.id); setIsMethodMenuVisible(false); }} 
-                                  className={`w-full text-left px-3 py-1.5 text-sm ${explorerMethod === method.id ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)] rounded-md`}
+                                  className={`w-full text-left px-3 py-1.5 text-sm ${explorerMethod === method.id ? 'font-bold text-purple-600' : 'text-gray-800'} hover:bg-gray-100 rounded-md`}
                               >
                                   {method.name}
                               </button>
@@ -496,11 +505,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           </div>
           <button 
               onClick={() => setIsImageModalVisible(true)} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
               title="Extraer de Imagen"
           >
-              <ImageIcon size={16} />
+              <ImageIcon size={16} strokeWidth={1.75} />
           </button>
           {/*
           <button 
@@ -514,126 +522,115 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           */}
           <button 
               onClick={handleOpenAdjusterSidebar} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
               title="Ajustar Paleta"
           >
-              <SlidersHorizontal size={16} /> 
+              <SlidersHorizontal size={16} strokeWidth={1.75} /> 
           </button>
           <button 
               onClick={handleOpenSimulationSidebar} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
               title="Daltonismo"
           >
-              <Eye size={16} /> 
+              <Eye size={16} strokeWidth={1.75} /> 
           </button>
           <div className="relative">
               <button 
                   onClick={() => setIsToolsMenuVisible(p => !p)}
-                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
                   title="Más herramientas"
               >
-                  <MoreHorizontal size={16}/>
+                  <MoreHorizontal size={16} strokeWidth={1.75}/>
               </button>
               {isToolsMenuVisible && (
                   <PopoverMenu onClose={() => setIsToolsMenuVisible(false)}>
-                      <MenuButton icon={<Accessibility size={16}/>} label="Accesibilidad" onClick={() => { setIsAccessibilityModalVisible(true); setIsToolsMenuVisible(false); }} />
-                      <MenuButton icon={<TestTube2 size={16}/>} label="Componentes" onClick={() => { setIsComponentPreviewModalVisible(true); setIsToolsMenuVisible(false); }} />
-                      <MenuButton icon={<Palette size={16}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
-                      <MenuButton icon={<ShieldCheck size={16}/>} label="Matriz de Contraste" onClick={() => { setIsContrastCheckerVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<Accessibility size={16} strokeWidth={1.75}/>} label="Accesibilidad" onClick={() => { setIsAccessibilityModalVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<TestTube2 size={16} strokeWidth={1.75}/>} label="Componentes" onClick={() => { setIsComponentPreviewModalVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<Palette size={16} strokeWidth={1.75}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<ShieldCheck size={16} strokeWidth={1.75}/>} label="Matriz de Contraste" onClick={() => { setIsContrastCheckerVisible(true); setIsToolsMenuVisible(false); }} />
                   </PopoverMenu>
               )}
           </div>
-          <div className="h-6 w-px bg-[var(--border-default)] mx-1"></div>
+          <div className="h-6 w-px bg-gray-200 mx-1"></div>
           {/* --- FIN DE MODIFICACIÓN --- */}
 
           <button 
               onClick={handleUndo} 
               disabled={!history || historyIndex <= 0}
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 hover:bg-gray-100" 
               title="Deshacer"
           >
-              <Undo2 size={16} />
+              <Undo2 size={16} strokeWidth={1.75} />
           </button>
           <button 
               onClick={handleRedo} 
               disabled={!history || historyIndex >= history.length - 1}
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 hover:bg-gray-100" 
               title="Rehacer"
           >
-              <Redo2 size={16} />
+              <Redo2 size={16} strokeWidth={1.75} />
           </button>
           <button 
               onClick={() => setIsHistoryModalVisible(true)} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
               title="Historial"
           >
-              <Clock size={16} />
+              <Clock size={16} strokeWidth={1.75} />
           </button>
           <button 
               onClick={handleThemeToggle} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
               title="Alternar tema"
           >
-              {themeData.theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+              {themeData.theme === 'light' ? <Moon size={16} strokeWidth={1.75} /> : <Sun size={16} strokeWidth={1.75} />}
           </button>
           <button 
               onClick={() => {
                 setExportingPaletteData(themeData);
                 setIsExportModalVisible(true);
               }}
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
               title="Exportar"
           >
-              <FileCode size={16} />
+              <FileCode size={16} strokeWidth={1.75} />
           </button>
 
-          <div className="h-6 w-px bg-[var(--border-default)] mx-1"></div>
+          <div className="h-6 w-px bg-gray-200 mx-1"></div>
 
           {user ? (
             <>
               <button 
                   onClick={handleOpenSaveSidebar}
-                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
                   title={currentPaletteId ? "Actualizar Paleta" : "Guardar Paleta"}
               >
-                  <Save size={16} />
+                  <Save size={16} strokeWidth={1.75} />
               </button>
 
               <button 
                   onClick={handleOpenMyPalettesSidebar}
-                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                  style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
                   title="Mis Paletas"
               >
-                  <FolderOpen size={16}/>
+                  <FolderOpen size={16} strokeWidth={1.75}/>
               </button>
               
               <div className="relative">
                 <button 
                     onClick={() => setIsUserMenuVisible(p => !p)}
-                    className="p-2 rounded-lg flex items-center gap-2" 
-                    style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                    className="p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
                     title="Mi Cuenta"
                 >
-                    <User size={16}/>
+                    <User size={16} strokeWidth={1.75}/>
                 </button>
                 {isUserMenuVisible && (
                     <PopoverMenu onClose={() => setIsUserMenuVisible(false)}>
                         <div className="px-3 py-2">
-                            <p className="text-sm font-semibold text-[var(--text-default)] truncate">{user.user_metadata?.name || user.email}</p>
-                            <p className="text-xs text-[var(--text-muted)]">Usuario Registrado</p>
+                            <p className="text-sm font-semibold text-gray-900 truncate">{user.user_metadata?.name || user.email}</p>
+                            <p className="text-xs text-gray-500">Usuario Registrado</p>
                         </div>
-                        <div className="h-px bg-[var(--border-default)] my-1"></div>
-                        <MenuButton icon={<LogOut size={16}/>} label="Cerrar Sesión" onClick={handleLogoutClick} />
+                        <div className="h-px bg-gray-200 my-1"></div>
+                        <MenuButton icon={<LogOut size={16} strokeWidth={1.75}/>} label="Cerrar Sesión" onClick={handleLogoutClick} />
                     </PopoverMenu>
                 )}
               </div>
@@ -643,28 +640,27 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             <>
               <button 
                 onClick={() => onNavigate('auth')}
-                className="text-sm font-semibold py-2 px-3 rounded-lg flex items-center gap-2"
-                style={{ backgroundColor: 'var(--action-primary-default)', color: 'white' }}
+                className="text-sm font-semibold py-2 px-3 rounded-lg flex items-center gap-2 text-white transition-all hover:opacity-90 active:scale-95"
+                style={{ background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)' }}
                 title="Iniciar Sesión"
               >
-                <LogIn size={14} />
+                <LogIn size={14} strokeWidth={1.75} />
                 <span className="hidden sm:inline">Iniciar Sesión</span>
               </button>
 
               <div className="relative">
                 <button 
                     onClick={() => setIsConfigMenuVisible(p => !p)}
-                    className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-                    style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
+                    className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
                     title="Ajustes y Ayuda"
                 >
-                    <Settings size={16}/>
+                    <Settings size={16} strokeWidth={1.75}/>
                 </button>
                 {isConfigMenuVisible && (
                     <PopoverMenu onClose={() => setIsConfigMenuVisible(false)}>
                         <div className="relative">
                             <MenuButton 
-                                icon={<Type size={16}/>} 
+                                icon={<Type size={16} strokeWidth={1.75}/>} 
                                 label="Fuente" 
                                 onClick={(e) => { e.stopPropagation(); setIsFontMenuVisible(p => !p); }} 
                             />
@@ -677,7 +673,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                                         <button
                                           key={fontName}
                                           onClick={() => handleFontSelect(fontName)}
-                                          className={`w-full text-left px-3 py-2 text-sm ${font === fontName ? 'font-bold text-[var(--action-primary-default)]' : 'text-[var(--text-default)]'} hover:bg-[var(--bg-muted)] rounded-md`}
+                                          className={`w-full text-left px-3 py-2 text-sm ${font === fontName ? 'font-bold text-purple-600' : 'text-gray-800'} hover:bg-gray-100 rounded-md`}
                                           style={{fontFamily: availableFonts[fontName]}}
                                         >
                                             {fontName}
@@ -686,11 +682,11 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                                 </PopoverMenu>
                             )}
                         </div>
-                        <div className="h-px bg-[var(--border-default)] my-1"></div>
-                        <MenuButton icon={<Upload size={16}/>} label="Importar Tema" onClick={handleImportClick} />
-                        <MenuButton icon={<Download size={16}/>} label="Exportar Tema" onClick={handleExportClick} />
-                        <MenuButton icon={<RefreshCcw size={16}/>} label="Reiniciar Tema" onClick={handleResetClick} />
-                        <MenuButton icon={<HelpCircle size={16}/>} label="Ayuda" onClick={handleHelpClick} />
+                        <div className="h-px bg-gray-200 my-1"></div>
+                        <MenuButton icon={<Upload size={16} strokeWidth={1.75}/>} label="Importar Tema" onClick={handleImportClick} />
+                        <MenuButton icon={<Download size={16} strokeWidth={1.75}/>} label="Exportar Tema" onClick={handleExportClick} />
+                        <MenuButton icon={<RefreshCcw size={16} strokeWidth={1.75}/>} label="Reiniciar Tema" onClick={handleResetClick} />
+                        <MenuButton icon={<HelpCircle size={16} strokeWidth={1.75}/>} label="Ayuda" onClick={handleHelpClick} />
                     </PopoverMenu>
                 )}
               </div>
@@ -868,20 +864,24 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           />
         </div>
 
-        <footer className="text-center py-8 px-4 md:px-8 border-t" style={{ borderColor: themeData.controlsThemeStyle.borderColor, color: themeData.controlsThemeStyle.color}}>
+        {/* --- ¡FOOTER MODIFICADO! ---
+            Cambiado 'themeData.controlsThemeStyle.color' a 'text-gray-500' 
+            para que sea legible sobre el fondo blanco.
+        */}
+        <footer className="text-center py-8 px-4 md:px-8 border-t text-gray-500" style={{ borderColor: 'var(--border-default)'}}>
             <p className="text-sm">Creado por JD_DM.</p>
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
             <div className="mt-4 flex justify-center items-center gap-3">
               <button 
                 onClick={() => onNavigate('privacy')}
-                className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+                className="text-xs text-gray-500 hover:underline"
               >
                 Política de Privacidad
               </button>
-              <span className="text-gray-500 dark:text-gray-400">|</span>
+              <span className="text-gray-500">|</span>
               <button 
                 onClick={() => onNavigate('terms')}
-                className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+                className="text-xs text-gray-500 hover:underline"
               >
                 Términos y Condiciones
               </button>
@@ -942,7 +942,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               className="h-12 w-12 rounded-full flex items-center justify-center shadow-lg text-white transform transition-all duration-200 hover:shadow-xl hover:-translate-y-1"
               style={{ background: 'linear-gradient(to right, var(--action-primary-default), #e11d48)' }}
             >
-              <Sparkles size={22} />
+              <Sparkles size={22} strokeWidth={1.75} />
             </button>
           </div>
         )}

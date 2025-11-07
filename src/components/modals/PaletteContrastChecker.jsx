@@ -8,28 +8,27 @@ const PaletteContrastChecker = ({ palette, onClose, onCopy }) => {
   const fullPalette = [...new Set([...palette, '#FFFFFF', '#000000'])];
 
   return (
-    // --- MODIFICACIÓN --- Backdrop responsivo
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
-        {/* --- MODIFICACIÓN ---
-          - Panel responsivo (bottom sheet en móvil)
-          - Padding inferior con 'safe-area-inset'.
+    // --- ¡MODIFICADO! --- Fondo centrado
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+        {/* --- ¡MODIFICADO! ---
+          - Cambiado a 'bg-white' y 'rounded-xl'
+          - Eliminado padding de safe-area y handle visual
+          - Ajustado max-h
         */}
       <div 
-        className="p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-7xl w-full relative flex flex-col max-h-[90vh]" 
-        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }} 
+        className="p-4 sm:p-6 rounded-xl border border-gray-200 max-w-7xl w-full relative flex flex-col max-h-[90vh] bg-white" 
         onClick={(e) => e.stopPropagation()}
       >
-        {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
-        <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden flex-shrink-0" />
+        {/* --- ELIMINADO --- Handle visual de móvil */}
         
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 flex-shrink-0 gap-4">
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-default)' }}>Comprobar Contraste de Paleta</h2>
+          <h2 className="text-xl font-bold text-gray-900">Comprobar Contraste de Paleta</h2>
           <div className="flex items-center gap-4 self-end sm:self-center">
-            <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-default)'}}>
+            <label className="flex items-center gap-2 text-sm text-gray-800">
               <span>Solo Válido (AA/AAA)</span>
               <Switch checked={showOnlyValid} onCheckedChange={setShowOnlyValid} />
             </label>
-            <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X size={24} /></button>
           </div>
         </div>
         

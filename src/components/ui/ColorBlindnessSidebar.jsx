@@ -38,8 +38,8 @@ const SimulationOption = ({ label, value, isActive, onClick }) => (
         onClick={() => onClick(value)}
         className={`w-full text-left flex justify-between items-center p-3 rounded-lg text-sm font-medium transition-colors
             ${isActive 
-                ? 'bg-[var(--action-primary-default)] text-white' 
-                : 'text-[var(--text-default)] hover:bg-[var(--bg-muted)]'
+                ? 'bg-purple-600 text-white' 
+                : 'text-gray-800 hover:bg-gray-100'
             }`}
     >
         <span>{label}</span>
@@ -70,9 +70,10 @@ const ColorBlindnessSidebar = ({
         ref={sidebarRef}
         className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform
                    md:transform-none md:relative md:w-80 lg:w-96 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
+        // --- ¡MODIFICADO! --- Fondo blanco
         style={{
-          backgroundColor: 'var(--bg-card)',
-          borderColor: 'var(--border-default)',
+          backgroundColor: '#FFFFFF',
+          borderColor: '#E5E7EB', // Borde gris claro
         }}
       >
         <div 
@@ -82,22 +83,22 @@ const ColorBlindnessSidebar = ({
           onTouchStart={(e) => e.stopPropagation()}
         >
           {/* Handle visual (solo móvil) */}
-          <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4 md:hidden" />
           
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-default)' }}>
-              <Eye size={20} />
+            <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+              <Eye size={20} strokeWidth={1.75} />
               Daltonismo
             </h2>
             <button 
               onClick={onCancel} 
-              style={{ color: 'var(--text-muted)' }}
+              className="text-gray-500 hover:text-gray-800"
             >
               <X size={24} />
             </button>
           </div>
 
-          <p className="text-sm text-[var(--text-muted)] mb-4">
+          <p className="text-sm text-gray-600 mb-4">
             Selecciona un tipo de simulación para previsualizar cómo se vería tu paleta.
           </p>
           
@@ -117,26 +118,22 @@ const ColorBlindnessSidebar = ({
           {/* Botones de Acción */}
           <div 
             className="flex gap-3 pt-4 border-t mt-4" 
-            style={{ borderColor: 'var(--border-default)' }}
+            style={{ borderColor: '#E5E7EB' }}
           >
             <button
               onClick={onCancel}
-              className="flex-1 font-bold py-2 px-4 rounded-lg transition-colors border"
-              style={{
-                backgroundColor: 'var(--bg-muted)',
-                color: 'var(--text-default)',
-                borderColor: 'var(--border-default)',
-              }}
+              className="flex-1 font-bold py-2 px-4 rounded-lg transition-colors border bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
             >
               Cancelar
             </button>
+            {/* --- ¡BOTÓN CON GRADIENTE! --- */}
             <button
               onClick={onApply}
               disabled={simulationMode === 'none'}
-              className="flex-1 font-bold py-2 px-4 rounded-lg transition-colors text-white flex items-center justify-center gap-2 disabled:opacity-50"
-              style={{ backgroundColor: 'var(--action-primary-default)' }}
+              className="flex-1 font-bold py-2 px-4 rounded-lg transition-all text-white flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 active:scale-95"
+              style={{ background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)' }}
             >
-              <Check size={16} />
+              <Check size={16} strokeWidth={1.75} />
               Aplicar
             </button>
           </div>

@@ -29,33 +29,32 @@ const VariationsModal = ({ explorerPalette, onClose, onColorSelect }) => {
   const currentGenerator = variationGenerators[activeTab];
 
   return (
-    // --- MODIFICACIÓN --- Backdrop responsivo
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
-        {/* --- MODIFICACIÓN ---
-          - Panel responsivo (bottom sheet en móvil)
-          - Padding inferior con 'safe-area-inset'.
+    // --- ¡MODIFICADO! --- Fondo centrado
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+        {/* --- ¡MODIFICADO! ---
+          - Cambiado a 'bg-white' y 'rounded-xl'
+          - Eliminado padding de safe-area y handle visual
+          - Ajustado max-h
         */}
       <div 
-        className="p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-7xl w-full relative flex flex-col max-h-[90vh]" 
-        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }} 
+        className="p-4 sm:p-6 rounded-xl border border-gray-200 max-w-7xl w-full relative flex flex-col max-h-[90vh] bg-white" 
         onClick={(e) => e.stopPropagation()}
       >
-        {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
-        <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden flex-shrink-0" />
+        {/* --- ELIMINADO --- Handle visual de móvil */}
         
         <div className="flex justify-between items-center mb-4 flex-shrink-0">
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-default)' }}>Variaciones de Paleta</h2>
-          <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+          <h2 className="text-xl font-bold text-gray-900">Variaciones de Paleta</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X size={24} /></button>
         </div>
-        <div className="flex border-b flex-shrink-0 overflow-x-auto">
+        <div className="flex border-b border-gray-200 flex-shrink-0 overflow-x-auto">
           {tabNames.map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex-shrink-0 ${activeTab === tab ? 'border-[var(--action-primary-default)] text-[var(--action-primary-default)]' : 'border-transparent text-[var(--text-muted)]'}`}>{tab}</button>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`py-2 px-4 text-sm font-semibold -mb-px border-b-2 flex-shrink-0 ${activeTab === tab ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500'}`}>{tab}</button>
           ))}
         </div>
         <div className="flex-1 overflow-auto mt-6">
           <div className="flex gap-x-1">
-            <div className="sticky left-0 bg-[var(--bg-card)] flex-shrink-0 w-16 z-10">
-                 {currentLabels.map((label, index) => (<div key={index} className="h-10 flex items-center justify-end text-xs font-mono pr-2" style={{color: 'var(--text-muted)'}}>{label === '+0%' || label === '0°' ? 'Base' : label}</div>))}
+            <div className="sticky left-0 bg-white flex-shrink-0 w-16 z-10">
+                 {currentLabels.map((label, index) => (<div key={index} className="h-10 flex items-center justify-end text-xs font-mono pr-2 text-gray-500">{label === '+0%' || label === '0°' ? 'Base' : label}</div>))}
             </div>
             {explorerPalette.map((colorHex, colIndex) => (
               <div key={colIndex} className="group flex flex-col gap-1 w-12 flex-shrink-0">

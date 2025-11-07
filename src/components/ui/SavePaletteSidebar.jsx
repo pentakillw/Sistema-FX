@@ -43,34 +43,25 @@ const ItemSelector = ({
 
     return (
         <div className="relative" ref={dropdownRef}>
-            <label className="text-sm font-semibold mb-2 block" style={{ color: 'var(--text-default)' }}>
+            <label className="text-sm font-semibold mb-2 block text-gray-900">
                 {label}
             </label>
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex justify-between items-center text-left p-3 rounded-lg border text-sm"
-                style={{
-                    backgroundColor: 'var(--bg-muted)',
-                    borderColor: 'var(--border-default)',
-                    color: 'var(--text-default)'
-                }}
+                className="w-full flex justify-between items-center text-left p-3 rounded-lg border text-sm bg-gray-100 border-gray-200 text-gray-900"
             >
                 <span className="truncate">{selectedItemName}</span>
-                <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
+                <ChevronDown size={16} strokeWidth={1.75} className={`transition-transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
             </button>
             
             {isOpen && (
                 <div 
-                    className="absolute z-10 top-full mt-2 w-full max-h-60 overflow-y-auto p-2 rounded-lg border shadow-lg"
-                    style={{
-                        backgroundColor: 'var(--bg-card)',
-                        borderColor: 'var(--border-default)',
-                    }}
+                    className="absolute z-10 top-full mt-2 w-full max-h-60 overflow-y-auto p-2 rounded-lg border shadow-lg bg-white border-gray-200"
                 >
                     <button
                         onClick={() => { onSelect(null); setIsOpen(false); }}
-                        className="w-full text-left px-3 py-2 text-sm rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-muted)]"
+                        className="w-full text-left px-3 py-2 text-sm rounded-md text-gray-500 hover:bg-gray-100"
                     >
                         Ninguno
                     </button>
@@ -78,13 +69,12 @@ const ItemSelector = ({
                         <button
                             key={item.id}
                             onClick={() => { onSelect(item.id); setIsOpen(false); }}
-                            className={`w-full text-left px-3 py-2 text-sm rounded-md ${selectedId === item.id ? 'font-bold bg-[var(--bg-muted)]' : ''} hover:bg-[var(--bg-muted)]`}
-                            style={{ color: 'var(--text-default)' }}
+                            className={`w-full text-left px-3 py-2 text-sm rounded-md ${selectedId === item.id ? 'font-bold bg-gray-100' : ''} hover:bg-gray-100 text-gray-900`}
                         >
                             {item.name}
                         </button>
                     ))}
-                    <div className="h-px bg-[var(--border-default)] my-1" />
+                    <div className="h-px bg-gray-200 my-1" />
                     {isAdding ? (
                         <div className="p-2">
                             <input
@@ -94,16 +84,15 @@ const ItemSelector = ({
                                 onChange={(e) => setNewItemName(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                                 placeholder={`Nuevo ${label}...`}
-                                className="w-full text-sm p-2 bg-transparent border-b border-[var(--action-primary-default)] focus:outline-none"
+                                className="w-full text-sm p-2 bg-transparent border-b border-purple-500 focus:outline-none"
                             />
                         </div>
                     ) : (
                         <button
                             onClick={() => setIsAdding(true)}
-                            className="w-full text-left px-3 py-2 text-sm rounded-md flex items-center gap-2"
-                            style={{ color: 'var(--action-primary-default)' }}
+                            className="w-full text-left px-3 py-2 text-sm rounded-md flex items-center gap-2 text-purple-600"
                         >
-                            <Plus size={16} /> Crear nuevo
+                            <Plus size={16} strokeWidth={1.75} /> Crear nuevo
                         </button>
                     )}
                 </div>
@@ -143,15 +132,11 @@ const TagManager = ({
     
     return (
         <div>
-            <label className="text-sm font-semibold mb-2 block" style={{ color: 'var(--text-default)' }}>
+            <label className="text-sm font-semibold mb-2 block text-gray-900">
                 Etiquetas
             </label>
             <div 
-                className="w-full flex flex-wrap items-center gap-2 p-2 rounded-lg border"
-                style={{
-                    backgroundColor: 'var(--bg-muted)',
-                    borderColor: 'var(--border-default)',
-                }}
+                className="w-full flex flex-wrap items-center gap-2 p-2 rounded-lg border bg-gray-100 border-gray-200"
             >
                 {selectedTagNames.map(tag => (
                     <div 
@@ -171,8 +156,7 @@ const TagManager = ({
                     onKeyDown={handleKeyDown}
                     onBlur={() => handleAddTag(inputValue)}
                     placeholder="Añadir tag..."
-                    className="flex-1 bg-transparent p-1 focus:outline-none text-sm"
-                    style={{ color: 'var(--text-default)' }}
+                    className="flex-1 bg-transparent p-1 focus:outline-none text-sm text-gray-900"
                 />
             </div>
         </div>
@@ -237,9 +221,10 @@ const SavePaletteSidebar = ({
                 ref={sidebarRef}
                 className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform
                            md:transform-none md:relative md:w-80 lg:w-96 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
+                // --- ¡MODIFICADO! --- Fondo blanco
                 style={{
-                  backgroundColor: 'var(--bg-card)',
-                  borderColor: 'var(--border-default)',
+                  backgroundColor: '#FFFFFF',
+                  borderColor: '#E5E7EB',
                 }}
             >
                 <form 
@@ -250,17 +235,17 @@ const SavePaletteSidebar = ({
                     onSubmit={handleSaveClick}
                 >
                     {/* Handle visual (solo móvil) */}
-                    <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden flex-shrink-0" />
+                    <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4 md:hidden flex-shrink-0" />
                     
                     {/* Header (Fijo) */}
                     <div className="flex justify-between items-center mb-4 flex-shrink-0 px-6 pt-4">
-                        <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-default)' }}>
+                        <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
                             {currentPaletteId ? "Actualizar Paleta" : "Guardar Paleta"}
                         </h2>
                         <button 
                             type="button" 
                             onClick={onClose} 
-                            style={{ color: 'var(--text-muted)' }}
+                            className="text-gray-500 hover:text-gray-800"
                         >
                             <X size={24} />
                         </button>
@@ -269,7 +254,7 @@ const SavePaletteSidebar = ({
                     {/* Contenido del Formulario (con scroll) */}
                     <div className="px-6 py-4 space-y-4 flex-grow">
                         <div>
-                            <label htmlFor="palette-name" className="text-sm font-semibold mb-2 block" style={{ color: 'var(--text-default)' }}>
+                            <label htmlFor="palette-name" className="text-sm font-semibold mb-2 block text-gray-900">
                                 Nombre
                             </label>
                             <input
@@ -279,17 +264,12 @@ const SavePaletteSidebar = ({
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Mi Nueva Paleta"
                                 required
-                                className="w-full p-3 rounded-lg border text-sm"
-                                style={{
-                                    backgroundColor: 'var(--bg-muted)',
-                                    borderColor: 'var(--border-default)',
-                                    color: 'var(--text-default)'
-                                }}
+                                className="w-full p-3 rounded-lg border text-sm bg-gray-100 border-gray-200 text-gray-900"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="palette-desc" className="text-sm font-semibold mb-2 block" style={{ color: 'var(--text-default)' }}>
+                            <label htmlFor="palette-desc" className="text-sm font-semibold mb-2 block text-gray-900">
                                 Descripción (Opcional)
                             </label>
                             <textarea
@@ -298,12 +278,7 @@ const SavePaletteSidebar = ({
                                 onChange={(e) => setDescription(e.target.value)}
                                 rows={3}
                                 placeholder="Una breve descripción..."
-                                className="w-full p-3 rounded-lg border text-sm"
-                                style={{
-                                    backgroundColor: 'var(--bg-muted)',
-                                    borderColor: 'var(--border-default)',
-                                    color: 'var(--text-default)'
-                                }}
+                                className="w-full p-3 rounded-lg border text-sm bg-gray-100 border-gray-200 text-gray-900"
                             />
                         </div>
                         
@@ -335,25 +310,21 @@ const SavePaletteSidebar = ({
                     {/* Footer (Fijo) */}
                     <div 
                         className="flex gap-3 pt-4 border-t mt-4 px-6 pb-4 flex-shrink-0" 
-                        style={{ borderColor: 'var(--border-default)' }}
+                        style={{ borderColor: '#E5E7EB' }}
                     >
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 font-bold py-2.5 px-4 rounded-lg transition-colors border"
-                            style={{
-                                backgroundColor: 'var(--bg-muted)',
-                                color: 'var(--text-default)',
-                                borderColor: 'var(--border-default)',
-                            }}
+                            className="flex-1 font-bold py-2.5 px-4 rounded-lg transition-colors border bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
                         >
                             Cancelar
                         </button>
+                        {/* --- ¡BOTÓN CON GRADIENTE! --- */}
                         <button
                             type="submit"
                             disabled={isSaving}
-                            className="flex-1 font-bold py-2.5 px-4 rounded-lg transition-colors text-white flex items-center justify-center gap-2 disabled:opacity-50"
-                            style={{ backgroundColor: 'var(--action-primary-default)' }}
+                            className="flex-1 font-bold py-2.5 px-4 rounded-lg transition-all text-white flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 active:scale-95"
+                            style={{ background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)' }}
                         >
                             {isSaving ? (
                                 <Loader2 size={16} className="animate-spin" />

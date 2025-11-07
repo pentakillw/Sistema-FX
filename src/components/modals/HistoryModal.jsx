@@ -6,25 +6,23 @@ const HistoryModal = ({ history, onSelect, onClose }) => {
     const recentHistory = [...history].slice(-15).reverse();
 
     return (
-        // --- MODIFICACIÓN --- Backdrop responsivo
-        <div className="fixed inset-0 bg-black/60 z-[70] flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
-            {/* --- MODIFICACIÓN ---
-              - Panel responsivo (bottom sheet en móvil)
-              - Padding inferior con 'safe-area-inset'.
+        // --- ¡MODIFICADO! --- Fondo centrado
+        <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4" onClick={onClose}>
+            {/* --- ¡MODIFICADO! ---
+              - Cambiado a 'bg-white' y 'rounded-xl'
+              - Eliminado padding de safe-area y handle visual
             */}
             <div
-                className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-6 rounded-t-2xl md:rounded-xl border max-w-md w-full relative flex flex-col"
-                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+                className="p-6 rounded-xl border border-gray-200 max-w-md w-full relative flex flex-col bg-white"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* --- NUEVO --- Handle visual para el bottom sheet en móvil */}
-                <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+                {/* --- ELIMINADO --- Handle visual de móvil */}
                 
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-default)' }}>
-                        <Clock size={24} /> Historial de Paletas
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+                        <Clock size={24} strokeWidth={1.75} /> Historial de Paletas
                     </h2>
-                    <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X size={24} /></button>
                 </div>
                 
                 <div className="overflow-y-auto space-y-4 pr-2" style={{ maxHeight: '60vh' }}>
@@ -35,10 +33,10 @@ const HistoryModal = ({ history, onSelect, onClose }) => {
                                 className="cursor-pointer group"
                                 onClick={() => onSelect(history.length - 1 - index)}
                             >
-                                <p className="text-xs font-semibold mb-1.5 text-[var(--text-muted)] group-hover:text-[var(--text-default)] transition-colors">
+                                <p className="text-xs font-semibold mb-1.5 text-gray-500 group-hover:text-gray-900 transition-colors">
                                     Paleta {history.length - 1 - index}
                                 </p>
-                                <div className="flex h-12 rounded-lg overflow-hidden border" style={{ borderColor: 'var(--border-default)'}}>
+                                <div className="flex h-12 rounded-lg overflow-hidden border border-gray-200">
                                     {state.explorerPalette.map((color, i) => (
                                         <div key={i} style={{ backgroundColor: color, flex: 1 }} />
                                     ))}
@@ -46,7 +44,7 @@ const HistoryModal = ({ history, onSelect, onClose }) => {
                             </div>
                         ))
                     ) : (
-                        <p className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>
+                        <p className="text-sm text-center py-8 text-gray-500">
                             Aún no has generado ninguna paleta. ¡Usa la barra espaciadora para empezar!
                         </p>
                     )}

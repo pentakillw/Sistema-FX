@@ -2,10 +2,7 @@ import React, { memo, useRef, useCallback, useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 
-// --- MODIFICACIÓN ---
-// El hook 'useOnClickOutside' ya no es necesario para el layout de escritorio.
-// Lo mantendremos pero solo para el backdrop de MÓVIL.
-
+// Hook para detectar clics fuera del panel (solo para móvil)
 function useOnClickOutside(ref, handler) {
   useEffect(() => {
     const listener = (event) => {
@@ -28,7 +25,6 @@ function useOnClickOutside(ref, handler) {
     };
   }, [ref, handler]);
 }
-// --- FIN MODIFICACIÓN ---
 
 
 // Componente de Slider Personalizado (sin cambios)
@@ -143,7 +139,7 @@ const SliderControl = ({ label, value, min, max, onChange, gradient, onInputChan
       onTouchStart={(e) => { e.stopPropagation(); }}
     >
         <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">{label}</label>
+            <label className="text-sm font-medium text-gray-800">{label}</label>
             <input
                 type="number"
                 value={value}
@@ -157,12 +153,7 @@ const SliderControl = ({ label, value, min, max, onChange, gradient, onInputChan
                 }}
                 onMouseDown={(e) => { e.stopPropagation(); }}
                 onTouchStart={(e) => { e.stopPropagation(); }}
-                className="w-20 px-2 py-1 rounded-md border text-sm text-center"
-                style={{
-                    backgroundColor: 'var(--bg-muted)',
-                    borderColor: 'var(--border-default)',
-                    color: 'var(--text-default)',
-                }}
+                className="w-20 px-2 py-1 rounded-md border text-sm text-center bg-gray-100 border-gray-200 text-gray-900"
             />
         </div>
         <div className="col-span-2">
@@ -230,17 +221,17 @@ const PaletteAdjusterSidebar = ({
 
   return (
     <>
-      {/* --- ¡CLASES MODIFICADAS! ---
-        Móvil (default): `fixed bottom-0`... (bottom sheet)
-        Escritorio (md:): `relative`, `sticky`, `w-80`... (sidebar)
-      */}
+      {/* --- ¡MODIFICADO! --- Se quita el backdrop, ya no es necesario */}
+      
+      {/* Panel del Sidebar */}
       <aside
         ref={sidebarRef}
         className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform
                    md:transform-none md:relative md:w-80 lg:w-96 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
+        // --- ¡MODIFICADO! --- Fondo blanco
         style={{
-          backgroundColor: 'var(--bg-card)',
-          borderColor: 'var(--border-default)',
+          backgroundColor: '#FFFFFF',
+          borderColor: '#E5E7EB', // Borde gris claro
         }}
       >
         <div 
@@ -251,15 +242,15 @@ const PaletteAdjusterSidebar = ({
           onTouchStart={(e) => e.stopPropagation()}
         >
           {/* Handle visual (solo móvil) */}
-          <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden" />
+          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4 md:hidden" />
           
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text-default)' }}>
+            <h2 className="text-xl font-bold text-gray-900">
               Ajustar Paleta
             </h2>
             <button 
               onClick={closeHandler} 
-              style={{ color: 'var(--text-muted)' }}
+              className="text-gray-500 hover:text-gray-800"
             >
               <X size={24} />
             </button>
@@ -325,26 +316,22 @@ const PaletteAdjusterSidebar = ({
 
           {/* Botones de Acción */}
           <div 
-            className="flex gap-3 pt-4 border-t" 
-            style={{ borderColor: 'var(--border-default)' }}
+            className="flex gap-3 pt-4 border-t mt-auto" // <-- 'mt-auto' empuja esto al fondo
+            style={{ borderColor: '#E5E7EB' }}
           >
             <button
               onClick={closeHandler}
-              className="flex-1 font-bold py-2 px-4 rounded-lg transition-colors border"
-              style={{
-                backgroundColor: 'var(--bg-muted)',
-                color: 'var(--text-default)',
-                borderColor: 'var(--border-default)',
-              }}
+              className="flex-1 font-bold py-2 px-4 rounded-lg transition-colors border bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
             >
               Cancelar
             </button>
+            {/* --- ¡BOTÓN CON GRADIENTE! --- */}
             <button
               onClick={handleApply}
-              className="flex-1 font-bold py-2 px-4 rounded-lg transition-colors text-white flex items-center justify-center gap-2"
-              style={{ backgroundColor: 'var(--action-primary-default)' }}
+              className="flex-1 font-bold py-2 px-4 rounded-lg transition-all text-white flex items-center justify-center gap-2 hover:opacity-90 active:scale-95"
+              style={{ background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)' }}
             >
-              <Check size={16} />
+              <Check size={16} strokeWidth={1.75} />
               Aplicar
             </button>
           </div>
