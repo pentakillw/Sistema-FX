@@ -424,7 +424,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         style={{ borderColor: 'var(--border-default)'}}
       >
         <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-          <img src="https://raw.githubusercontent.com/pentakillw/Sistema-FX/f8cd5658ae02d604dfe6724b709b69c7f18de104/Logo.png" alt="Sistema FX Logo" className="h-10 w-10 rounded-lg"/>
+          <img src="https://raw.githubusercontent.com/pentakillw/Sistema-FX/f8cd5658ae02d604dfe6724b709b69c7f18de104/Logo.png" alt="Sistema FX Logo" className="h-16 w-16 rounded-lg"/>
           
           {/* --- INICIO DE LA MODIFICACIÓN --- */}
           {/* Aplicamos la fuente 'pacifico' y la clase del degradado */}
