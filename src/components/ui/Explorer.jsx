@@ -1,25 +1,27 @@
 import React, { useState, memo, useRef, useEffect } from 'react';
 import { 
-    // --- Iconos conservados para la paleta ---
     Palette, X, Plus, 
     Lock, Star, Unlock, Copy, Trash2, 
-    ArrowLeftRight
+    ArrowLeftRight,
+    ChevronDown,
+    Pipette // Añadido para Eyedropper
 } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ColorPalette from '../ColorPalette.jsx';
 import { 
-    // --- Modales conservados ---
     DisplayModeModal
 } from '../modals/index.jsx'; 
+// --- ¡CORRECCIÓN DE IMPORTACIÓN! ---
 import { generateShades, findClosestColorName } from '../../utils/colorUtils.js'; 
+import { colorNameList } from '../../utils/colorNameList.js';
+// --- FIN DE CORRECCIÓN ---
 import { HexColorPicker } from 'react-colorful';
 import ColorActionMenu from './ColorActionMenu.jsx';
 
-// --- ¡NUEVO! --- Componente para el menú de añadir color
+// --- (Componente AddColorMenu sin cambios) ---
 const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
     const menuRef = useRef(null);
-
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -29,9 +31,7 @@ const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [onClose]);
-
-    const counts = [1, 2, 3, 4, 5, +10, +15]; // Opciones
-
+    const counts = [1, 2, 3, 4, 5, +10, +15];
     return (
         <div 
             ref={menuRef}
@@ -39,9 +39,8 @@ const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
             style={{ 
                 backgroundColor: 'var(--bg-card)', 
                 border: '1px solid var(--border-default)',
-                // Posicionamiento (ej. centrado arriba del botón +)
                 transform: 'translate(-50%, -100%)', 
-                marginTop: '-10px' // Pequeño espacio
+                marginTop: '-10px'
             }}
             onClick={(e) => e.stopPropagation()}
         >
@@ -59,12 +58,11 @@ const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
         </div>
     );
 };
-// --- FIN NUEVO COMPONENTE ---
 
-// Componente para los botones de acción que aparecen al pasar el mouse
+// --- (Componente ActionButtonHover sin cambios) ---
 const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMouseDown }) => (
     <button
-        onMouseDown={onMouseDown} // Añadido para dragHandleProps
+        onMouseDown={onMouseDown}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
         title={title}
         className={`p-2 rounded-lg transition-colors ${iconColor} ${hoverBg}`}
@@ -73,8 +71,7 @@ const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMou
     </button>
 );
 
-
-// Función helper para obtener el color de fondo correcto
+// --- (Función getPreviewBgColor sin cambios) ---
 const getPreviewBgColor = (mode, shades, cardColor) => {
     if (!shades || shades.length === 0) return '#FFFFFF';
     switch (mode) {
@@ -87,45 +84,312 @@ const getPreviewBgColor = (mode, shades, cardColor) => {
     }
 }
 
-// Pop-over para el selector de color
-const ColorPickerPopover = ({ color, onChange, onClose }) => {
-    const [localColor, setLocalColor] = useState(color);
-
-    const handleOk = () => {
-        onChange(localColor);
-        onClose();
+// --- Componente de Slider ---
+const ColorSlider = ({ label, value, min, max, onChange, gradientStyle }) => {
+    const handleSliderChange = (e) => {
+        onChange(parseFloat(e.target.value));
+    };
+    
+    const handleInputChange = (e) => {
+        let val = parseFloat(e.target.value);
+        if (isNaN(val)) val = min;
+        if (val < min) val = min;
+        if (val > max) val = max;
+        onChange(val);
     };
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center" onClick={onClose}>
-            <div className="p-4 rounded-xl border shadow-2xl" 
-                 style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
-                 onClick={(e) => e.stopPropagation()}>
-                <HexColorPicker color={localColor} onChange={setLocalColor} />
-                <div className="flex items-center gap-2 mt-4">
-                    <div className="w-6 h-6 rounded-md border" style={{ backgroundColor: localColor, borderColor: 'var(--border-default)' }}></div>
-                    <input 
-                        type="text"
-                        value={localColor.toUpperCase()}
-                        onChange={(e) => setLocalColor(e.target.value)}
-                        className="w-full font-mono text-sm px-2 py-1 rounded-md border"
-                        style={{ backgroundColor: 'var(--bg-muted)', borderColor: 'var(--border-default)', color: 'var(--text-default)'}}
-                    />
-                    <button
-                        onClick={handleOk}
-                        className="text-sm font-semibold px-4 py-1 rounded-md text-white"
-                        style={{ backgroundColor: 'var(--action-primary-default)' }}
-                    >
-                        OK
-                    </button>
-                </div>
+        <div className="space-y-1">
+            <div className="flex justify-between items-center text-xs">
+                <label className="font-medium text-[var(--text-default)]">{label}</label>
+                <input
+                    type="number"
+                    value={Math.round(value)}
+                    onChange={handleInputChange}
+                    min={min}
+                    max={max}
+                    className="w-12 text-center py-0.5 px-1 rounded border"
+                    style={{ 
+                        backgroundColor: 'var(--bg-muted)', 
+                        borderColor: 'var(--border-default)',
+                        color: 'var(--text-default)'
+                    }}
+                />
+            </div>
+            <div className="relative h-4 flex items-center">
+                <input
+                    type="range"
+                    min={min}
+                    max={max}
+                    value={value}
+                    onChange={handleSliderChange}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer custom-slider"
+                    style={{ background: gradientStyle }}
+                />
             </div>
         </div>
     );
 };
 
-// --- IMPORTANTE: Se conservan PopoverMenu y MenuButton ---
-// Se exportan porque MyPalettesSidebar.jsx depende de ellos
+
+// --- Pop-over para el selector de color (Con Sliders, Eyedropper, y corrección de CMYK) ---
+const ColorPickerPopover = ({ color, onClose, style, onRealtimeChange }) => {
+    const [localColor, setLocalColor] = useState(color);
+    const [inputMode, setInputMode] = useState('hex');
+    const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
+    const [isPicking, setIsPicking] = useState(false);
+
+    useEffect(() => {
+        setLocalColor(color);
+    }, [color]);
+
+    const handlePickerChange = (newColor) => {
+        setLocalColor(newColor);
+        if (onRealtimeChange) {
+            onRealtimeChange(newColor);
+        }
+    };
+
+    // --- Handlers para el input de texto (solo modo HEX y NAME) ---
+    const handleTextChange = (e) => {
+        const newColorStr = e.target.value;
+        setLocalColor(newColorStr);
+        if (tinycolor(newColorStr).isValid() && onRealtimeChange) {
+            onRealtimeChange(newColorStr);
+        }
+    };
+    const handleTextBlur = (e) => {
+        if (!tinycolor(e.target.value).isValid()) {
+            setLocalColor(color); 
+        } else {
+            onRealtimeChange(e.target.value); 
+        }
+    };
+    const handleTextKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            if (tinycolor(e.target.value).isValid()) {
+                onRealtimeChange(e.target.value);
+                onClose();
+            }
+        }
+    };
+    const getFormattedColor = (mode) => {
+        const c = tinycolor(localColor);
+        if (!c.isValid()) return localColor;
+        if (mode === 'name') {
+            return findClosestColorName(localColor);
+        }
+        return c.toHexString().toUpperCase();
+    };
+    // --- Fin Handlers HEX ---
+
+
+    // --- Handlers para Sliders ---
+    const colorTiny = tinycolor(localColor);
+    const rgb = colorTiny.toRgb();
+    const hsl = colorTiny.toHsl();
+    const hsv = colorTiny.toHsv();
+    // const cmyk = colorTiny.toCmyk(); // <-- ¡ELIMINADO! Esta línea causaba el error.
+
+    const handleSliderChange = (mode, channel, value) => {
+        let newColor;
+        if (mode === 'rgb') {
+            const newRgb = { ...rgb, [channel]: value };
+            newColor = tinycolor(newRgb);
+        } else if (mode === 'hsl') {
+            const newHsl = { ...hsl, [channel]: value / (channel === 'h' ? 1 : 100) };
+            newColor = tinycolor(newHsl);
+        } else if (mode === 'hsv') {
+            const newHsv = { ...hsv, [channel]: value / (channel === 'h' ? 1 : 100) };
+            newColor = tinycolor(newHsv);
+        // --- ¡ELIMINADO! --- Se quita el bloque CMYK
+        // } else if (mode === 'cmyk') {
+        //     const newCmyk = { ...cmyk, [channel]: value };
+        //     newColor = tinycolor(newCmyk);
+        }
+        
+        if (newColor && newColor.isValid()) {
+            const newHex = newColor.toHexString();
+            setLocalColor(newHex);
+            if (onRealtimeChange) onRealtimeChange(newHex);
+        }
+    };
+    
+    // --- Gradientes para los sliders ---
+    const gradients = {
+        hue: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+        saturationHsl: `linear-gradient(to right, ${tinycolor({h: hsl.h, s: 0, l: 0.5}).toHexString()}, ${tinycolor({h: hsl.h, s: 1, l: 0.5}).toHexString()})`,
+        luminance: `linear-gradient(to right, #000, ${tinycolor({h: hsl.h, s: hsl.s, l: 0.5}).toHexString()}, #fff)`,
+        saturationHsv: `linear-gradient(to right, ${tinycolor({h: hsv.h, s: 0, v: hsv.v}).toHexString()}, ${tinycolor({h: hsv.h, s: 1, v: hsv.v}).toHexString()})`,
+        brightness: `linear-gradient(to right, #000, ${tinycolor({h: hsv.h, s: hsv.s, v: 1}).toHexString()})`,
+        red: `linear-gradient(to right, ${tinycolor({...rgb, r: 0}).toHexString()}, ${tinycolor({...rgb, r: 255}).toHexString()})`,
+        green: `linear-gradient(to right, ${tinycolor({...rgb, g: 0}).toHexString()}, ${tinycolor({...rgb, g: 255}).toHexString()})`,
+        blue: `linear-gradient(to right, ${tinycolor({...rgb, b: 0}).toHexString()}, ${tinycolor({...rgb, b: 255}).toHexString()})`,
+        // --- ¡ELIMINADO! --- Se quitan los gradientes CMYK
+        // cyan: `linear-gradient(to right, ${tinycolor({...cmyk, c: 0}).toHexString()}, ${tinycolor({...cmyk, c: 100}).toHexString()})`,
+        // magenta: `linear-gradient(to right, ${tinycolor({...cmyk, m: 0}).toHexString()}, ${tinycolor({...cmyk, m: 100}).toHexString()})`,
+        // yellow: `linear-gradient(to right, ${tinycolor({...cmyk, y: 0}).toHexString()}, ${tinycolor({...cmyk, y: 100}).toHexString()})`,
+        // key: `linear-gradient(to right, ${tinycolor({...cmyk, k: 0}).toHexString()}, ${tinycolor({...cmyk, k: 100}).toHexString()})`,
+    };
+
+    // --- ¡MODIFICADO! ---
+    const inputModes = ['hex', 'rgb', 'hsl', 'hsv', 'name']; // 'cmyk' eliminado
+
+    // --- Lógica del Eyedropper ---
+    const openEyedropper = async () => {
+        if (!('EyeDropper' in window)) {
+            console.warn('Eyedropper API no soportada');
+            return;
+        }
+        try {
+            const eyeDropper = new window.EyeDropper();
+            setIsPicking(true);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const { sRGBHex } = await eyeDropper.open();
+            setIsPicking(false);
+            handlePickerChange(sRGBHex);
+        } catch (e) {
+            setIsPicking(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[70]" onClick={onClose} style={{ visibility: isPicking ? 'hidden' : 'visible' }}>
+            <div
+                className="fixed z-[71] p-4 rounded-xl border shadow-2xl w-64"
+                style={{
+                    ...style,
+                    backgroundColor: 'var(--bg-card)',
+                    borderColor: 'var(--border-default)'
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <HexColorPicker color={localColor} onChange={handlePickerChange} />
+                
+                <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                        <div 
+                            className="w-6 h-6 rounded-md border" 
+                            style={{ 
+                                backgroundColor: localColor, 
+                                borderColor: 'var(--border-default)' 
+                            }}
+                        />
+                        
+                        <button
+                            onClick={openEyedropper}
+                            className="p-1 rounded-md border"
+                            style={{ 
+                                backgroundColor: 'var(--bg-muted)', 
+                                borderColor: 'var(--border-default)', 
+                                color: 'var(--text-default)'
+                            }}
+                            title="Seleccionar color (Eyedropper)"
+                        >
+                            <Pipette size={16} />
+                        </button>
+                        
+                        {inputMode === 'hex' && (
+                            <input 
+                                type="text"
+                                value={getFormattedColor('hex')}
+                                onChange={handleTextChange}
+                                onBlur={handleTextBlur}
+                                onKeyDown={handleTextKeyDown}
+                                className="w-full font-mono text-sm px-2 py-1 rounded-md border"
+                                style={{ 
+                                    backgroundColor: 'var(--bg-muted)', 
+                                    borderColor: 'var(--border-default)', 
+                                    color: 'var(--text-default)'
+                                }}
+                            />
+                        )}
+                        
+                        {inputMode === 'name' && (
+                            <input 
+                                type="text"
+                                value={getFormattedColor('name')}
+                                readOnly
+                                className="w-full text-sm px-2 py-1 rounded-md border"
+                                style={{ 
+                                    backgroundColor: 'var(--bg-muted)', 
+                                    borderColor: 'var(--border-default)', 
+                                    color: 'var(--text-default)',
+                                    cursor: 'default'
+                                }}
+                            />
+                        )}
+                        
+                        {inputMode !== 'hex' && inputMode !== 'name' && (
+                            <span className="flex-1 font-mono text-sm font-medium text-[var(--text-default)]">
+                                {getFormattedColor('hex')}
+                            </span>
+                        )}
+                        
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsModeMenuOpen(p => !p)}
+                                className="p-1 rounded-md border"
+                                style={{ 
+                                    backgroundColor: 'var(--bg-muted)', 
+                                    borderColor: 'var(--border-default)', 
+                                    color: 'var(--text-default)'
+                                }}
+                                title="Cambiar modo de input"
+                            >
+                                <ChevronDown size={16} />
+                            </button>
+                            {isModeMenuOpen && (
+                                <div className="absolute bottom-full right-0 mb-2 w-24 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-xl z-50 p-1">
+                                    {inputModes.map(mode => (
+                                        <button
+                                            key={mode}
+                                            onClick={() => {
+                                                setInputMode(mode);
+                                                setIsModeMenuOpen(false);
+                                            }}
+                                            className={`w-full text-left px-2 py-1 text-sm rounded ${inputMode === mode ? 'font-bold bg-[var(--bg-muted)]' : ''} hover:bg-[var(--bg-muted)]`}
+                                            style={{ color: 'var(--text-default)' }}
+                                        >
+                                            {mode.toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {inputMode === 'rgb' && (
+                        <div className="space-y-2 pt-2">
+                            <ColorSlider label="R" min={0} max={255} value={rgb.r} onChange={(v) => handleSliderChange('rgb', 'r', v)} gradientStyle={gradients.red} />
+                            <ColorSlider label="G" min={0} max={255} value={rgb.g} onChange={(v) => handleSliderChange('rgb', 'g', v)} gradientStyle={gradients.green} />
+                            <ColorSlider label="B" min={0} max={255} value={rgb.b} onChange={(v) => handleSliderChange('rgb', 'b', v)} gradientStyle={gradients.blue} />
+                        </div>
+                    )}
+                    {inputMode === 'hsl' && (
+                        <div className="space-y-2 pt-2">
+                            <ColorSlider label="H" min={0} max={360} value={Math.round(hsl.h)} onChange={(v) => handleSliderChange('hsl', 'h', v)} gradientStyle={gradients.hue} />
+                            <ColorSlider label="S" min={0} max={100} value={Math.round(hsl.s * 100)} onChange={(v) => handleSliderChange('hsl', 's', v)} gradientStyle={gradients.saturationHsl} />
+                            <ColorSlider label="L" min={0} max={100} value={Math.round(hsl.l * 100)} onChange={(v) => handleSliderChange('hsl', 'l', v)} gradientStyle={gradients.luminance} />
+                        </div>
+                    )}
+                    {inputMode === 'hsv' && (
+                        <div className="space-y-2 pt-2">
+                            <ColorSlider label="H" min={0} max={360} value={Math.round(hsv.h)} onChange={(v) => handleSliderChange('hsv', 'h', v)} gradientStyle={gradients.hue} />
+                            <ColorSlider label="S" min={0} max={100} value={Math.round(hsv.s * 100)} onChange={(v) => handleSliderChange('hsv', 's', v)} gradientStyle={gradients.saturationHsv} />
+                            <ColorSlider label="V" min={0} max={100} value={Math.round(hsv.v * 100)} onChange={(v) => handleSliderChange('hsv', 'v', v)} gradientStyle={gradients.brightness} />
+                        </div>
+                    )}
+                    {/* --- ¡ELIMINADO! --- Se quita el bloque de sliders CMYK */}
+                    {/* {inputMode === 'cmyk' && ( ... )} */}
+                </div>
+            </div>
+        </div>
+    );
+};
+// --- FIN DEL COMPONENTE MODIFICADO ---
+
+// --- (Componentes PopoverMenu y MenuButton sin cambios) ---
 export const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     const menuRef = useRef(null);
     useEffect(() => {
@@ -160,50 +424,83 @@ export const MenuButton = ({ icon, label, onClick, className = "" }) => (
 );
 
 
+// --- Estilos para los sliders de color ---
+const sliderStyles = `
+  .custom-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    outline: none;
+    opacity: 0.9;
+    transition: opacity .2s;
+  }
+  .custom-slider:hover {
+    opacity: 1;
+  }
+  .custom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    border: 2px solid var(--border-default);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    margin-top: -4px; /* Centrar el thumb en el track */
+  }
+  .custom-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    border: 2px solid var(--border-default);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+`;
+
+
 const Explorer = (props) => {
+    // --- (Props sin cambios) ---
     const { 
         explorerPalette, reorderExplorerPalette, explorerGrayShades, 
         handleExplorerColorPick, setGrayColor,
         brandColor, updateBrandColor, themeData, insertColorInPalette,
-        insertMultipleColors, // <-- AÑADIR PROP
+        insertMultipleColors, 
         removeColorFromPalette, 
-        // Ya no se necesitan: explorerMethod, setExplorerMethod,
-        // generatePaletteWithAI, showNotification, applySimulationToPalette
-        // onOpenAdjuster, onOpenAccessibilityModal, onOpenComponentPreviewModal
-        // onOpenSimulationSidebar
-        // --- Props conservadas ---
+        explorerMethod, setExplorerMethod,
+        generatePaletteWithAI, showNotification, applySimulationToPalette,
+        onOpenAdjuster, onOpenAccessibilityModal, onOpenComponentPreviewModal,
+        onOpenSimulationSidebar,
         replaceColorInPalette,
         handleUndo, handleRedo, history, historyIndex, 
         simulationMode,
-        showNotification, // Se conserva para el botón de copiar
         lockedColors,
         toggleLockColor,
         isAdjusterSidebarVisible,
         originalExplorerPalette,
         isSimulationSidebarVisible,
-        // --- PROPS MOVIDAS ---
         isExpanded,
         setIsExpanded,
         colorModePreview
-        // --- FIN PROPS MOVIDAS ---
     } = props;
     
-    // --- Estado local conservado ---
+    // --- (Estado local sin cambios) ---
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
     const [baseColorForShades, setBaseColorForShades] = useState(null);
-    const [pickerColor, setPickerColor] = useState(null); 
+    const [pickerColor, setPickerColor] = useState(null);
     const [activeColorMenu, setActiveColorMenu] = useState(null); 
     const paletteContainerRef = useRef(null);
     const [displayMode, setDisplayMode] = useState('name');
     const [isDisplayModeModalVisible, setIsDisplayModeModalVisible] = useState(false);
-
-    // --- ¡NUEVO! --- Estado para el menú de añadir y el timer
     const [addMenuState, setAddMenuState] = useState({ isVisible: false, index: 0, style: {} });
     const longPressTimer = useRef();
     const [isLongPress, setIsLongPress] = useState(false);
-    // --- FIN NUEVO ESTADO ---
-
-    // Devuelve el valor de texto inferior (Nombre, RGB, HSL, HSB)
+    
+    // --- (Funciones getDisplayValue y getHexValue sin cambios) ---
     const getDisplayValue = (colorStr, mode) => {
         const color = tinycolor(colorStr);
         switch (mode) {
@@ -213,7 +510,7 @@ const Explorer = (props) => {
             case 'hsl':
                 const { h, s, l } = color.toHsl();
                 return `HSL: ${Math.round(h)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%`;
-            case 'hsb': // HSB (o HSV)
+            case 'hsb':
                 const { h: hsvH, s: hsvS, v: hsvV } = color.toHsv();
                 return `HSB: ${Math.round(hsvH)}, ${Math.round(hsvS * 100)}%, ${Math.round(hsvV * 100)}%`;
             case 'name':
@@ -221,27 +518,20 @@ const Explorer = (props) => {
                 return findClosestColorName(colorStr);
         }
     };
-    
-    // Devuelve el valor H E X siempre, para el texto superior.
     const getHexValue = (colorStr) => {
         return tinycolor(colorStr).toHexString().substring(1).toUpperCase();
     }
 
-
+    // --- (Lógica de themeData, cardColor, colorModeBg, onDragEnd, etc. sin cambios) ---
     if (!themeData || !themeData.stylePalette || !themeData.grayShades) {
         return null; 
     }
-    
-    // Asignación de colores y funciones
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
-    // Usa 'colorModePreview' (prop) para calcular 'colorModeBg'
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
-
     const onDragEnd = (result) => {
         if (!result.destination) return;
         reorderExplorerPalette(result.source.index, result.destination.index);
     };
-    
     const toggleShades = (index) => {
         if (activeShadeIndex === index) {
             setActiveShadeIndex(null);
@@ -251,19 +541,15 @@ const Explorer = (props) => {
             setBaseColorForShades(explorerPalette[index]);
         }
     };
-
     const simulationFilterStyle = {
         filter: simulationMode !== 'none' ? `url(#${simulationMode})` : 'none'
     };
-    
     const isSplitView = isAdjusterSidebarVisible || isSimulationSidebarVisible;
 
-
-    // Abre el menú de acciones para el modo expandido
+    // --- (Funciones handleColorBarClick, handleAddButtonDown, handleAddButtonUp sin cambios) ---
     const handleColorBarClick = (e, index) => {
         const rect = e.currentTarget.getBoundingClientRect();
         let menuStyle = {};
-
         if (window.innerWidth >= 768) {
             menuStyle = {
                 top: `${rect.bottom + window.scrollY + 8}px`,
@@ -271,61 +557,46 @@ const Explorer = (props) => {
                 transform: 'translateX(-50%)',
             };
         }
-        
-        setActiveColorMenu({
-            index,
-            style: menuStyle 
-        });
+        setActiveColorMenu({ index, style: menuStyle });
     };
-    
-    // --- ¡NUEVO! --- Lógica para el botón de añadir (+)
     const handleAddButtonDown = (e, index) => {
         e.stopPropagation();
-        setIsLongPress(false); // Resetea el estado
-        
-        // Posición para el menú
+        setIsLongPress(false);
         const rect = e.currentTarget.getBoundingClientRect();
         const style = {
             top: `${rect.top + window.scrollY}px`,
             left: `${rect.left + window.scrollX + rect.width / 2}px`,
         };
-
-        // Inicia el timer
         longPressTimer.current = setTimeout(() => {
-            setIsLongPress(true); // Marca que fue long press
+            setIsLongPress(true);
             setAddMenuState({ isVisible: true, index, style });
-        }, 400); // 400ms para long press
+        }, 400);
     };
-
     const handleAddButtonUp = (e, index) => {
         e.stopPropagation();
-        clearTimeout(longPressTimer.current); // Limpia el timer
-        // Si NO fue un long press (el timer no se completó)
+        clearTimeout(longPressTimer.current);
         if (!isLongPress) {
             insertColorInPalette(index);
         }
     };
-    // --- FIN NUEVA LÓGICA ---
-
 
     return (
         <>
+            <style>{sliderStyles}</style>
+            
             <section 
                 ref={paletteContainerRef}
                 className={`transition-all duration-300`} 
                 style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
             >
-                {/* --- La barra de herramientas se eliminó --- */}
+                {/* ... (Tu Header de Explorer va aquí, si lo tienes) ... */}
                 
-                {/* --- CONTENEDOR DE LA PALETA PRINCIPAL --- */}
-                
-                {/* Vista "ANTES" (Paleta Original) */}
                 {isSplitView && (
                     <div 
                         className="h-[calc((100vh-65px)/2)] overflow-hidden" 
                         title="Paleta Original (Antes de ajustar)"
                     >
-                        <DragDropContext onDragEnd={onDragEnd}>
+                         <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="palette-original" direction="horizontal">
                                 {(provided) => (
                                     <div
@@ -372,14 +643,11 @@ const Explorer = (props) => {
                     </div>
                 )}
                 
-                {/* "DESPUÉS" (Paleta Ajustada) o Paleta Única */}
-                {/* --- MODIFICACIÓN --- Altura y padding actualizados --- */}
                 <div 
                     className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)] rounded-b-md'}`}
                     title={isAdjusterSidebarVisible ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
                 >
                     
-                    {/* Si estamos ajustando, mostrar la paleta ajustada (draggable) */}
                     {isAdjusterSidebarVisible && (
                          <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="palette-main" direction="horizontal">
@@ -393,16 +661,14 @@ const Explorer = (props) => {
                                             const originalColor = originalExplorerPalette[index];
                                             const isLocked = lockedColors.includes(originalColor);
                                             const displayShade = isLocked ? originalColor : shade;
-                                            
                                             const isLight = tinycolor(displayShade).isLight();
                                             const iconColor = isLight ? 'text-gray-900' : 'text-white';
                                             const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
                                             const textColor = isLight ? '#000' : '#FFF';
                                             const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
-                                            
                                             const hexValue = getHexValue(displayShade);
                                             const displayValue = getDisplayValue(displayShade, displayMode);
-
+                                            
                                             return (
                                                 <Draggable key={"main-" + originalColor + index} draggableId={"main-" + originalColor + index} index={index}>
                                                     {(provided) => (
@@ -421,21 +687,37 @@ const Explorer = (props) => {
                                                                     <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
                                                                 </div>
                                                                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10">
-                                                                    <button className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setPickerColor({ index, color: displayShade }); }} title="Editar Color">{hexValue}</button>
+                                                                    <button 
+                                                                        className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} 
+                                                                        style={{ color: textColor, textShadow: textShadow }} 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                                            let pickerStyle = {
+                                                                                top: `${rect.top + window.scrollY - 10}px`,
+                                                                                left: `${rect.left + window.scrollX + rect.width / 2}px`,
+                                                                                transform: 'translate(-50%, -100%)',
+                                                                            };
+                                                                            if (window.innerWidth < 768) {
+                                                                                pickerStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+                                                                            }
+                                                                            setPickerColor({ index, color: displayShade, style: pickerStyle }); 
+                                                                        }} 
+                                                                        title="Editar Color"
+                                                                    >
+                                                                        {hexValue}
+                                                                    </button>
                                                                     <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
                                                                 </div>
                                                             </div>
-                                                            {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
                                                             <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                 <button 
-                                                                    // --- ¡¡¡MODIFICADO!!! ---
-                                                                    onClick={(e) => e.stopPropagation()} // Click se maneja en Up/Down
+                                                                    onClick={(e) => e.stopPropagation()}
                                                                     onMouseDown={(e) => handleAddButtonDown(e, index)}
                                                                     onMouseUp={(e) => handleAddButtonUp(e, index)}
                                                                     onTouchStart={(e) => handleAddButtonDown(e, index)}
                                                                     onTouchEnd={(e) => handleAddButtonUp(e, index)}
-                                                                    onMouseLeave={() => clearTimeout(longPressTimer.current)} // Cancela si se sale
-                                                                    // --- FIN MODIFICACIÓN ---
+                                                                    onMouseLeave={() => clearTimeout(longPressTimer.current)}
                                                                     className="bg-white/90 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
                                                                     title="Añadir color (mantén presionado para más)"
                                                                 >
@@ -455,11 +737,10 @@ const Explorer = (props) => {
                         </DragDropContext>
                     )}
                     
-                    {/* Si estamos simulando, mostrar la paleta original con filtro (no-draggable) */}
                     {isSimulationSidebarVisible && (
                         <div 
                             className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
-                            style={simulationFilterStyle} // ¡El filtro se aplica AQUÍ!
+                            style={simulationFilterStyle}
                         >
                             {originalExplorerPalette.map((shade, index) => {
                                 const isLight = tinycolor(shade).isLight();
@@ -481,7 +762,6 @@ const Explorer = (props) => {
                         </div>
                     )}
                     
-                    {/* Si no hay sidebar abierto, mostrar la paleta principal (draggable) */}
                     {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
                          <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="palette-main" direction="horizontal">
@@ -491,13 +771,11 @@ const Explorer = (props) => {
                                             const originalColor = (originalExplorerPalette && originalExplorerPalette[index]) ? originalExplorerPalette[index] : shade;
                                             const isLocked = lockedColors.includes(originalColor);
                                             const displayShade = shade;
-                                            
                                             const isLight = tinycolor(displayShade).isLight();
                                             const iconColor = isLight ? 'text-gray-900' : 'text-white';
                                             const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
                                             const textColor = isLight ? '#000' : '#FFF';
                                             const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
-                                            
                                             const hexValue = getHexValue(displayShade);
                                             const displayValue = getDisplayValue(displayShade, displayMode);
 
@@ -519,21 +797,41 @@ const Explorer = (props) => {
                                                                     <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
                                                                 </div>
                                                                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10">
-                                                                    <button className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setPickerColor({ index, color: displayShade }); }} title="Editar Color">{hexValue}</button>
+                                                                    <button 
+                                                                        className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} 
+                                                                        style={{ color: textColor, textShadow: textShadow }} 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                                            let pickerStyle = {
+                                                                                top: `${rect.top + window.scrollY - 10}px`,
+                                                                                left: `${rect.left + window.scrollX + rect.width / 2}px`,
+                                                                                transform: 'translate(-50%, -100%)',
+                                                                            };
+                                                                            if (window.innerWidth < 768) {
+                                                                                pickerStyle = {
+                                                                                    top: '50%',
+                                                                                    left: '50%',
+                                                                                    transform: 'translate(-50%, -50%)',
+                                                                                };
+                                                                            }
+                                                                            setPickerColor({ index, color: displayShade, style: pickerStyle }); 
+                                                                        }} 
+                                                                        title="Editar Color"
+                                                                    >
+                                                                        {hexValue}
+                                                                    </button>
                                                                     <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
                                                                 </div>
                                                             </div>
-                                                            {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
                                                             <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                 <button 
-                                                                    // --- ¡¡¡MODIFICADO!!! ---
-                                                                    onClick={(e) => e.stopPropagation()} // Click se maneja en Up/Down
+                                                                    onClick={(e) => e.stopPropagation()}
                                                                     onMouseDown={(e) => handleAddButtonDown(e, index)}
                                                                     onMouseUp={(e) => handleAddButtonUp(e, index)}
                                                                     onTouchStart={(e) => handleAddButtonDown(e, index)}
                                                                     onTouchEnd={(e) => handleAddButtonUp(e, index)}
-                                                                    onMouseLeave={() => clearTimeout(longPressTimer.current)} // Cancela si se sale
-                                                                    // --- FIN MODIFICACIÓN ---
+                                                                    onMouseLeave={() => clearTimeout(longPressTimer.current)}
                                                                     className="bg-white/90 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
                                                                     title="Añadir color (mantén presionado para más)"
                                                                 >
@@ -555,33 +853,21 @@ const Explorer = (props) => {
                     
                 </div>
                 
-                {/* <div className="mt-6 pt-4 border-t px-4 sm:px-6 pb-2" style={{ borderColor: tinycolor(colorModeBg).isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}>
-                     <ColorPalette
-                         isExplorer={true}
-                         shades={explorerGrayShades}
-                         onShadeCopy={setGrayColor}
-                         themeOverride={tinycolor(colorModeBg).isLight() ? 'light' : 'dark'}
-                     />
-                </div>
-                */}
             </section>
             
-            {/* --- ¡NUEVO! --- Renderizar el menú de añadir */}
             {addMenuState.isVisible && (
                 <div 
                     className="fixed z-[60]" 
                     style={addMenuState.style}
-                    // Este div fantasma se posiciona donde fue el clic
                 >
                     <AddColorMenu
                         onClose={() => setAddMenuState({ isVisible: false, index: 0, style: {} })}
                         onAdd={(count) => insertMultipleColors(addMenuState.index, count)}
-                        maxAdd={20 - explorerPalette.length} // Límite de 20
+                        maxAdd={20 - explorerPalette.length}
                     />
                 </div>
             )}
             
-            {/* --- MENÚ EMERGENTE PARA MODO EXPANDIDO --- */}
             {activeColorMenu && (
                 <ColorActionMenu
                     style={activeColorMenu.style}
@@ -612,19 +898,17 @@ const Explorer = (props) => {
                 />
             )}
 
-
-            {/* --- MODAL DE PICKER --- */}
             {pickerColor && (
                 <ColorPickerPopover 
                     color={pickerColor.color}
+                    style={pickerColor.style} 
                     onClose={() => setPickerColor(null)}
-                    onChange={(newColor) => {
+                    onRealtimeChange={(newColor) => {
                         replaceColorInPalette(pickerColor.index, newColor);
                     }}
                 />
             )}
             
-            {/* --- MODO EXPANDIDO (PANTALLA COMPLETA) --- */}
             {isExpanded && (
                 <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={(e) => { e.stopPropagation(); setIsExpanded(false); setActiveShadeIndex(null);}}>
                     <div 
@@ -632,15 +916,12 @@ const Explorer = (props) => {
                         onClick={(e) => e.stopPropagation()}
                         onMouseUp={(e) => e.stopPropagation()}
                     >
-                        {/* Botones de deshacer/rehacer */}
                         <div className="absolute top-4 left-4 flex gap-2 z-30">
                             <button onClick={(e) => { e.stopPropagation(); handleUndo(); }} disabled={!history || historyIndex <= 0} className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Deshacer cambio de paleta" ><Undo2 size={24} /></button>
                             <button onClick={(e) => { e.stopPropagation(); handleRedo(); }} disabled={!history || historyIndex >= history.length - 1} className="text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Rehacer cambio de paleta" ><Redo2 size={24} /></button>
                         </div>
-                        {/* Botón de cerrar */}
                         <button onClick={() => {setIsExpanded(false); setActiveShadeIndex(null);}} className="absolute top-4 right-4 text-white bg-black/20 rounded-full p-2 hover:bg-black/40 transition-colors z-30"><X size={24} /></button>
                         
-                        {/* Paleta expandida */}
                         <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="palette-expanded" direction="horizontal">
                                 {(provided) => (
@@ -655,10 +936,10 @@ const Explorer = (props) => {
                                                     {(provided) => (
                                                         <div ref={provided.innerRef} {...provided.draggableProps} className="relative group h-full flex flex-col items-center justify-end text-white font-bold text-lg" style={{...provided.draggableProps.style, minWidth: '100px', flex: '1 1 0px' }} >
                                                             <div 
-                                                                {...provided.dragHandleProps} // El drag handle props se aplica directamente al div de color
+                                                                {...provided.dragHandleProps}
                                                                 className="w-full h-full cursor-grab active:cursor-grabbing" 
                                                                 style={{backgroundColor: displayShade}}
-                                                                onClick={(e) => handleColorBarClick(e, index)} // Usa el menú emergente
+                                                                onClick={(e) => handleColorBarClick(e, index)}
                                                             ></div>
                                                             
                                                             {activeColorMenu?.index !== index && (
@@ -677,17 +958,14 @@ const Explorer = (props) => {
                                                                         <p className="font-mono text-sm hidden sm:block" style={{ color: tinycolor(displayShade).isLight() ? '#000' : '#FFF' }}>{displayShade.toUpperCase()}</p>
                                                                     </div>
                                                                     <button onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}} className="absolute top-2 right-2 p-1 bg-black/20 rounded-full text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-all" title="Quitar color"><X size={16}/></button>
-                                                                    {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
                                                                     <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                         <button 
-                                                                            // --- ¡¡¡MODIFICADO!!! ---
-                                                                            onClick={(e) => e.stopPropagation()} // Click se maneja en Up/Down
+                                                                            onClick={(e) => e.stopPropagation()}
                                                                             onMouseDown={(e) => handleAddButtonDown(e, index)}
                                                                             onMouseUp={(e) => handleAddButtonUp(e, index)}
                                                                             onTouchStart={(e) => handleAddButtonDown(e, index)}
                                                                             onTouchEnd={(e) => handleAddButtonUp(e, index)}
-                                                                            onMouseLeave={() => clearTimeout(longPressTimer.current)} // Cancela si se sale
-                                                                            // --- FIN MODIFICACIÓN ---
+                                                                            onMouseLeave={() => clearTimeout(longPressTimer.current)}
                                                                             className="bg-white/80 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
                                                                             title="Añadir color (mantén presionado para más)"
                                                                         >
@@ -724,9 +1002,6 @@ const Explorer = (props) => {
                 </div>
             )}
             
-            {/* --- MODALES MOVIDOS A APP.JSX --- */}
-            
-            {/* Modal de Formato de Visualización (Conservado) */}
             {isDisplayModeModalVisible && (
                 <DisplayModeModal
                     currentMode={displayMode}
