@@ -356,11 +356,9 @@ export const generateAdvancedRandomPalette = (
     originalPalette = []
 ) => {
 
-    // --- (Inicio) Lógica de Armonía Clásica ---
-    // Métodos que usan la lógica de generación antigua
+    // --- CASO 1: Armonía Específica (triad, analogous, etc.) ---
+    // Si el método NO es 'auto' O 'mono', usamos la lógica de armonía simple.
     const classicMethods = ['analogous', 'complement', 'split-complement', 'splitcomplement', 'triad', 'tetrad'];
-    
-    // Si el método es uno de los clásicos, usamos la lógica de armonía simple.
     if (classicMethods.includes(method)) {
         const baseColor = baseColorHex ? tinycolor(baseColorHex) : tinycolor(CURATED_BASE_COLORS[Math.floor(rand(0, CURATED_BASE_COLORS.length))]);
         let paletteColors = generateHarmonyPalette(baseColor, method, count);
@@ -370,10 +368,9 @@ export const generateAdvancedRandomPalette = (
             brandColor: baseColor.toHexString()
         };
     }
-    // --- (Fin) Lógica de Armonía Clásica ---
+    // --- FIN CASO 1 ---
 
-
-    // --- (Inicio) Lógica de Plantillas Avanzadas (para 'auto', 'mono', temáticos, etc.) ---
+    // --- CASO 2: Método 'auto' o Temático (¡Plan Monstruoso 11.0!) ---
     const effectiveCount = Math.max(3, count);
 
     // --- PASO 1: Seleccionar Color Base y Matices de Armonía ---
@@ -386,7 +383,7 @@ export const generateAdvancedRandomPalette = (
     const baseHsb = baseColor.toHsv(); // { h: 0-360, s: 0-100, v: 0-100 }
     const baseHue = baseHsb.h;
 
-    // Generamos matices (Hues) únicos para los roles
+    // Generamos 5 matices (Hues) únicos para los 5 roles
     const hues = [
         baseHue, // Base
         (baseHue + 180) % 360, // Complementario
@@ -402,7 +399,7 @@ export const generateAdvancedRandomPalette = (
 
     // --- PASO 2: Seleccionar un "Template" de Generación ---
     
-    // Lista de todas las plantillas disponibles
+    // ¡NUESTRO ARSENAL DE 79 PLANTILLAS (REORDENADAS)!
     const templates = [
       // --- (Grupo 1) Temas Artísticos y Naturales (Más Atractivos) ---
       'theme-nebula', 'theme-vaporwave', 'theme-cyber-noir', 'theme-tropical', 'theme-autumn', 
@@ -432,68 +429,64 @@ export const generateAdvancedRandomPalette = (
       'gradiente-analogo', 'monotone-split', 'rampa-saturacion', 'bajo-contraste',
       
       // --- (Grupo 7) Básicos y Caos ---
-      'monocromatico', 'grayscale', 'calido', 'frio', 'caos'
+      'mono', 'grayscale', 'calido', 'frio', 'caos'
     ];
     
     let selectedTemplate;
 
-    // --- Lógica para ELEGIR la plantilla ---
-    
-    // Si el método es 'auto', elegimos una plantilla aleatoria.
-    if (method === 'auto') {
+    // --- (INICIO) SELECCIÓN DE PLANTILLA MANUAL ---
+    // Si el método *NO* es 'auto' (ej. 'brand-google'), 
+    // lo usamos para forzar la plantilla seleccionada.
+    if (method !== 'auto' && templates.includes(method)) {
+        selectedTemplate = method;
+    }
+    // --- (FIN) SELECCIÓN DE PLANTILLA MANUAL ---
+    else if (baseColorHex && lockedColors.length === 0) {
+        // --- INFERIR PLANTILLA ---
+        const { h, s, v: b } = baseHsb; // s y b (brillo) están en 0-100
         
-        if (baseColorHex && lockedColors.length === 0) {
-            // --- MODO INFERENCIA (Clic en ✨) ---
-            const { h, s, v: b } = baseHsb; // s y b (brillo) están en 0-100
-            if (s < 5) selectedTemplate = 'grayscale';
-            else if (s > 90 && b > 80) selectedTemplate = 'pop-neon';
-            else if (s > 60 && b < 50) selectedTemplate = 'profundo';       // Profundo/Joya
-            else if (s > 70 && b > 70) selectedTemplate = 'gradiente-analogo-vibrante'; // vibrante
-            else if (s < 20 && b > 75) selectedTemplate = 'faded';
-            else if (s < 30 && b > 85) selectedTemplate = 'pastel';      // Pastel
-            else if (s < 40 && b > 60) selectedTemplate = 'vintage';
-            else if (s < 50 && b < 80) selectedTemplate = 'gradiente-analogo'; // apagado
-            else selectedTemplate = 'equilibrado'; // Default
-            
-        } else if (baseColorHex && lockedColors.length > 0) {
-            // --- MODO BLOQUEADO (Barra espaciadora con candados) ---
-            const balancingTemplates = [
-                'equilibrado', 'complementario-dividido', 'acentos-complementarios', 'tetrada',
-                'neutral-accent', 'triad-balanced', 'analogo-comp', 'acentos-dobles-neutros',
-                'alto-contraste', 'dos-matices', 'complemento-neutros'
-            ];
-            selectedTemplate = balancingTemplates[Math.floor(rand(0, balancingTemplates.length))];
-
-        } else {
-            // --- MODO ALEATORIO PURO (Barra espaciadora sin candados) ---
-            selectedTemplate = templates[Math.floor(rand(0, templates.length))];
-        }
+        if (s < 5) selectedTemplate = 'grayscale';
+        else if (s > 90 && b > 80) selectedTemplate = 'pop-neon';
+        else if (s > 60 && b < 50) selectedTemplate = 'profundo';       // Profundo/Joya
+        else if (s > 70 && b > 70) selectedTemplate = 'gradiente-analogo-vibrante'; // vibrante
+        else if (s < 20 && b > 75) selectedTemplate = 'faded';
+        else if (s < 30 && b > 85) selectedTemplate = 'pastel';      // Pastel
+        else if (s < 40 && b > 60) selectedTemplate = 'vintage';
+        else if (s < 50 && b < 80) selectedTemplate = 'gradiente-analogo'; // apagado
+        else selectedTemplate = 'equilibrado'; // Default
+        
+    } else if (baseColorHex && lockedColors.length > 0) {
+        // --- MODO BLOQUEADO ---
+        const balancingTemplates = [
+            'equilibrado', 'complementario-dividido', 'acentos-complementarios', 'tetrada',
+            'neutral-accent', 'triad-balanced', 'analogo-comp', 'acentos-dobles-neutros',
+            'alto-contraste', 'dos-matices', 'complemento-neutros'
+        ];
+        selectedTemplate = balancingTemplates[Math.floor(rand(0, balancingTemplates.length))];
 
     } else {
-        // Si el método NO es 'auto', significa que el usuario eligió uno del menú.
-        
-        if (method === 'mono' || method === 'monochromatic') {
-            selectedTemplate = 'gradiente-mono'; // Usar nuestra mejor plantilla mono
-        } else if (templates.includes(method)) {
-            selectedTemplate = method; // Usar la plantilla seleccionada (ej: 'theme-vaporwave')
-        } else {
-            // Fallback por si el método no se encuentra
-            console.warn(`Método '${method}' no reconocido. Usando 'equilibrado'.`);
-            selectedTemplate = 'equilibrado';
-        }
+        // --- MODO ALEATORIO PURO ---
+        selectedTemplate = templates[Math.floor(rand(0, templates.length))];
+    }
+    
+    // Si el método de generación era 'mono', forzar el template 'gradiente-mono'
+    if (method === 'mono' || method === 'monochromatic') {
+        selectedTemplate = 'gradiente-mono'; // Reemplazamos 'monocromatico' por la mejor versión
     }
     // --- Fin de la lógica de elección de plantilla ---
 
 
     let generatedHsbPalette = [];
-    
+    let baseTemplateColors = []; // <-- ¡NUEVO!
+
     // --- PASO 3: Ejecutar la Plantilla de Generación ---
+    // (Esta sección define los colores "semilla" y los guarda en baseTemplateColors)
     switch (selectedTemplate) {
         
         case 'pastel':
             // TEMPLATE 2: Pastel Suave (Todos claros y desaturados)
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: shuffledHues[i % shuffledHues.length],
                     s: rand(15, 40), // Saturación baja
                     b: rand(85, 95)  // Brillo alto
@@ -503,8 +496,8 @@ export const generateAdvancedRandomPalette = (
 
         case 'apagado':
             // TEMPLATE 3: Apagado/Tierra (Todos medios y desaturados)
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: shuffledHues[i % shuffledHues.length],
                     s: rand(20, 50), // Saturación media-baja
                     b: rand(30, 80)  // Brillo medio
@@ -514,8 +507,8 @@ export const generateAdvancedRandomPalette = (
 
         case 'vibrante':
             // TEMPLATE 4: Vibrante (Todos brillantes y saturados)
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: shuffledHues[i % shuffledHues.length],
                     s: rand(70, 100), // Saturación ALTA
                     b: rand(70, 100)  // Brillo ALTO
@@ -525,8 +518,8 @@ export const generateAdvancedRandomPalette = (
 
         case 'profundo':
             // TEMPLATE 5: Profundo / Joya (Todos oscuros y saturados)
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: shuffledHues[i % shuffledHues.length],
                     s: rand(60, 100), // Saturación ALTA
                     b: rand(20, 50)   // Brillo BAJO/MEDIO
@@ -536,9 +529,9 @@ export const generateAdvancedRandomPalette = (
             
         case 'calido':
             // TEMPLATE 6: Cálido (Todos los Hues en rango cálido)
-            for (let i = 0; i < effectiveCount; i++) {
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
                 const hue = Math.random() > 0.3 ? rand(0, 70) : rand(330, 360);
-                generatedHsbPalette.push({
+                baseTemplateColors.push({ 
                     h: hue, s: rand(40, 90), b: rand(30, 95)
                 });
             }
@@ -546,8 +539,8 @@ export const generateAdvancedRandomPalette = (
 
         case 'frio':
             // TEMPLATE 7: Frío (Todos los Hues en rango frío)
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: rand(70, 329), s: rand(40, 90), b: rand(30, 95)
                 });
             }
@@ -558,8 +551,8 @@ export const generateAdvancedRandomPalette = (
             const monoHue = baseHue;
             const s = rand(70, 100); 
             const bValues = [rand(85, 95), rand(65, 80), rand(50, 65), rand(35, 50), rand(20, 35)];
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: monoHue,
                     s: s - (i * 5),
                     b: bValues[i % bValues.length]
@@ -573,8 +566,8 @@ export const generateAdvancedRandomPalette = (
             const hueStep = rand(15, 30); 
             const analogS = rand(20, 50); 
             const analogB = rand(40, 80);
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: (analogHue + (i * hueStep)) % 360,
                     s: analogS + rand(-5, 5),
                     b: analogB + rand(-10, 10)
@@ -586,22 +579,22 @@ export const generateAdvancedRandomPalette = (
             // TEMPLATE 10: Par Complementario (2+2+1)
             const h1 = baseHue;
             const h2 = (baseHue + 180) % 360; 
-            generatedHsbPalette.push({ h: h1, s: rand(70, 100), b: rand(60, 90) });
-            generatedHsbPalette.push({ h: h1, s: rand(50, 90), b: rand(20, 40) });
-            generatedHsbPalette.push({ h: h2, s: rand(60, 95), b: rand(50, 80) });
-            generatedHsbPalette.push({ h: h2, s: rand(20, 50), b: rand(80, 95) });
-            generatedHsbPalette.push({ h: rand(0, 360), s: rand(5, 15), b: rand(90, 98) });
+            baseTemplateColors.push({ h: h1, s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h1, s: rand(50, 90), b: rand(20, 40) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h2, s: rand(60, 95), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h2, s: rand(20, 50), b: rand(80, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: rand(0, 360), s: rand(5, 15), b: rand(90, 98) }); // <-- CAMBIO
             break;
 
         case 'acentos-complementarios':
             // TEMPLATE 11: Base + Acentos (3+2)
             const accentBaseHue = baseHue;
             const accentCompHue = (baseHue + 180) % 360;
-            generatedHsbPalette.push({ h: accentBaseHue, s: rand(60, 100), b: rand(20, 40) });
-            generatedHsbPalette.push({ h: accentBaseHue, s: rand(50, 90), b: rand(40, 60) });
-            generatedHsbPalette.push({ h: accentBaseHue, s: rand(40, 80), b: rand(60, 80) });
-            generatedHsbPalette.push({ h: accentCompHue, s: rand(20, 50), b: rand(80, 95) });
-            generatedHsbPalette.push({ h: accentCompHue, s: rand(30, 60), b: rand(60, 80) });
+            baseTemplateColors.push({ h: accentBaseHue, s: rand(60, 100), b: rand(20, 40) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: accentBaseHue, s: rand(50, 90), b: rand(40, 60) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: accentBaseHue, s: rand(40, 80), b: rand(60, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: accentCompHue, s: rand(20, 50), b: rand(80, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: accentCompHue, s: rand(30, 60), b: rand(60, 80) }); // <-- CAMBIO
             break;
 
         case 'tetrada':
@@ -610,17 +603,17 @@ export const generateAdvancedRandomPalette = (
             const tHue2 = (baseHue + 90) % 360;
             const tHue3 = (baseHue + 180) % 360;
             const tHue4 = (baseHue + 270) % 360;
-            generatedHsbPalette.push({ h: tHue1, s: rand(70, 100), b: rand(20, 50) });
-            generatedHsbPalette.push({ h: tHue2, s: rand(40, 80), b: rand(50, 80) });
-            generatedHsbPalette.push({ h: tHue3, s: rand(70, 100), b: rand(60, 90) });
-            generatedHsbPalette.push({ h: tHue4, s: rand(30, 60), b: rand(85, 95) });
-            generatedHsbPalette.push({ h: rand(0, 360), s: rand(5, 15), b: rand(80, 95) });
+            baseTemplateColors.push({ h: tHue1, s: rand(70, 100), b: rand(20, 50) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: tHue2, s: rand(40, 80), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: tHue3, s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: tHue4, s: rand(30, 60), b: rand(85, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: rand(0, 360), s: rand(5, 15), b: rand(80, 95) }); // <-- CAMBIO
             break;
 
         case 'pop-neon':
             // TEMPLATE 13: Hyper-vibrante
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: shuffledHues[i % shuffledHues.length],
                     s: rand(90, 100), b: rand(80, 100)
                 });
@@ -629,8 +622,8 @@ export const generateAdvancedRandomPalette = (
 
         case 'vintage':
             // TEMPLATE 14: Desteñido/Vintage
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: shuffledHues[i % shuffledHues.length],
                     s: rand(20, 40), b: rand(60, 90)
                 });
@@ -639,9 +632,9 @@ export const generateAdvancedRandomPalette = (
             
         case 'earthy':
             // TEMPLATE 15: Tonos Tierra
-            for (let i = 0; i < effectiveCount; i++) {
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
                 const hue = Math.random() > 0.5 ? rand(20, 70) : rand(180, 220); // Naranjas/Verdes
-                generatedHsbPalette.push({
+                baseTemplateColors.push({ 
                     h: hue, s: rand(30, 70), b: rand(30, 70)
                 });
             }
@@ -649,8 +642,8 @@ export const generateAdvancedRandomPalette = (
 
         case 'oceanic':
             // TEMPLATE 16: Tonos Océano
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: rand(70, 260), // Verdes/Azules/Cianes
                     s: rand(40, 90), b: rand(30, 95)
                 });
@@ -659,9 +652,9 @@ export const generateAdvancedRandomPalette = (
 
         case 'sunset':
             // TEMPLATE 17: Tonos Atardecer
-            for (let i = 0; i < effectiveCount; i++) {
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
                 const hue = Math.random() > 0.3 ? rand(0, 60) : rand(300, 360); // Rojos/Naranjas/Rosas
-                generatedHsbPalette.push({
+                baseTemplateColors.push({ 
                     h: hue, s: rand(50, 100), b: rand(40, 90)
                 });
             }
@@ -669,29 +662,29 @@ export const generateAdvancedRandomPalette = (
 
         case 'high-key':
             // TEMPLATE 18: Mayormente Claro
-            generatedHsbPalette.push({ h: shuffledHues[0], s: rand(5, 20), b: rand(90, 98) });
-            generatedHsbPalette.push({ h: shuffledHues[1], s: rand(15, 40), b: rand(85, 95) });
-            generatedHsbPalette.push({ h: shuffledHues[2], s: rand(15, 40), b: rand(85, 95) });
-            generatedHsbPalette.push({ h: shuffledHues[3], s: rand(5, 20), b: rand(90, 98) });
-            generatedHsbPalette.push({ h: shuffledHues[4], s: rand(60, 100), b: rand(20, 40) }); // Acento Oscuro
+            baseTemplateColors.push({ h: shuffledHues[0], s: rand(5, 20), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[1], s: rand(15, 40), b: rand(85, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[2], s: rand(15, 40), b: rand(85, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[3], s: rand(5, 20), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[4], s: rand(60, 100), b: rand(20, 40) }); // <-- CAMBIO
             break;
 
         case 'low-key':
             // TEMPLATE 19: Mayormente Oscuro
-            generatedHsbPalette.push({ h: shuffledHues[0], s: rand(10, 30), b: rand(15, 30) });
-            generatedHsbPalette.push({ h: shuffledHues[1], s: rand(60, 100), b: rand(20, 35) });
-            generatedHsbPalette.push({ h: shuffledHues[2], s: rand(60, 100), b: rand(25, 40) });
-            generatedHsbPalette.push({ h: shuffledHues[3], s: rand(10, 30), b: rand(15, 30) });
-            generatedHsbPalette.push({ h: shuffledHues[4], s: rand(70, 100), b: rand(85, 95) }); // Acento Claro
+            baseTemplateColors.push({ h: shuffledHues[0], s: rand(10, 30), b: rand(15, 30) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[1], s: rand(60, 100), b: rand(20, 35) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[2], s: rand(60, 100), b: rand(25, 40) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[3], s: rand(10, 30), b: rand(15, 30) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[4], s: rand(70, 100), b: rand(85, 95) }); // <-- CAMBIO
             break;
 
         case 'neutral-accent':
             // TEMPLATE 20: Neutros + 1 Acento
-            generatedHsbPalette.push({ h: baseHue, s: rand(5, 15), b: rand(90, 98) }); // Neutro 1
-            generatedHsbPalette.push({ h: baseHue, s: rand(5, 15), b: rand(60, 80) }); // Neutro 2
-            generatedHsbPalette.push({ h: baseHue, s: rand(5, 15), b: rand(30, 50) }); // Neutro 3
-            generatedHsbPalette.push({ h: baseHue, s: rand(5, 15), b: rand(15, 30) }); // Neutro 4
-            generatedHsbPalette.push({ h: (baseHue + 180) % 360, s: rand(80, 100), b: rand(60, 80) }); // Acento
+            baseTemplateColors.push({ h: baseHue, s: rand(5, 15), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(5, 15), b: rand(60, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(5, 15), b: rand(30, 50) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(5, 15), b: rand(15, 30) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: (baseHue + 180) % 360, s: rand(80, 100), b: rand(60, 80) }); // <-- CAMBIO
             break;
 
         case 'triad-balanced':
@@ -699,11 +692,11 @@ export const generateAdvancedRandomPalette = (
             const h_triad_1 = baseHue;
             const h_triad_2 = (baseHue + 120) % 360;
             const h_triad_3 = (baseHue + 240) % 360;
-            generatedHsbPalette.push({ h: h_triad_1, s: rand(70, 100), b: rand(60, 90) }); // Base
-            generatedHsbPalette.push({ h: h_triad_2, s: rand(50, 90), b: rand(40, 70) }); // Acento 1
-            generatedHsbPalette.push({ h: h_triad_3, s: rand(30, 70), b: rand(70, 90) }); // Acento 2
-            generatedHsbPalette.push({ h: h_triad_1, s: rand(5, 15), b: rand(90, 98) }); // Neutro Claro
-            generatedHsbPalette.push({ h: h_triad_1, s: rand(5, 15), b: rand(15, 30) }); // Neutro Oscuro
+            baseTemplateColors.push({ h: h_triad_1, s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_triad_2, s: rand(50, 90), b: rand(40, 70) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_triad_3, s: rand(30, 70), b: rand(70, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_triad_1, s: rand(5, 15), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_triad_1, s: rand(5, 15), b: rand(15, 30) }); // <-- CAMBIO
             break;
 
         case 'analogo-comp':
@@ -712,17 +705,17 @@ export const generateAdvancedRandomPalette = (
             const h_an_2 = (baseHue + 30) % 360;
             const h_an_3 = (baseHue - 30 + 360) % 360;
             const h_comp = (baseHue + 180) % 360;
-            generatedHsbPalette.push({ h: h_an_1, s: rand(60, 100), b: rand(50, 80) }); // Base
-            generatedHsbPalette.push({ h: h_an_2, s: rand(50, 90), b: rand(40, 70) }); // Análogo 1
-            generatedHsbPalette.push({ h: h_an_3, s: rand(40, 80), b: rand(60, 90) }); // Análogo 2
-            generatedHsbPalette.push({ h: h_comp, s: rand(70, 100), b: rand(70, 90) }); // Acento
-            generatedHsbPalette.push({ h: h_an_1, s: rand(5, 15), b: rand(90, 98) }); // Neutro
+            baseTemplateColors.push({ h: h_an_1, s: rand(60, 100), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_an_2, s: rand(50, 90), b: rand(40, 70) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_an_3, s: rand(40, 80), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_comp, s: rand(70, 100), b: rand(70, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_an_1, s: rand(5, 15), b: rand(90, 98) }); // <-- CAMBIO
             break;
 
         case 'grayscale':
             // TEMPLATE 23: Escala de Grises
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: 0, s: 0, b: rand(10, 95)
                 });
             }
@@ -730,8 +723,8 @@ export const generateAdvancedRandomPalette = (
 
         case 'faded':
             // TEMPLATE 24: Desvaído
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: shuffledHues[i % shuffledHues.length],
                     s: rand(10, 25), b: rand(75, 95)
                 });
@@ -741,27 +734,27 @@ export const generateAdvancedRandomPalette = (
         case 'primary':
             // TEMPLATE 25: Colores Primarios
             const p_hues = [rand(350, 10), rand(50, 70), rand(230, 250)];
-            generatedHsbPalette.push({ h: p_hues[0], s: rand(70, 100), b: rand(50, 80) }); // Rojo
-            generatedHsbPalette.push({ h: p_hues[1], s: rand(70, 100), b: rand(60, 90) }); // Amarillo
-            generatedHsbPalette.push({ h: p_hues[2], s: rand(70, 100), b: rand(50, 80) }); // Azul
-            generatedHsbPalette.push({ h: baseHue, s: rand(0, 10), b: rand(90, 98) }); // Neutro Claro
-            generatedHsbPalette.push({ h: baseHue, s: rand(0, 10), b: rand(10, 20) }); // Neutro Oscuro
+            baseTemplateColors.push({ h: p_hues[0], s: rand(70, 100), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: p_hues[1], s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: p_hues[2], s: rand(70, 100), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(0, 10), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(0, 10), b: rand(10, 20) }); // <-- CAMBIO
             break;
 
         case 'secondary':
             // TEMPLATE 26: Colores Secundarios
             const s_hues = [rand(25, 45), rand(110, 140), rand(260, 290)];
-            generatedHsbPalette.push({ h: s_hues[0], s: rand(70, 100), b: rand(50, 80) }); // Naranja
-            generatedHsbPalette.push({ h: s_hues[1], s: rand(70, 100), b: rand(60, 90) }); // Verde
-            generatedHsbPalette.push({ h: s_hues[2], s: rand(70, 100), b: rand(50, 80) }); // Púrpura
-            generatedHsbPalette.push({ h: baseHue, s: rand(0, 10), b: rand(90, 98) }); // Neutro Claro
-            generatedHsbPalette.push({ h: baseHue, s: rand(0, 10), b: rand(10, 20) }); // Neutro Oscuro
+            baseTemplateColors.push({ h: s_hues[0], s: rand(70, 100), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: s_hues[1], s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: s_hues[2], s: rand(70, 100), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(0, 10), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(0, 10), b: rand(10, 20) }); // <-- CAMBIO
             break;
             
         case 'metallic':
             // TEMPLATE 27: Metálicos
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: rand(25, 50), // Rango de Dorados/Bronces
                     s: rand(20, 70),
                     b: rand(40, 95)
@@ -771,9 +764,9 @@ export const generateAdvancedRandomPalette = (
 
         case 'themed-forest':
             // TEMPLATE 28: Bosque
-            for (let i = 0; i < effectiveCount; i++) {
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
                 const hue = Math.random() > 0.3 ? rand(70, 160) : rand(20, 45); // Verdes y Marrones
-                generatedHsbPalette.push({
+                baseTemplateColors.push({ 
                     h: hue, s: rand(30, 80), b: rand(20, 70)
                 });
             }
@@ -783,7 +776,7 @@ export const generateAdvancedRandomPalette = (
             // TEMPLATE 29: Pastelería
             const sw_hues = [rand(300, 350), rand(190, 220), rand(50, 60)]; // Rosa, Azul claro, Crema
             for (let i = 0; i < sw_hues.length; i++) {
-                generatedHsbPalette.push({
+                baseTemplateColors.push({ 
                     h: sw_hues[i],
                     s: rand(20, 50), b: rand(80, 95)
                 });
@@ -793,32 +786,32 @@ export const generateAdvancedRandomPalette = (
         case 'academic':
             // TEMPLATE 30: Académico
             const ac_hues = [rand(340, 360), rand(220, 250), rand(90, 120)]; // Borgoña, Azul Marino, Verde Oscuro
-            generatedHsbPalette.push({ h: ac_hues[0], s: rand(40, 80), b: rand(20, 40) });
-            generatedHsbPalette.push({ h: ac_hues[1], s: rand(40, 80), b: rand(20, 40) });
-            generatedHsbPalette.push({ h: ac_hues[2], s: rand(30, 70), b: rand(20, 40) });
-            generatedHsbPalette.push({ h: rand(30, 50), s: rand(10, 30), b: rand(80, 95) }); // Crema
-            generatedHsbPalette.push({ h: rand(30, 50), s: rand(20, 40), b: rand(60, 80) }); // Beige
+            baseTemplateColors.push({ h: ac_hues[0], s: rand(40, 80), b: rand(20, 40) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: ac_hues[1], s: rand(40, 80), b: rand(20, 40) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: ac_hues[2], s: rand(30, 70), b: rand(20, 40) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: rand(30, 50), s: rand(10, 30), b: rand(80, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: rand(30, 50), s: rand(20, 40), b: rand(60, 80) }); // <-- CAMBIO
             break;
 
         case 'southwestern':
             // TEMPLATE 31: Suroeste
             const sws_hues = [rand(15, 35), rand(170, 190), rand(40, 50)]; // Terracota, Turquesa, Arena
-            generatedHsbPalette.push({ h: sws_hues[0], s: rand(50, 90), b: rand(40, 70) }); // Terracota 1
-            generatedHsbPalette.push({ h: sws_hues[0], s: rand(40, 80), b: rand(60, 80) }); // Terracota 2
-            generatedHsbPalette.push({ h: sws_hues[1], s: rand(60, 90), b: rand(50, 80) }); // Turquesa
-            generatedHsbPalette.push({ h: sws_hues[2], s: rand(20, 40), b: rand(80, 95) }); // Arena 1
-            generatedHsbPalette.push({ h: sws_hues[2], s: rand(30, 50), b: rand(60, 80) }); // Arena 2
+            baseTemplateColors.push({ h: sws_hues[0], s: rand(50, 90), b: rand(40, 70) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: sws_hues[0], s: rand(40, 80), b: rand(60, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: sws_hues[1], s: rand(60, 90), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: sws_hues[2], s: rand(20, 40), b: rand(80, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: sws_hues[2], s: rand(30, 50), b: rand(60, 80) }); // <-- CAMBIO
             break;
 
         case 'monotone-split':
             // TEMPLATE 32: Monótono Dividido (4+1)
             const msp_hue = baseHue;
             const msp_comp = (baseHue + 180) % 360;
-            generatedHsbPalette.push({ h: msp_hue, s: rand(10, 30), b: rand(80, 95) }); // Mono 1
-            generatedHsbPalette.push({ h: msp_hue, s: rand(30, 60), b: rand(50, 80) }); // Mono 2
-            generatedHsbPalette.push({ h: msp_hue, s: rand(50, 80), b: rand(20, 40) }); // Mono 3
-            generatedHsbPalette.push({ h: msp_hue, s: rand(5, 20), b: rand(10, 30) });  // Mono 4
-            generatedHsbPalette.push({ h: msp_comp, s: rand(80, 100), b: rand(60, 80) }); // Acento
+            baseTemplateColors.push({ h: msp_hue, s: rand(10, 30), b: rand(80, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: msp_hue, s: rand(30, 60), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: msp_hue, s: rand(50, 80), b: rand(20, 40) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: msp_hue, s: rand(5, 20), b: rand(10, 30) });  // <-- CAMBIO
+            baseTemplateColors.push({ h: msp_comp, s: rand(80, 100), b: rand(60, 80) }); // <-- CAMBIO
             break;
             
         case 'acentos-dobles-neutros':
@@ -826,11 +819,11 @@ export const generateAdvancedRandomPalette = (
             const h_ac1 = shuffledHues[0];
             const h_ac2 = (h_ac1 + 180) % 360; // Complementario
             const h_neu = rand(0, 360); // Matiz aleatorio para los neutros
-            generatedHsbPalette.push({ h: h_ac1, s: rand(70, 100), b: rand(60, 90) }); // Acento 1
-            generatedHsbPalette.push({ h: h_ac2, s: rand(70, 100), b: rand(60, 90) }); // Acento 2
-            generatedHsbPalette.push({ h: h_neu, s: rand(0, 10), b: rand(90, 98) }); // Neutro Claro
-            generatedHsbPalette.push({ h: h_neu, s: rand(0, 10), b: rand(60, 80) }); // Neutro Medio
-            generatedHsbPalette.push({ h: h_neu, s: rand(0, 10), b: rand(20, 40) }); // Neutro Oscuro
+            baseTemplateColors.push({ h: h_ac1, s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_ac2, s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_neu, s: rand(0, 10), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_neu, s: rand(0, 10), b: rand(60, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: h_neu, s: rand(0, 10), b: rand(20, 40) }); // <-- CAMBIO
             break;
 
         case 'gradiente-analogo-vibrante':
@@ -839,9 +832,9 @@ export const generateAdvancedRandomPalette = (
             const gv_hueStep = rand(15, 30); // Paso de matiz
             const gv_analogS = rand(70, 100); // Perfil vibrante
             const gv_analogB = rand(60, 95);
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
-                    h: (gv_analogHue + (i * hueStep)) % 360,
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
+                    h: (gv_analogHue + (i * gv_hueStep)) % 360,
                     s: gv_analogS + rand(-5, 5),
                     b: gv_analogB + rand(-10, 10)
                 });
@@ -850,11 +843,11 @@ export const generateAdvancedRandomPalette = (
 
         case 'alto-contraste':
             // TEMPLATE 35: Alto Contraste
-            generatedHsbPalette.push({ h: shuffledHues[0], s: rand(5, 30), b: rand(90, 98) }); // Claro 1
-            generatedHsbPalette.push({ h: shuffledHues[1], s: rand(15, 40), b: rand(85, 95) }); // Claro 2
-            generatedHsbPalette.push({ h: shuffledHues[2], s: rand(5, 30), b: rand(10, 20) }); // Oscuro 1
-            generatedHsbPalette.push({ h: shuffledHues[3], s: rand(5, 30), b: rand(15, 25) }); // Oscuro 2
-            generatedHsbPalette.push({ h: shuffledHues[4], s: rand(70, 100), b: rand(50, 80) }); // Acento
+            baseTemplateColors.push({ h: shuffledHues[0], s: rand(5, 30), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[1], s: rand(15, 40), b: rand(85, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[2], s: rand(5, 30), b: rand(10, 20) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[3], s: rand(5, 30), b: rand(15, 25) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: shuffledHues[4], s: rand(70, 100), b: rand(50, 80) }); // <-- CAMBIO
             break;
 
         case 'bajo-contraste':
@@ -862,8 +855,8 @@ export const generateAdvancedRandomPalette = (
             const lc_hue = baseHue;
             const lc_s = rand(10, 30);
             const lc_b_start = rand(40, 60);
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: (lc_hue + rand(-10, 10)) % 360,
                     s: lc_s + rand(-5, 5),
                     b: lc_b_start + rand(-5, 5) // Rango de Brillo muy estrecho
@@ -876,8 +869,8 @@ export const generateAdvancedRandomPalette = (
             const rs_hue = baseHue;
             const rs_b = rand(60, 80); // Brillo constante
             const s_values = [rand(10, 20), rand(20, 40), rand(40, 60), rand(60, 80), rand(80, 100)];
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: rs_hue,
                     s: s_values[i % s_values.length],
                     b: rs_b
@@ -891,39 +884,39 @@ export const generateAdvancedRandomPalette = (
             const dc_h2 = (baseHue + 30) % 360; // Análogo
             const dc_h3 = (baseHue + 180) % 360; // Complemento
             const dc_h4 = (baseHue + 210) % 360; // Complemento del Análogo
-            generatedHsbPalette.push({ h: dc_h1, s: rand(60, 90), b: rand(50, 80) });
-            generatedHsbPalette.push({ h: dc_h2, s: rand(60, 90), b: rand(50, 80) });
-            generatedHsbPalette.push({ h: dc_h3, s: rand(60, 90), b: rand(50, 80) });
-            generatedHsbPalette.push({ h: dc_h4, s: rand(60, 90), b: rand(50, 80) });
-            generatedHsbPalette.push({ h: baseHue, s: rand(5, 15), b: rand(90, 98) }); // Neutro
+            baseTemplateColors.push({ h: dc_h1, s: rand(60, 90), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: dc_h2, s: rand(60, 90), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: dc_h3, s: rand(60, 90), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: dc_h4, s: rand(60, 90), b: rand(50, 80) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(5, 15), b: rand(90, 98) }); // <-- CAMBIO
             break;
 
         case 'dos-matices':
             // TEMPLATE 39: Dos Matices (3+2)
             const tm_h1 = baseHue;
             const tm_h2 = (baseHue + 150) % 360; // Ni análogo ni complemento
-            generatedHsbPalette.push({ h: tm_h1, s: rand(70, 100), b: rand(70, 90) }); // H1 Vibrante
-            generatedHsbPalette.push({ h: tm_h1, s: rand(30, 60), b: rand(80, 95) }); // H1 Claro
-            generatedHsbPalette.push({ h: tm_h1, s: rand(50, 90), b: rand(30, 50) }); // H1 Oscuro
-            generatedHsbPalette.push({ h: tm_h2, s: rand(70, 100), b: rand(60, 90) }); // H2 Vibrante
-            generatedHsbPalette.push({ h: tm_h2, s: rand(30, 60), b: rand(80, 95) }); // H2 Claro
+            baseTemplateColors.push({ h: tm_h1, s: rand(70, 100), b: rand(70, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: tm_h1, s: rand(30, 60), b: rand(80, 95) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: tm_h1, s: rand(50, 90), b: rand(30, 50) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: tm_h2, s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: tm_h2, s: rand(30, 60), b: rand(80, 95) }); // <-- CAMBIO
             break;
 
         case 'complemento-neutros':
             // TEMPLATE 40: Complemento + Neutros (1+1+3)
             const cn_h1 = baseHue;
             const cn_h2 = (baseHue + 180) % 360;
-            generatedHsbPalette.push({ h: cn_h1, s: rand(70, 100), b: rand(60, 90) }); // Acento 1
-            generatedHsbPalette.push({ h: cn_h2, s: rand(70, 100), b: rand(60, 90) }); // Acento 2
-            generatedHsbPalette.push({ h: baseHue, s: rand(0, 10), b: rand(90, 98) }); // Neutro 1
-            generatedHsbPalette.push({ h: baseHue, s: rand(0, 10), b: rand(50, 70) }); // Neutro 2
-            generatedHsbPalette.push({ h: baseHue, s: rand(0, 10), b: rand(10, 30) }); // Neutro 3
+            baseTemplateColors.push({ h: cn_h1, s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: cn_h2, s: rand(70, 100), b: rand(60, 90) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(0, 10), b: rand(90, 98) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(0, 10), b: rand(50, 70) }); // <-- CAMBIO
+            baseTemplateColors.push({ h: baseHue, s: rand(0, 10), b: rand(10, 30) }); // <-- CAMBIO
             break;
 
         case 'tematico-fuego':
             // TEMPLATE 41: Fuego
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: rand(0, 50), // Rojos/Naranjas/Amarillos
                     s: rand(70, 100), b: rand(60, 100)
                 });
@@ -932,8 +925,8 @@ export const generateAdvancedRandomPalette = (
             
         case 'tematico-hielo':
             // TEMPLATE 42: Hielo
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: rand(170, 220), // Cianes/Azules Claros
                     s: rand(5, 30), b: rand(90, 100)
                 });
@@ -944,7 +937,7 @@ export const generateAdvancedRandomPalette = (
             // TEMPLATE 43: Desierto
             const ds_hues = [rand(20, 40), rand(40, 60), rand(190, 210)]; // Naranjas, Arenas, Azul pálido
             for (let i = 0; i < ds_hues.length; i++) {
-                generatedHsbPalette.push({
+                baseTemplateColors.push({ 
                     h: ds_hues[i],
                     s: rand(30, 70), b: rand(50, 90)
                 });
@@ -953,8 +946,8 @@ export const generateAdvancedRandomPalette = (
 
         case 'caos':
             // TEMPLATE 44: Aleatorio (Caos)
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: rand(0, 360), s: rand(20, 100), b: rand(20, 100)
                 });
             }
@@ -968,7 +961,7 @@ export const generateAdvancedRandomPalette = (
             const sg = [rand(80, 100), rand(80, 100), rand(90, 100), rand(80, 100), rand(10, 20)];
             const bg = [rand(70, 90), rand(70, 90), rand(80, 100), rand(60, 80), rand(80, 90)];
             for (let i = 0; i < hg.length; i++) {
-                generatedHsbPalette.push({ h: hg[i], s: sg[i], b: bg[i] });
+                baseTemplateColors.push({ h: hg[i], s: sg[i], b: bg[i] }); // <-- CAMBIO
             }
             break;
 
@@ -978,7 +971,7 @@ export const generateAdvancedRandomPalette = (
             const sm = [rand(90, 100), rand(90, 100), rand(90, 100), rand(90, 100), rand(0, 10)];
             const bm = [rand(70, 90), rand(60, 80), rand(80, 100), rand(80, 100), rand(60, 70)];
             for (let i = 0; i < hm.length; i++) {
-                generatedHsbPalette.push({ h: hm[i], s: sm[i], b: bm[i] });
+                baseTemplateColors.push({ h: hm[i], s: sm[i], b: bm[i] }); // <-- CAMBIO
             }
             break;
 
@@ -988,7 +981,7 @@ export const generateAdvancedRandomPalette = (
             const ssp = [rand(80, 100), rand(0, 10), rand(0, 5), rand(0, 10), rand(0, 10)];
             const bsp = [rand(60, 80), rand(10, 20), rand(95, 100), rand(70, 80), rand(30, 40)];
             for (let i = 0; i < hsp.length; i++) {
-                generatedHsbPalette.push({ h: hsp[i], s: ssp[i], b: bsp[i] });
+                baseTemplateColors.push({ h: hsp[i], s: ssp[i], b: bsp[i] }); // <-- CAMBIO
             }
             break;
 
@@ -998,7 +991,7 @@ export const generateAdvancedRandomPalette = (
             const si = [rand(90, 100), rand(90, 100), rand(0, 5), rand(0, 10), rand(90, 100)];
             const bi = [rand(60, 80), rand(80, 100), rand(95, 100), rand(10, 20), rand(70, 90)];
             for (let i = 0; i < hi.length; i++) {
-                generatedHsbPalette.push({ h: hi[i], s: si[i], b: bi[i] });
+                baseTemplateColors.push({ h: hi[i], s: si[i], b: bi[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1008,7 +1001,7 @@ export const generateAdvancedRandomPalette = (
             const sc = [rand(90, 100), rand(0, 5), rand(0, 10), rand(0, 5), rand(5, 15)];
             const bc = [rand(70, 90), rand(95, 100), rand(10, 20), rand(80, 90), rand(60, 70)];
             for (let i = 0; i < hc.length; i++) {
-                generatedHsbPalette.push({ h: hc[i], s: sc[i], b: bc[i] });
+                baseTemplateColors.push({ h: hc[i], s: sc[i], b: bc[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1018,7 +1011,7 @@ export const generateAdvancedRandomPalette = (
             const sst = [rand(80, 100), rand(0, 5), rand(0, 10), rand(0, 10), rand(10, 20)];
             const bst = [rand(30, 50), rand(95, 100), rand(10, 20), rand(60, 70), rand(90, 95)];
             for (let i = 0; i < hst.length; i++) {
-                generatedHsbPalette.push({ h: hst[i], s: sst[i], b: bst[i] });
+                baseTemplateColors.push({ h: hst[i], s: sst[i], b: bst[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1028,7 +1021,7 @@ export const generateAdvancedRandomPalette = (
             const sma = [rand(90, 100), rand(80, 100), rand(90, 100), rand(80, 100), rand(60, 80)];
             const bma = [rand(70, 90), rand(70, 90), rand(80, 100), rand(60, 80), rand(40, 60)];
             for (let i = 0; i < hma.length; i++) {
-                generatedHsbPalette.push({ h: hma[i], s: sma[i], b: bma[i] });
+                baseTemplateColors.push({ h: hma[i], s: sma[i], b: bma[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1038,7 +1031,7 @@ export const generateAdvancedRandomPalette = (
             const sz = [rand(60, 80), rand(20, 30), rand(70, 90), rand(40, 60), rand(70, 90)];
             const bz = [rand(60, 80), rand(90, 100), rand(50, 70), rand(40, 60), rand(70, 90)];
             for (let i = 0; i < hz.length; i++) {
-                generatedHsbPalette.push({ h: hz[i], s: sz[i], b: bz[i] });
+                baseTemplateColors.push({ h: hz[i], s: sz[i], b: bz[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1048,7 +1041,7 @@ export const generateAdvancedRandomPalette = (
             const scp = [rand(90, 100), rand(90, 100), rand(90, 100), rand(90, 100), rand(0, 10)];
             const bcp = [rand(90, 100), rand(80, 100), rand(80, 100), rand(80, 100), rand(10, 20)];
             for (let i = 0; i < hcp.length; i++) {
-                generatedHsbPalette.push({ h: hcp[i], s: scp[i], b: bcp[i] });
+                baseTemplateColors.push({ h: hcp[i], s: scp[i], b: bcp[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1058,7 +1051,7 @@ export const generateAdvancedRandomPalette = (
             const sm_mc = [rand(60, 80), rand(50, 70), rand(60, 80), rand(0, 10), rand(0, 10)];
             const bm_mc = [rand(30, 50), rand(40, 60), rand(70, 90), rand(60, 80), rand(20, 30)];
             for (let i = 0; i < hm_mc.length; i++) {
-                generatedHsbPalette.push({ h: hm_mc[i], s: sm_mc[i], b: bm_mc[i] });
+                baseTemplateColors.push({ h: hm_mc[i], s: sm_mc[i], b: bm_mc[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1068,7 +1061,7 @@ export const generateAdvancedRandomPalette = (
             const sp = [rand(90, 100), rand(90, 100), rand(0, 5), rand(0, 10), rand(0, 5)];
             const bp = [rand(80, 100), rand(80, 100), rand(95, 100), rand(20, 30), rand(70, 80)];
             for (let i = 0; i < hp.length; i++) {
-                generatedHsbPalette.push({ h: hp[i], s: sp[i], b: bp[i] });
+                baseTemplateColors.push({ h: hp[i], s: sp[i], b: bp[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1078,7 +1071,7 @@ export const generateAdvancedRandomPalette = (
             const sw = [rand(70, 90), rand(10, 20), rand(20, 30), rand(30, 50), rand(5, 15)];
             const bw = [rand(30, 50), rand(15, 25), rand(80, 90), rand(40, 60), rand(90, 100)];
             for (let i = 0; i < hw.length; i++) {
-                generatedHsbPalette.push({ h: hw[i], s: sw[i], b: bw[i] });
+                baseTemplateColors.push({ h: hw[i], s: sw[i], b: bw[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1088,7 +1081,7 @@ export const generateAdvancedRandomPalette = (
             const sac = [rand(50, 70), rand(80, 100), rand(60, 80), rand(80, 100), rand(40, 60)];
             const bac = [rand(60, 80), rand(90, 100), rand(80, 100), rand(80, 100), rand(50, 70)];
             for (let i = 0; i < hac.length; i++) {
-                generatedHsbPalette.push({ h: hac[i], s: sac[i], b: bac[i] });
+                baseTemplateColors.push({ h: hac[i], s: sac[i], b: bac[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1098,7 +1091,7 @@ export const generateAdvancedRandomPalette = (
             const sd = [rand(70, 90), rand(30, 50), rand(0, 10), rand(40, 60), rand(10, 20)];
             const bd = [rand(60, 80), rand(80, 95), rand(10, 20), rand(30, 50), rand(60, 70)];
             for (let i = 0; i < hd.length; i++) {
-                generatedHsbPalette.push({ h: hd[i], s: sd[i], b: bd[i] });
+                baseTemplateColors.push({ h: hd[i], s: sd[i], b: bd[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1108,7 +1101,7 @@ export const generateAdvancedRandomPalette = (
             const sb = [rand(90, 100), rand(30, 50), rand(80, 100), rand(90, 100), rand(0, 5)];
             const bb = [rand(80, 100), rand(90, 100), rand(70, 90), rand(80, 100), rand(95, 100)];
             for (let i = 0; i < hb.length; i++) {
-                generatedHsbPalette.push({ h: hb[i], s: sb[i], b: bb[i] });
+                baseTemplateColors.push({ h: hb[i], s: sb[i], b: bb[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1118,7 +1111,7 @@ export const generateAdvancedRandomPalette = (
             const so = [rand(90, 100), rand(0, 10), rand(20, 30), rand(50, 70), rand(0, 10)];
             const bo = [rand(80, 100), rand(10, 20), rand(90, 95), rand(20, 40), rand(60, 70)];
             for (let i = 0; i < ho.length; i++) {
-                generatedHsbPalette.push({ h: ho[i], s: so[i], b: bo[i] });
+                baseTemplateColors.push({ h: ho[i], s: so[i], b: bo[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1128,7 +1121,7 @@ export const generateAdvancedRandomPalette = (
             const smx = [rand(90, 100), rand(70, 90), rand(0, 5), rand(0, 5), rand(0, 5)];
             const bmx = [rand(80, 100), rand(20, 40), rand(5, 10), rand(10, 20), rand(30, 40)];
             for (let i = 0; i < hmx.length; i++) {
-                generatedHsbPalette.push({ h: hmx[i], s: smx[i], b: bmx[i] });
+                baseTemplateColors.push({ h: hmx[i], s: smx[i], b: bmx[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1138,7 +1131,7 @@ export const generateAdvancedRandomPalette = (
             const sin = [rand(70, 90), rand(10, 20), rand(90, 100), rand(0, 10), rand(0, 10)];
             const bin = [rand(10, 20), rand(90, 100), rand(80, 100), rand(30, 40), rand(60, 70)];
             for (let i = 0; i < hin.length; i++) {
-                generatedHsbPalette.push({ h: hin[i], s: sin[i], b: bin[i] });
+                baseTemplateColors.push({ h: hin[i], s: sin[i], b: bin[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1148,7 +1141,7 @@ export const generateAdvancedRandomPalette = (
             const ssa = [rand(70, 90), rand(30, 50), rand(50, 70), rand(50, 70), rand(70, 90)];
             const bsa = [rand(60, 80), rand(90, 100), rand(50, 70), rand(20, 40), rand(80, 95)];
             for (let i = 0; i < hsa.length; i++) {
-                generatedHsbPalette.push({ h: hsa[i], s: ssa[i], b: bsa[i] });
+                baseTemplateColors.push({ h: hsa[i], s: ssa[i], b: bsa[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1158,7 +1151,7 @@ export const generateAdvancedRandomPalette = (
             const ssv = [rand(90, 100), rand(90, 100), rand(90, 100), rand(90, 100), rand(0, 10)];
             const bsv = [rand(80, 100), rand(70, 90), rand(80, 100), rand(60, 80), rand(10, 20)];
             for (let i = 0; i < hsv.length; i++) {
-                generatedHsbPalette.push({ h: hsv[i], s: ssv[i], b: bsv[i] });
+                baseTemplateColors.push({ h: hsv[i], s: ssv[i], b: bsv[i] }); // <-- CAMBIO
             }
             break;
             
@@ -1167,7 +1160,7 @@ export const generateAdvancedRandomPalette = (
             const sa = [rand(60, 90), rand(70, 100), rand(80, 100), rand(50, 70), rand(60, 80)];
             const ba = [rand(40, 70), rand(50, 80), rand(60, 80), rand(30, 50), rand(70, 90)];
             for (let i = 0; i < ha.length; i++) {
-                generatedHsbPalette.push({ h: ha[i], s: sa[i], b: ba[i] });
+                baseTemplateColors.push({ h: ha[i], s: sa[i], b: ba[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1176,7 +1169,7 @@ export const generateAdvancedRandomPalette = (
             const ssp_ = [rand(40, 60), rand(40, 60), rand(50, 70), rand(30, 50), rand(20, 40)];
             const bsp_ = [rand(85, 95), rand(90, 100), rand(90, 100), rand(90, 100), rand(95, 100)];
             for (let i = 0; i < hsp_.length; i++) {
-                generatedHsbPalette.push({ h: hsp_[i], s: ssp_[i], b: bsp_[i] });
+                baseTemplateColors.push({ h: hsp_[i], s: ssp_[i], b: bsp_[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1185,7 +1178,7 @@ export const generateAdvancedRandomPalette = (
             const swi = [rand(5, 15), rand(10, 20), rand(0, 5), rand(0, 5), rand(20, 40)];
             const bwi = [rand(80, 100), rand(60, 80), rand(95, 100), rand(70, 85), rand(40, 60)];
             for (let i = 0; i < hwi.length; i++) {
-                generatedHsbPalette.push({ h: hwi[i], s: swi[i], b: bwi[i] });
+                baseTemplateColors.push({ h: hwi[i], s: swi[i], b: bwi[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1194,7 +1187,7 @@ export const generateAdvancedRandomPalette = (
             const sn = [rand(70, 100), rand(80, 100), rand(60, 90), rand(0, 10), rand(30, 60)];
             const bn = [rand(20, 40), rand(30, 50), rand(70, 90), rand(10, 20), rand(80, 100)];
             for (let i = 0; i < hn.length; i++) {
-                generatedHsbPalette.push({ h: hn[i], s: sn[i], b: bn[i] });
+                baseTemplateColors.push({ h: hn[i], s: sn[i], b: bn[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1203,7 +1196,7 @@ export const generateAdvancedRandomPalette = (
             const sco = [rand(15, 30), rand(30, 50), rand(0, 5), rand(70, 90), rand(20, 40)];
             const bco = [rand(85, 95), rand(70, 90), rand(95, 100), rand(70, 80), rand(85, 95)];
             for (let i = 0; i < hco.length; i++) {
-                generatedHsbPalette.push({ h: hco[i], s: sco[i], b: bco[i] });
+                baseTemplateColors.push({ h: hco[i], s: sco[i], b: bco[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1212,7 +1205,7 @@ export const generateAdvancedRandomPalette = (
             const sj = [rand(60, 90), rand(50, 80), rand(50, 70), rand(100, 100), rand(100, 100)];
             const bj = [rand(30, 60), rand(20, 40), rand(30, 50), rand(80, 90), rand(70, 80)];
             for (let i = 0; i < hj.length; i++) {
-                generatedHsbPalette.push({ h: hj[i], s: sj[i], b: bj[i] });
+                baseTemplateColors.push({ h: hj[i], s: sj[i], b: bj[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1221,7 +1214,7 @@ export const generateAdvancedRandomPalette = (
             const sg_ = [rand(0, 5), rand(50, 70), rand(80, 100), rand(0, 5), rand(30, 50)];
             const bg_ = [rand(10, 15), rand(20, 30), rand(40, 60), rand(50, 60), rand(15, 25)];
             for (let i = 0; i < hg_.length; i++) {
-                generatedHsbPalette.push({ h: hg_[i], s: sg_[i], b: bg_[i] });
+                baseTemplateColors.push({ h: hg_[i], s: sg_[i], b: bg_[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1230,7 +1223,7 @@ export const generateAdvancedRandomPalette = (
             const sv = [rand(70, 100), rand(70, 100), rand(60, 90), rand(80, 100), rand(0, 5)];
             const bv = [rand(80, 100), rand(80, 100), rand(70, 90), rand(80, 100), rand(10, 20)];
             for (let i = 0; i < hv.length; i++) {
-                generatedHsbPalette.push({ h: hv[i], s: sv[i], b: bv[i] });
+                baseTemplateColors.push({ h: hv[i], s: sv[i], b: bv[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1239,7 +1232,7 @@ export const generateAdvancedRandomPalette = (
             const scn = [rand(30, 50), rand(40, 60), rand(0, 10), rand(100, 100), rand(100, 100)];
             const bcn = [rand(10, 30), rand(20, 40), rand(10, 20), rand(80, 90), rand(80, 90)];
             for (let i = 0; i < hcn.length; i++) {
-                generatedHsbPalette.push({ h: hcn[i], s: scn[i], b: bcn[i] });
+                baseTemplateColors.push({ h: hcn[i], s: scn[i], b: bcn[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1248,7 +1241,7 @@ export const generateAdvancedRandomPalette = (
             const sad = [rand(70, 90), rand(0, 5), rand(60, 80), rand(0, 5), rand(50, 70)];
             const bad = [rand(70, 90), rand(10, 15), rand(20, 40), rand(95, 100), rand(30, 50)];
             for (let i = 0; i < had.length; i++) {
-                generatedHsbPalette.push({ h: had[i], s: sad[i], b: bad[i] });
+                baseTemplateColors.push({ h: had[i], s: sad[i], b: bad[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1257,7 +1250,7 @@ export const generateAdvancedRandomPalette = (
             const sba = [rand(90, 100), rand(90, 100), rand(90, 100), rand(0, 5), rand(0, 10)];
             const bba = [rand(70, 90), rand(80, 100), rand(70, 90), rand(95, 100), rand(10, 20)];
             for (let i = 0; i < hba.length; i++) {
-                generatedHsbPalette.push({ h: hba[i], s: sba[i], b: bba[i] });
+                baseTemplateColors.push({ h: hba[i], s: sba[i], b: bba[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1266,7 +1259,7 @@ export const generateAdvancedRandomPalette = (
             const sim = [rand(30, 60), rand(40, 70), rand(20, 40), rand(30, 50), rand(10, 30)];
             const bim = [rand(80, 100), rand(90, 100), rand(90, 100), rand(85, 95), rand(95, 100)];
             for (let i = 0; i < him.length; i++) {
-                generatedHsbPalette.push({ h: him[i], s: sim[i], b: bim[i] });
+                baseTemplateColors.push({ h: him[i], s: sim[i], b: bim[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1275,7 +1268,7 @@ export const generateAdvancedRandomPalette = (
             const sg_o = [rand(40, 70), rand(10, 20), rand(60, 80), rand(60, 80), rand(20, 40)];
             const bg_o = [rand(20, 40), rand(90, 95), rand(30, 50), rand(50, 70), rand(80, 90)];
             for (let i = 0; i < hg_o.length; i++) {
-                generatedHsbPalette.push({ h: hg_o[i], s: sg_o[i], b: bg_o[i] });
+                baseTemplateColors.push({ h: hg_o[i], s: sg_o[i], b: bg_o[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1284,7 +1277,7 @@ export const generateAdvancedRandomPalette = (
             const st = [rand(80, 100), rand(90, 100), rand(80, 100), rand(60, 80), rand(90, 100)];
             const bt = [rand(70, 90), rand(80, 100), rand(70, 90), rand(60, 80), rand(80, 100)];
             for (let i = 0; i < ht.length; i++) {
-                generatedHsbPalette.push({ h: ht[i], s: st[i], b: bt[i] });
+                baseTemplateColors.push({ h: ht[i], s: st[i], b: bt[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1293,7 +1286,7 @@ export const generateAdvancedRandomPalette = (
             const ssa_ = [rand(60, 90), rand(40, 70), rand(20, 40), rand(20, 40), rand(30, 50)];
             const bsa_ = [rand(70, 90), rand(50, 70), rand(85, 95), rand(80, 95), rand(30, 50)];
             for (let i = 0; i < hsa_.length; i++) {
-                generatedHsbPalette.push({ h: hsa_[i], s: ssa_[i], b: bsa_[i] });
+                baseTemplateColors.push({ h: hsa_[i], s: ssa_[i], b: bsa_[i] }); // <-- CAMBIO
             }
             break;
 
@@ -1303,7 +1296,7 @@ export const generateAdvancedRandomPalette = (
             // TEMPLATE 43: Desierto
             const Desierto = [rand(20, 40), rand(40, 60), rand(190, 210)]; // Naranjas, Arenas, Azul pálido
             for (let i = 0; i < ds_hues.length; i++) {
-                generatedHsbPalette.push({
+                baseTemplateColors.push({ 
                     h: ds_hues[i],
                     s: rand(30, 70), b: rand(50, 90)
                 });
@@ -1314,7 +1307,7 @@ export const generateAdvancedRandomPalette = (
             // TEMPLATE 29: Pastelería
             const Pastelería = [rand(300, 350), rand(190, 220), rand(50, 60)]; // Rosa, Azul claro, Crema
             for (let i = 0; i < sw_hues.length; i++) {
-                generatedHsbPalette.push({
+                baseTemplateColors.push({ 
                     h: sw_hues[i],
                     s: rand(20, 50), b: rand(80, 95)
                 });
@@ -1326,8 +1319,8 @@ export const generateAdvancedRandomPalette = (
             const monoHue_fallback = baseHue;
             const s_fallback = [rand(5, 20), rand(20, 40), rand(40, 60), rand(60, 80), rand(80, 100)].sort(() => 0.5 - Math.random());
             const b_fallback = [rand(15, 30), rand(30, 50), rand(50, 70), rand(70, 90), rand(90, 95)].sort(() => 0.5 - Math.random());
-            for (let i = 0; i < effectiveCount; i++) {
-                generatedHsbPalette.push({
+            for (let i = 0; i < 5; i++) { // <-- ¡¡¡LA MEJORA!!! (era effectiveCount)
+                baseTemplateColors.push({ 
                     h: monoHue_fallback,
                     s: s_fallback[i % s_fallback.length],
                     b: b_fallback[i % b_fallback.length]
@@ -1338,19 +1331,19 @@ export const generateAdvancedRandomPalette = (
         case 'equilibrado':
         default:
             // TEMPLATE 1: Equilibrado (1 Dark, 1 Light, 3 Core)
-            generatedHsbPalette.push({ // Rol 1: Ancla Oscura
+            baseTemplateColors.push({ 
                 h: shuffledHues[0], s: rand(10, 40), b: rand(15, 35)
             });
-            generatedHsbPalette.push({ // Rol 2: Ancla Clara
+            baseTemplateColors.push({ 
                 h: shuffledHues[1], s: rand(5, 30), b: rand(90, 100)
             });
-            generatedHsbPalette.push({ // Rol 3: Corazón Vibrante
+            baseTemplateColors.push({ 
                 h: shuffledHues[2], s: rand(70, 100), b: rand(60, 90)
             });
-            generatedHsbPalette.push({ // Rol 4: Corazón Profundo
+            baseTemplateColors.push({ 
                 h: shuffledHues[3], s: rand(60, 95), b: rand(30, 60)
             });
-            generatedHsbPalette.push({ // Rol 5: Corazón Apagado
+            baseTemplateColors.push({ 
                 h: shuffledHues[4], s: rand(30, 60), b: rand(50, 80)
             });
             break;
@@ -1360,9 +1353,18 @@ export const generateAdvancedRandomPalette = (
     // ¡CORRECCIÓN! En lugar de añadir colores 100% aleatorios,
     // tomamos los colores base que ya generó la plantilla
     // y creamos variaciones de ellos.
-    const baseTemplateColors = [...generatedHsbPalette];
+    
+    // const baseTemplateColors = [...generatedHsbPalette]; // <-- ¡ELIMINADO!
     const baseTemplateLength = baseTemplateColors.length;
 
+    if (baseTemplateLength === 0) {
+        // Fallback de seguridad si una plantilla falla en generar seeds
+        console.error(`La plantilla "${selectedTemplate}" no generó colores base.`);
+        baseTemplateColors.push({ h: rand(0, 360), s: rand(40, 80), b: rand(40, 80) });
+    }
+
+    // --- ¡¡¡LA NUEVA LÓGICA!!! ---
+    // Rellena la paleta final con variaciones aleatorias de las semillas
     while (generatedHsbPalette.length < effectiveCount) {
         // Elige un color base aleatorio de la plantilla (ej: 1 de los 5)
         const baseColorToVary = baseTemplateColors[Math.floor(Math.random() * baseTemplateLength)];
@@ -1375,7 +1377,7 @@ export const generateAdvancedRandomPalette = (
         });
     }
     // Truncar si es necesario (esto no debería pasar con nuestra lógica)
-    generatedHsbPalette = generatedHsbPalette.slice(0, effectiveCount);
+    // generatedHsbPalette = generatedHsbPalette.slice(0, effectiveCount);
 
 
     // --- Integración de Colores Bloqueados ---
@@ -1427,6 +1429,8 @@ export const generateAdvancedRandomPalette = (
         if (noSortTemplates.includes(selectedTemplate) || isBranded) {
             // No hacer nada. Mantener el orden icónico o estructural
             // de la plantilla tal como fue definida.
+            // ¡PERO SÍ BARAJAR!
+            finalHsbPalette.sort(() => 0.5 - Math.random());
         } else if (isAnalogGradient) {
             // Los gradientes análogos se ven mejor ordenados por matiz (hue)
             finalHsbPalette.sort((a, b) => a.h - b.h);
@@ -1469,4 +1473,367 @@ export const generateExplorerPalette = (method = 'auto', baseColorHex, count = 2
     const harmonicGrayShades = generateShades(tinycolor(baseForGray).desaturate(85).toHexString());
 
     return { palette: palette, gray: harmonicGrayShades };
+};
+
+
+// --- (INICIO) FORMATO DE CÓDIGO ---
+
+// Configuración de estilos de fuente (sin cambios)
+const displayStylesConfig = {
+  'Título Grande': { fontSize: '2rem', fontWeight: '700' },
+  'Título Mediano': { fontSize: '1.75rem', fontWeight: '700' },
+  'Título Pequeño': { fontSize: '1.5rem', fontWeight: '700' },
+  'Cuerpo Grande Negrita': { fontSize: '1.125rem', fontWeight: '700' },
+  'Cuerpo Grande': { fontSize: '1.125rem', fontWeight: '400' },
+  'Cuerpo Mediano Negrita': { fontSize: '1rem', fontWeight: '700' },
+  'Cuerpo Mediano': { fontSize: '1rem', fontWeight: '400' },
+  'Cuerpo Pequeño': { fontSize: '0.875rem', fontWeight: '400' },
+  'Subtítulo': { fontSize: '0.75rem', fontWeight: '400' },
+};
+
+// Función interna para generar las paletas semánticas para un tema específico (claro u oscuro).
+// (Sin cambios)
+const generateSemanticPalettesForTheme = (theme, brandShades, grayShades, grayColor) => {
+    const infoBase = '#0ea5e9', successBase = '#22c55e', attentionBase = '#f97316', criticalBase = '#ef4444',
+          purpleBase = '#a855f7', tealBase = '#14b8a6', pinkBase = '#ec4899';
+
+    const info = tinycolor.mix(infoBase, grayColor, 15).saturate(10).toHexString(),
+          success = tinycolor.mix(successBase, grayColor, 15).saturate(10).toHexString(),
+          attention = tinycolor.mix(attentionBase, grayColor, 15).saturate(10).toHexString(),
+          critical = tinycolor.mix(criticalBase, grayColor, 15).saturate(10).toHexString(),
+          purple = tinycolor.mix(purpleBase, grayColor, 15).saturate(10).toHexString(),
+          teal = tinycolor.mix(tealBase, grayColor, 15).saturate(10).toHexString(),
+          pink = tinycolor.mix(pinkBase, grayColor, 15).saturate(10).toHexString();
+    
+    let stylePalette = {
+      decorateColors: [
+        { name: 'Azul1', color: info }, { name: 'Azul2', color: tinycolor(info).lighten(15).toHexString() },
+        { name: 'Verde1', color: success }, { name: 'Verde2', color: tinycolor(success).lighten(15).toHexString() },
+        { name: 'Neutro1', color: grayShades[5] }, { name: 'Neutro2', color: grayShades[4] },
+        { name: 'Naranja1', color: attention }, { name: 'Naranja2', color: tinycolor(attention).lighten(15).toHexString() },
+        { name: 'Violeta1', color: purple }, { name: 'Violeta2', color: tinycolor(purple).lighten(15).toHexString() },
+        { name: 'Turquesa1', color: teal }, { name: 'Turquesa2', color: tinycolor(teal).lighten(15).toHexString() },
+        { name: 'Rosa1', color: pink }, { name: 'Rosa2', color: tinycolor(pink).lighten(15).toHexString() },
+      ],
+      fullActionColors: [
+        { name: 'Primario', color: brandShades[4] }, { name: 'PrimarioFlotante', color: brandShades[5] },
+        { name: 'PrimarioPresionado', color: brandShades[6] }, { name: 'Secundario', color: grayShades[4] },
+        { name: 'SecundarioPresionado', color: grayShades[5] }, { name: 'Critico', color: critical },
+        { name: 'CriticoFlotante', color: tinycolor(critical).lighten(10).toHexString() }, { name: 'CriticoPresionado', color: tinycolor(critical).darken(10).toHexString() },
+      ],
+    };
+
+    if (theme === 'dark') {
+      stylePalette.fullBackgroundColors = [
+        { name: 'Predeterminado', color: grayShades[0] }, { name: 'Apagado', color: grayShades[1] },
+        { name: 'Debil', color: grayShades[2] }, { name: 'Fuerte', color: grayShades[9] },
+        { name: 'Inverso', color: grayShades[19] }, { name: 'MarcaDebil', color: brandShades[1] },
+        { name: 'InfoDebil', color: tinycolor(info).darken(25).toHexString() },
+        { name: 'ExitoDebil', color: tinycolor(success).darken(25).toHexString() },
+        { name: 'AtencionDebil', color: tinycolor(attention).darken(25).toHexString() },
+        { name: 'CriticoDebil', color: tinycolor(critical).darken(25).toHexString() }, 
+      ];
+      stylePalette.fullForegroundColors = [
+        { name: 'Predeterminado', color: grayShades[19] }, { name: 'Apagado', color: grayShades[6] },
+        { name: 'Debil', color: grayShades[4] }, { name: 'Fuerte', color: grayShades[19] },
+        { name: 'Inverso', color: grayShades[0] }, { name: 'Info', color: info },
+        { name: 'Critico', color: critical }, { name: 'Atencion', color: attention },
+        { name: 'Exito', color: success }, { name: 'SobreAccento', color: '#FFFFFF' },
+      ];
+      stylePalette.fullBorderColors = [
+        { name: 'Predeterminado', color: grayShades[2] }, { name: 'Fuerte', color: grayShades[4] },
+        { name: 'Inverso', color: grayShades[0] }, { name: 'InfoFuerte', color: info },
+        { name: 'CriticoFuerte', color: critical }, { name: 'AtencionFuerte', color: attention },
+        { name: 'ExitoFuerte', color: success },
+      ];
+    } else { // light theme
+       stylePalette.fullBackgroundColors = [
+        { name: 'Predeterminado', color: grayShades[19] }, { name: 'Apagado', color: grayShades[18] },
+        { name: 'Debil', color: grayShades[17] }, { name: 'Fuerte', color: grayShades[0] },
+        { name: 'Inverso', color: grayShades[0] }, { name: 'MarcaDebil', color: brandShades[18] },
+        { name: 'InfoDebil', color: tinycolor(info).lighten(25).toHexString() },
+        { name: 'ExitoDebil', color: tinycolor(success).lighten(25).toHexString() },
+        { name: 'AtencionDebil', color: tinycolor(attention).lighten(25).toHexString() },
+        { name: 'CriticoDebil', color: tinycolor(critical).lighten(25).toHexString() },
+      ];
+       stylePalette.fullForegroundColors = [
+        { name: 'Predeterminado', color: grayShades[0] }, { name: 'Apagado', color: grayShades[3] },
+        { name: 'Debil', color: grayShades[5] }, { name: 'Fuerte', color: grayShades[0] },
+        { name: 'Inverso', color: grayShades[19] }, { name: 'Info', color: info },
+        { name: 'Critico', color: critical }, { name: 'Atencion', color: attention },
+        { name: 'Exito', color: success }, { name: 'SobreAccento', color: '#FFFFFF' },
+      ];
+       stylePalette.fullBorderColors = [
+        { name: 'Predeterminado', color: grayShades[17] }, { name: 'Fuerte', color: grayShades[5] },
+        { name: 'Inverso', color: grayShades[19] }, { name: 'InfoFuerte', color: info },
+        { name: 'CriticoFuerte', color: critical }, { name: 'AtencionFuerte', color: attention },
+        { name: 'ExitoFuerte', color: success },
+      ];
+    }
+    return stylePalette;
+};
+
+
+export const generatePowerFxCode = (themeData, separator, useQuotes) => {
+  if (!themeData || !themeData.brandShades) return "// Generando código...";
+
+  const { brandShades, grayShades, grayColor, font = "Segoe UI", explorerPalette } = themeData;
+
+  const formatKey = (key) => {
+    if (useQuotes) return `"${key}"`;
+    return key.replace(/ /g, '');
+  };
+
+  const formatShades = (shades) => {
+    return shades.map((s, i) => `    ${formatKey(`t${i * 50}`)}: ColorValue("${s.toUpperCase()}")`).join(`${separator}\n`);
+  };
+
+  const formatPalette = (palette) => {
+    return (palette || []).map(item => `    ${formatKey(item.name)}: ColorValue("${item.color.toUpperCase()}")`).join(`${separator}\n`);
+  };
+
+  const formatExplorerPalette = (palette) => {
+      return (palette || []).map((color, index) => `    ${formatKey(`Color${index + 1}`)}: ColorValue("${color.toUpperCase()}")`).join(`${separator}\n`);
+  };
+
+  const fontStylesRecord = Object.entries(displayStylesConfig)
+    .map(([name, styles]) => `    ${formatKey(name)}: { Font: Font.'${font.split(',')[0].replace(/"/g, '')}'${separator} Size: ${Math.round(parseFloat(styles.fontSize) * 10)}${separator} Bold: ${styles.fontWeight === '700'} }`)
+    .join(`${separator}\n`);
+
+  const lightPalettes = generateSemanticPalettesForTheme('light', brandShades, grayShades, grayColor);
+  const darkPalettes = generateSemanticPalettesForTheme('dark', brandShades, grayShades, grayColor);
+
+  const createThemeRecord = (themeName, palettes) => {
+    return `{
+    // --- Tema ${themeName} ---
+    Marca: {
+${formatShades(brandShades)}
+    }${separator}
+    Gris: {
+${formatShades(grayShades)}
+    }${separator}
+    ModoColor: {
+${formatExplorerPalette(explorerPalette)}
+    }${separator}
+    Fondos: {
+${formatPalette(palettes.fullBackgroundColors)}
+    }${separator}
+    Textos: {
+${formatPalette(palettes.fullForegroundColors)}
+    }${separator}
+    Bordes: {
+${formatPalette(palettes.fullBorderColors)}
+    }${separator}
+    Acciones: {
+${formatPalette(palettes.fullActionColors)}
+    }${separator}
+    Decorativos: {
+${formatPalette(palettes.decorateColors)}
+    }
+}`;
+  };
+
+  const lightThemeRecord = createThemeRecord('Claro', lightPalettes);
+  const darkThemeRecord = createThemeRecord('Oscuro', darkPalettes);
+
+  return `// --- GUÍA RÁPIDA PARA POWER APPS ---
+// 1. Pega este código en la propiedad 'OnStart' de tu App.
+// 2. Para cambiar de tema, usa una variable: Set(gblIsDarkMode, Self.Value)
+// 3. Para USAR un color: LookUp(colDesignSystem, Tema = If(gblIsDarkMode, "Oscuro", "Claro")).Colores.Acciones.Primario
+// 4. Para USAR una fuente: First(colFonts).Fuentes.CuerpoMediano.Font
+
+ClearCollect(
+    colDesignSystem${separator}
+    {
+        Tema: "Claro"${separator}
+        Colores: ${lightThemeRecord}
+    }${separator}
+    {
+        Tema: "Oscuro"${separator}
+        Colores: ${darkThemeRecord}
+    }
+)${separator}
+
+ClearCollect(
+    colFonts${separator}
+    {
+        Fuentes: {
+${fontStylesRecord}
+        }
+    }
+)${separator}`;
+};
+
+
+export const generateCssCode = (themeData) => {
+  if (!themeData || !themeData.stylePalette) return "/* Generando CSS... */";
+  const { brandShades, grayShades, stylePalette, theme } = themeData;
+
+  const formatShades = (shades, prefix) => 
+    shades.map((s, i) => `    --${prefix}-t${i * 50}: ${s.toUpperCase()};`).join('\n');
+  
+  const formatPalette = (palette, prefix) =>
+    (palette || []).map(item => `    --${prefix}-${item.name.toLowerCase().replace(/ /g, '-')}: ${item.color.toUpperCase()};`).join('\n');
+
+  return `
+/* --- TEMA DE DISEÑO GENERADO --- */
+/* Modo: ${theme === 'light' ? 'Claro' : 'Oscuro'} */
+
+:root {
+    /* --- Colores de Marca --- */
+${formatShades(brandShades, 'brand')}
+
+    /* --- Escala de Grises --- */
+${formatShades(grayShades, 'gray')}
+
+    /* --- Fondos --- */
+${formatPalette(stylePalette.fullBackgroundColors, 'bg')}
+
+    /* --- Textos --- */
+${formatPalette(stylePalette.fullForegroundColors, 'text')}
+
+    /* --- Bordes --- */
+${formatPalette(stylePalette.fullBorderColors, 'border')}
+
+    /* --- Acciones --- */
+${formatPalette(stylePalette.fullActionColors, 'action')}
+
+    /* --- Decorativos --- */
+${formatPalette(stylePalette.decorateColors, 'deco')}
+}`;
+};
+
+export const generateTailwindCode = (themeData) => {
+    if (!themeData || !themeData.brandShades) return "// Generando Tailwind Config...";
+    const { brandShades, grayShades } = themeData;
+    const formatShades = (shades) => {
+        let shadeObject = '';
+        shades.forEach((s, i) => {
+            shadeObject += `          '${i * 50}': '${s.toUpperCase()}',\n`;
+        });
+        return shadeObject.slice(0, -1);
+    };
+
+    return `
+// In your tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+${formatShades(brandShades)}
+        },
+        gray: {
+${formatShades(grayShades)}
+        }
+      }
+    }
+  }
+};`;
+};
+
+// --- NUEVA FUNCIÓN ---
+// Genera un objeto JSON limpio para exportar.
+export const generateJsonCode = (themeData) => {
+    if (!themeData) return "{}";
+
+    const { brandShades, grayShades, grayColor, font, theme, explorerPalette } = themeData;
+
+    // Función auxiliar para convertir array de sombras a objeto
+    const formatShadesForJson = (shades) => {
+        const shadeObj = {};
+        shades.forEach((s, i) => {
+            shadeObj[`t${i * 50}`] = s.toUpperCase();
+        });
+        return shadeObj;
+    };
+    
+    // Función auxiliar para convertir paleta semántica a objeto
+    const formatPaletteForJson = (palette) => {
+        const paletteObj = {};
+        (palette || []).forEach(item => {
+            paletteObj[item.name.toLowerCase().replace(/ /g, '-')] = item.color.toUpperCase();
+        });
+        return paletteObj;
+    };
+
+    const lightPalettes = generateSemanticPalettesForTheme('light', brandShades, grayShades, grayColor);
+    const darkPalettes = generateSemanticPalettesForTheme('dark', brandShades, grayShades, grayColor);
+
+    const exportData = {
+        meta: {
+            themeActual: theme,
+            font: font,
+            brandColor: themeData.brandColor,
+            grayColor: themeData.grayColor,
+            isGrayAuto: themeData.isGrayAuto,
+        },
+        palettes: {
+            brand: formatShadesForJson(brandShades),
+            gray: formatShadesForJson(grayShades),
+            explorer: explorerPalette.map(c => c.toUpperCase()),
+        },
+        themes: {
+            light: {
+                backgrounds: formatPaletteForJson(lightPalettes.fullBackgroundColors),
+                foregrounds: formatPaletteForJson(lightPalettes.fullForegroundColors),
+                borders: formatPaletteForJson(lightPalettes.fullBorderColors),
+                actions: formatPaletteForJson(lightPalettes.fullActionColors),
+                decorative: formatPaletteForJson(lightPalettes.decorateColors),
+            },
+            dark: {
+                backgrounds: formatPaletteForJson(darkPalettes.fullBackgroundColors),
+                foregrounds: formatPaletteForJson(darkPalettes.fullForegroundColors),
+                borders: formatPaletteForJson(darkPalettes.fullBorderColors),
+                actions: formatPaletteForJson(darkPalettes.fullActionColors),
+                decorative: formatPaletteForJson(darkPalettes.decorateColors),
+            }
+        }
+    };
+
+    return JSON.stringify(exportData, null, 2);
+};
+
+// --- NUEVA FUNCIÓN ---
+// Genera variables SCSS (Sass).
+export const generateScssCode = (themeData) => {
+  if (!themeData || !themeData.stylePalette) return "/* Generando SCSS... */";
+  const { brandShades, grayShades, stylePalette, theme } = themeData;
+
+  // Modificamos las funciones de formato para SCSS
+  const formatShades = (shades, prefix) => 
+    shades.map((s, i) => `$${prefix}-t${i * 50}: ${s.toUpperCase()};`).join('\n');
+  
+  const formatPalette = (palette, prefix) =>
+    (palette || []).map(item => `$${prefix}-${item.name.toLowerCase().replace(/ /g, '-')}: ${item.color.toUpperCase()};`).join('\n');
+
+  // El tema actual (light/dark) se usa para generar las paletas semánticas
+  const semanticPrefix = theme === 'light' ? 'light' : 'dark';
+  
+  return `
+// --- TEMA DE DISEÑO GENERADO ---
+// Modo: ${theme === 'light' ? 'Claro' : 'Oscuro'}
+
+// --- Colores de Marca ---
+${formatShades(brandShades, 'brand')}
+
+// --- Escala de Grises ---
+${formatShades(grayShades, 'gray')}
+
+// --- Paletas Semánticas (basadas en el modo '${semanticPrefix}') ---
+// --- Fondos ---
+${formatPalette(stylePalette.fullBackgroundColors, 'bg')}
+
+// --- Textos ---
+${formatPalette(stylePalette.fullForegroundColors, 'text')}
+
+// --- Bordes ---
+${formatPalette(stylePalette.fullBorderColors, 'border')}
+
+// --- Acciones ---
+${formatPalette(stylePalette.fullActionColors, 'action')}
+
+// --- Decorativos ---
+${formatPalette(stylePalette.decorateColors, 'deco')}
+`;
 };
