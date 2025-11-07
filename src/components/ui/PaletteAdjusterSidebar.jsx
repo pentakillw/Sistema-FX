@@ -224,10 +224,14 @@ const PaletteAdjusterSidebar = ({
       {/* --- ¡MODIFICADO! --- Se quita el backdrop, ya no es necesario */}
       
       {/* Panel del Sidebar */}
+      {/* --- ¡MODIFICACIÓN CLAVE! ---
+          Se cambió 'md:w-80 lg:w-96' por 'md:w-64 lg:w-72'
+          para hacerlo más delgado.
+      */}
       <aside
         ref={sidebarRef}
         className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform
-                   md:transform-none md:relative md:w-80 lg:w-96 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
+                   md:transform-none md:relative md:w-64 lg:w-72 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
         // --- ¡MODIFICADO! --- Fondo blanco
         style={{
           backgroundColor: '#FFFFFF',

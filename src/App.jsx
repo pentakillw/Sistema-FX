@@ -697,7 +697,11 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       
       <div className="flex-grow">
         
-        <div className="flex flex-col md:flex-row md:gap-4">
+        {/* --- ¡MODIFICACIÓN CLAVE! ---
+            Se ha eliminado 'md:gap-4' de esta clase para
+            quitar el espacio entre la paleta y el sidebar.
+        */}
+        <div className="flex flex-col md:flex-row">
           
           <div className="flex-grow w-full min-w-0">
             <main>
@@ -742,7 +746,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               />
               
               <div className="px-4 md:px-8">
-                <div className="space-y-6 mb-8">
+                {/* --- MODIFICACIÓN: Reducido el espacio vertical --- */}
+                <div className="space-y-4 mb-4">
                   <ColorPreviewer 
                     title="Modo Claro" 
                     themeOverride="light" 
@@ -855,8 +860,13 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       </div>
 
         <div className="px-4 md:px-8 my-8 flex justify-center">
+          {/* --- ¡MODIFICACIÓN CLAVE! ---
+              Se ha eliminado la prop 'dataAdClient' para evitar
+              la advertencia de 'import.meta'. El componente
+              GoogleAdBanner.jsx (según el contexto) ya
+              obtiene este valor por sí mismo.
+          */}
           <GoogleAdBanner
-            dataAdClient={import.meta.env.VITE_GOOGLE_AD_CLIENT}
             dataAdSlot="3746326433"
             style={{ display: 'block' }}
             dataAdFormat="fluid"

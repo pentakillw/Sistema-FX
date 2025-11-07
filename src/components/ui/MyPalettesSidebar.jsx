@@ -91,7 +91,7 @@ const PaletteCard = ({
                         onFocus={(e) => e.target.select()}
                         onChange={(e) => setName(e.target.value)}
                         onBlur={handleNameUpdate}
-                        onKeyDown={(e) => e.key === 'Enter' && handleNameUpdate()}
+                        onKeyDown={(e) => e.key === 'Enter' && handleNameUpdate}
                         onClick={(e) => e.stopPropagation()}
                         className="font-semibold text-sm p-0 m-0 bg-transparent border-b border-purple-500 focus:outline-none flex-1 w-full"
                         style={{ color: 'var(--text-default)' }}
@@ -379,14 +379,21 @@ const MyPalettesSidebar = ({
                 onClick={onClose}
             />
             
+            {/* --- ¡MODIFICACIÓN CLAVE! ---
+                Se cambió 'md:w-80 lg:w-96' por 'md:w-64 lg:w-72'
+                para hacerlo más delgado.
+            */}
             <aside
                 ref={sidebarRef}
                 className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform
-                           md:transform-none md:relative md:w-80 lg:w-96 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
-                // --- ¡MODIFICADO! --- Fondo blanco
+                           md:transform-none md:relative md:w-64 lg:w-72 md:flex-shrink-0 md:sticky md:top-0 md:rounded-l-xl md:shadow-lg md:border-l md:border-t md:border-b md:max-h-full md:z-10 border-t"
+                // --- ¡MODIFICADO! --- Fondo blanco y bordes ajustados
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderColor: '#E5E7EB',
+                  borderColor: '#E5E7EB', // Borde gris claro
+                  // La altura ahora se estira para coincidir con la paleta
+                  maxHeight: 'calc(100vh - 65px)', // 65px es la altura del header
+                  top: '65px', // Se alinea con la parte inferior del header
                 }}
             >
                 <div 
@@ -399,7 +406,8 @@ const MyPalettesSidebar = ({
                     <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4 md:hidden flex-shrink-0" />
                     
                     {/* Header (Fijo) */}
-                    <div className="flex justify-between items-center mb-4 flex-shrink-0 px-6 pt-4">
+                    {/* --- MODIFICACIÓN: px-6 cambiado a px-4 --- */}
+                    <div className="flex justify-between items-center mb-4 flex-shrink-0 px-4 pt-4">
                         <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
                             <FolderOpen size={20} strokeWidth={1.75} className="text-purple-500" /> Mis Paletas
                         </h2>
@@ -428,7 +436,8 @@ const MyPalettesSidebar = ({
                                 placeholder="Buscar..."
                                 value={safeFilters.search}
                                 onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
-                                className="w-28 bg-gray-100 border border-transparent rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 text-gray-900"
+                                // --- MODIFICACIÓN: w-28 cambiado a w-24 ---
+                                className="w-24 bg-gray-100 border border-transparent rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 text-gray-900"
                             />
                         </div>
                     </div>
@@ -470,7 +479,8 @@ const MyPalettesSidebar = ({
                         </div>
                     )}
 
-                    <div className="px-6 py-4">
+                    {/* --- MODIFICACIÓN: px-6 cambiado a px-4 --- */}
+                    <div className="px-4 py-4">
                         {isLoading ? (
                             <div className="flex items-center justify-center h-48">
                                 <Loader2 size={32} className="animate-spin text-purple-500" />
