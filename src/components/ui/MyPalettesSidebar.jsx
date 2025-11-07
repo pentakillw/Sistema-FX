@@ -5,6 +5,28 @@ import {
 } from 'lucide-react';
 import { PopoverMenu, MenuButton } from './Explorer.jsx'; 
 
+// --- Opciones estáticas para los filtros ---
+const styleOptions = [
+    { label: "Cálido", value: "warm" }, { label: "Frío", value: "cold" },
+    { label: "Claro", value: "light" }, { label: "Oscuro", value: "dark" },
+    { label: "Brillante", value: "bright" }, { label: "Silenciado", value: "muted" },
+    { label: "Pastel", value: "pastel" }, { label: "Vintage", value: "vintage" },
+    { label: "Monocromo", value: "monochromatic" }, { label: "Gradiente", value: "gradient" }
+];
+
+const colorOptions = [
+    { label: "Rojo", value: "red", color: "#e11d48" },
+    { label: "Naranja", value: "orange", color: "#f97316" },
+    { label: "Marrón", value: "brown", color: "#78350f" },
+    { label: "Amarillo", value: "yellow", color: "#facc15" },
+    { label: "Verde", value: "green", color: "#22c55e" },
+    { label: "Azul", value: "blue", color: "#3b82f6" },
+    { label: "Púrpura", value: "purple", color: "#a855f7" },
+    { label: "Rosa", value: "pink", color: "#ec4899" },
+    { label: "Gris", value: "gray", color: "#6b7280" }
+];
+// --- FIN DE OPCIONES ---
+
 // Hook para detectar clics fuera (solo para móvil)
 function useOnClickOutside(ref, handler) {
   useEffect(() => {
@@ -133,7 +155,7 @@ const PaletteCard = ({
 };
 
 
-// --- ¡NUEVO! --- Componente para gestionar Proyectos y Colecciones
+// Componente para gestionar Proyectos y Colecciones
 const ProjectCollectionManager = ({
     title,
     items,
@@ -174,6 +196,7 @@ const ProjectCollectionManager = ({
                 >
                     <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
                     {title}
+                    {activeItemId && <div className="w-2 h-2 rounded-full bg-purple-500 ml-1"></div>}
                 </button>
                 <button 
                     onClick={() => setIsAdding(true)}
@@ -185,7 +208,7 @@ const ProjectCollectionManager = ({
             </div>
             
             {isOpen && (
-                <div className="pl-4 pr-2 space-y-1 max-h-40 overflow-y-auto">
+                <div className="pl-4 pr-2 space-y-1">
                     {/* Botón de "Todas las Paletas" (solo para Proyectos) */}
                     {title === "Proyectos" && (
                          <button
@@ -196,7 +219,6 @@ const ProjectCollectionManager = ({
                         </button>
                     )}
                     
-                    {/* Lista de items (proyectos/colecciones) */}
                     {items && items.map(item => (
                         <div
                             key={item.id}
@@ -238,7 +260,6 @@ const ProjectCollectionManager = ({
                         </div>
                     ))}
                     
-                    {/* Campo para añadir nuevo item */}
                     {isAdding && (
                         <div className="px-3 py-1.5">
                             <input
@@ -259,7 +280,7 @@ const ProjectCollectionManager = ({
     );
 };
 
-// --- ¡NUEVO! --- Componente para los filtros de Estilo y Color
+// Componente para los filtros de Estilo y Color
 const FilterGroup = ({ title, options, activeOption, onSelectOption }) => {
     const [isOpen, setIsOpen] = useState(true);
 
@@ -271,9 +292,10 @@ const FilterGroup = ({ title, options, activeOption, onSelectOption }) => {
             >
                 <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
                 {title}
+                {activeOption && <div className="w-2 h-2 rounded-full bg-purple-500 ml-1"></div>}
             </button>
             {isOpen && (
-                <div className="pl-4 pr-2 space-y-1 max-h-40 overflow-y-auto">
+                <div className="pl-4 pr-2 space-y-1">
                     <button
                         onClick={() => onSelectOption(null)}
                         className={`w-full text-left px-3 py-1.5 text-sm rounded-md ${!activeOption ? 'font-bold bg-[var(--bg-muted)] text-[var(--text-default)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-muted)]'}`}
@@ -298,29 +320,9 @@ const FilterGroup = ({ title, options, activeOption, onSelectOption }) => {
     );
 };
 
-// Opciones estáticas para los filtros
-const styleOptions = [
-    { label: "Cálido", value: "warm" }, { label: "Frío", value: "cold" },
-    { label: "Claro", value: "light" }, { label: "Oscuro", value: "dark" },
-    { label: "Brillante", value: "bright" }, { label: "Silenciado", value: "muted" },
-    { label: "Pastel", value: "pastel" }, { label: "Vintage", value: "vintage" },
-    { label: "Monocromo", value: "monochromatic" }, { label: "Gradiente", value: "gradient" }
-];
 
-const colorOptions = [
-    { label: "Rojo", value: "red", color: "#e11d48" },
-    { label: "Naranja", value: "orange", color: "#f97316" },
-    { label: "Marrón", value: "brown", color: "#78350f" },
-    { label: "Amarillo", value: "yellow", color: "#facc15" },
-    { label: "Verde", value: "green", color: "#22c55e" },
-    { label: "Azul", value: "blue", color: "#3b82f6" },
-    { label: "Púrpura", value: "purple", color: "#a855f7" },
-    { label: "Rosa", value: "pink", color: "#ec4899" },
-    { label: "Gris", value: "gray", color: "#6b7280" }
-];
-
-
-// --- COMPONENTE PRINCIPAL (MyPalettesSidebar) - ¡REDISÑADO! ---
+// --- COMPONENTE PRINCIPAL (MyPalettesSidebar) ---
+// Este componente SÍ necesita los filtros, y los recibe de App.jsx
 const MyPalettesSidebar = ({ 
     onClose, 
     palettes, 
@@ -331,11 +333,11 @@ const MyPalettesSidebar = ({
     onExportPalette,
     onUpdatePaletteName,
     deletingId,
-    // --- ¡NUEVAS PROPS! ---
+    // --- Props de filtros ---
     projects,
     collections,
-    filters,
-    setFilters,
+    filters, // <-- Recibido de App.jsx
+    setFilters, // <-- Recibido de App.jsx
     onCreateProject,
     onUpdateProject,
     onDeleteProject,
@@ -347,16 +349,29 @@ const MyPalettesSidebar = ({
     useOnClickOutside(sidebarRef, onClose);
     const [showFilters, setShowFilters] = useState(true);
 
-    // Determina qué texto mostrar en el botón principal
+    // Esta función ahora funcionará porque 'filters' está garantizado
+    // (o al menos, se espera que App.jsx lo pase).
     const getFilterButtonText = () => {
+        // Añadimos una comprobación por si acaso 'filters' es undefined
+        if (!filters) return "Todas las paletas"; 
+        
         if (filters.projectId) {
             return projects.find(p => p.id === filters.projectId)?.name || "Proyecto";
         }
         if (filters.collectionId) {
             return collections.find(c => c.id === filters.collectionId)?.name || "Colección";
         }
+        if (filters.style) {
+            return styleOptions.find(o => o.value === filters.style)?.label || "Estilo";
+        }
+        if (filters.color) {
+            return colorOptions.find(o => o.value === filters.color)?.label || "Color";
+        }
         return "Todas las paletas";
     };
+
+    // Fallback por si filters es nulo o undefined
+    const safeFilters = filters || { projectId: null, collectionId: null, style: null, color: null, search: '' };
 
     return (
         <>
@@ -374,7 +389,6 @@ const MyPalettesSidebar = ({
                   borderColor: 'var(--border-default)',
                 }}
             >
-                {/* --- CONTENIDO DEL SIDEBAR (AHORA CON SCROLL) --- */}
                 <div 
                     className="h-full overflow-y-auto flex flex-col"
                     onClick={(e) => e.stopPropagation()}
@@ -384,7 +398,7 @@ const MyPalettesSidebar = ({
                     {/* Handle visual (solo móvil) */}
                     <div className="w-12 h-1.5 bg-[var(--border-default)] rounded-full mx-auto mb-4 md:hidden flex-shrink-0" />
                     
-                    {/* Header */}
+                    {/* Header (Fijo) */}
                     <div className="flex justify-between items-center mb-4 flex-shrink-0 px-6 pt-4">
                         <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-default)' }}>
                             <FolderOpen size={20} className="text-purple-500" /> Mis Paletas
@@ -398,8 +412,8 @@ const MyPalettesSidebar = ({
                         </button>
                     </div>
 
-                    {/* --- ¡NUEVO! --- Pestaña de Filtro y Botón de Búsqueda */}
-                    <div className="flex justify-between items-center border-b border-[var(--border-default)] px-4">
+                    {/* Barra de Filtro/Búsqueda (Fijo) */}
+                    <div className="flex justify-between items-center border-b border-[var(--border-default)] px-4 flex-shrink-0">
                         <button 
                             onClick={() => setShowFilters(f => !f)}
                             className="flex-1 text-left font-semibold py-3 px-2 flex items-center justify-between"
@@ -412,21 +426,22 @@ const MyPalettesSidebar = ({
                             <input 
                                 type="text"
                                 placeholder="Buscar..."
-                                value={filters.search}
+                                value={safeFilters.search}
                                 onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
                                 className="w-28 bg-[var(--bg-muted)] border border-transparent rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--action-primary-default)]"
                             />
                         </div>
                     </div>
 
-                    {/* --- ¡NUEVO! --- Contenedor de Filtros (Colapsable) */}
+                    {/* Contenido Desplazable (Filtros + Paletas) */}
+                    
                     {showFilters && (
-                        <div className="px-4 py-2 border-b border-[var(--border-default)] flex-shrink-0">
+                        <div className="px-4 py-2 border-b border-[var(--border-default)]">
                             <ProjectCollectionManager
                                 title="Proyectos"
                                 items={projects}
-                                activeItemId={filters.projectId}
-                                onSelectItem={(id) => setFilters(f => ({ ...f, projectId: id, collectionId: null }))}
+                                activeItemId={safeFilters.projectId}
+                                onSelectItem={(id) => setFilters(f => ({ ...f, projectId: id, collectionId: null, style: null, color: null }))}
                                 onAddItem={onCreateProject}
                                 onUpdateItem={onUpdateProject}
                                 onDeleteItem={onDeleteProject}
@@ -434,8 +449,8 @@ const MyPalettesSidebar = ({
                             <ProjectCollectionManager
                                 title="Colecciones"
                                 items={collections}
-                                activeItemId={filters.collectionId}
-                                onSelectItem={(id) => setFilters(f => ({ ...f, collectionId: id, projectId: null }))}
+                                activeItemId={safeFilters.collectionId}
+                                onSelectItem={(id) => setFilters(f => ({ ...f, collectionId: id, projectId: null, style: null, color: null }))}
                                 onAddItem={onCreateCollection}
                                 onUpdateItem={onUpdateCollection}
                                 onDeleteItem={onDeleteCollection}
@@ -443,20 +458,19 @@ const MyPalettesSidebar = ({
                             <FilterGroup
                                 title="Estilo"
                                 options={styleOptions}
-                                activeOption={filters.style}
-                                onSelectOption={(value) => setFilters(f => ({ ...f, style: value }))}
+                                activeOption={safeFilters.style}
+                                onSelectOption={(value) => setFilters(f => ({ ...f, style: value, projectId: null, collectionId: null }))}
                             />
                             <FilterGroup
                                 title="Color"
                                 options={colorOptions}
-                                activeOption={filters.color}
-                                onSelectOption={(value) => setFilters(f => ({ ...f, color: value }))}
+                                activeOption={safeFilters.color}
+                                onSelectOption={(value) => setFilters(f => ({ ...f, color: value, projectId: null, collectionId: null }))}
                             />
                         </div>
                     )}
 
-                    {/* --- Lista de Paletas (Resultados) --- */}
-                    <div className="overflow-y-auto flex-grow px-6 py-4">
+                    <div className="px-6 py-4">
                         {isLoading ? (
                             <div className="flex items-center justify-center h-48">
                                 <Loader2 size={32} className="animate-spin text-purple-500" />
@@ -466,7 +480,7 @@ const MyPalettesSidebar = ({
                                 <AlertTriangle size={32} className="text-amber-500 mb-2" />
                                 <p className="font-semibold" style={{ color: 'var(--text-default)'}}>No se encontraron paletas</p>
                                 <p className="text-sm" style={{ color: 'var(--text-muted)'}}>
-                                    {filters.search || filters.projectId || filters.collectionId || filters.style || filters.color 
+                                    {safeFilters.search || safeFilters.projectId || safeFilters.collectionId || safeFilters.style || safeFilters.color 
                                         ? "Prueba con otros filtros." 
                                         : "Usa el botón \"Guardar\"."
                                     }
@@ -482,7 +496,7 @@ const MyPalettesSidebar = ({
                                         onDelete={onDeletePalette}
                                         onDuplicate={onDuplicatePalette}
                                         onExport={onExportPalette}
-                                        onUpdateName={onUpdatePaletteName}
+                                        onUpdatePaletteName={onUpdatePaletteName}
                                         isDeleting={deletingId === palette.id}
                                     />
                                 ))}

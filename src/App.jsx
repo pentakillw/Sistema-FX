@@ -16,7 +16,10 @@ import {
     User, LogOut, LogIn, Save, FolderOpen,
     Undo2, Redo2, Clock, Sun, Moon, FileCode, Sparkles,
     // --- ICONOS MOVIDOS DE EXPLORER ---
-    Layers, Wand2, Image as ImageIcon, Maximize, SlidersHorizontal, Eye, 
+    // Layers, // <--- ELIMINADO
+    Wand2, Image as ImageIcon, 
+    // Maximize, // <--- ELIMINADO
+    SlidersHorizontal, Eye, 
     MoreHorizontal, Palette, ShieldCheck, Accessibility, TestTube2
 } from 'lucide-react';
 import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
@@ -203,7 +206,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   // --- FIN HANDLER MOVIDO ---
 
   const handleNativeExport = async () => {
-    // ... (código sin cambios) ...
     const data = { 
       brandColor: brandColor, 
       grayColor: grayColor, 
@@ -231,7 +233,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
 
   const handleWebExport = () => {
-    // ... (código sin cambios) ...
     const data = { 
       brandColor: brandColor, 
       grayColor: grayColor, 
@@ -249,40 +250,33 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
 
   const handleFontSelect = (fontName) => {
-      // ... (código sin cambios) ...
       setFont(fontName);
       setIsFontMenuVisible(false);
       setIsConfigMenuVisible(false);
   };
   const handleImportClick = () => {
-      // ... (código sin cambios) ...
       importFileRef.current.click();
       setIsConfigMenuVisible(false);
   };
   const handleExportClick = () => {
-      // ... (código sin cambios) ...
       setExportingPaletteData(themeData);
       setIsExportModalVisible(true);
       setIsConfigMenuVisible(false);
   };
   const handleResetClick = () => {
-      // ... (código sin cambios) ...
       handleReset();
       setIsConfigMenuVisible(false);
   };
   const handleHelpClick = () => {
-      // ... (código sin cambios) ...
       setIsHelpModalVisible(true);
       setIsConfigMenuVisible(false);
   };
   const handleLogoutClick = () => {
-      // ... (código sin cambios) ...
       onLogout();
       setIsUserMenuVisible(false);
   };
   
   const closeAllSidebars = () => {
-    // ... (código sin cambios) ...
     setIsAdjusterSidebarVisible(false);
     setIsSimulationSidebarVisible(false);
     setIsSaveSidebarVisible(false);
@@ -292,44 +286,38 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
 
   const handleOpenSimulationSidebar = () => {
-    // ... (código sin cambios) ...
     closeAllSidebars();
     setIsSimulationSidebarVisible(true);
   };
 
   const handleOpenAdjusterSidebar = () => {
-    // ... (código sin cambios) ...
     closeAllSidebars();
     setIsAdjusterSidebarVisible(true);
   };
 
   const handleOpenSaveSidebar = () => {
-    // ... (código sin cambios) ...
     closeAllSidebars();
     setIsSaveSidebarVisible(true);
   };
 
   const handleOpenMyPalettesSidebar = () => {
-    // ... (código sin cambios) ...
     closeAllSidebars();
     setIsMyPalettesSidebarVisible(true);
   };
   
   const handleCancelSimulation = () => {
-    // ... (código sin cambios) ...
     setSimulationMode('none');
     setIsSimulationSidebarVisible(false);
   };
 
   const handleApplySimulation = () => {
-    // ... (código sin cambios) ...
     applySimulationToPalette();
     setSimulationMode('none');
     setIsSimulationSidebarVisible(false);
   };
   
+  // Recibe el objeto 'saveData' completo
   const onSavePalette = async (saveData) => {
-    // ... (código sin cambios) ...
     const success = await handleSavePalette(saveData);
     if (success) {
         setIsSaveSidebarVisible(false); 
@@ -337,13 +325,12 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
   
   const onLoadPalette = (palette) => {
-    // ... (código sin cambios) ...
     handleLoadPalette(palette);
     setIsMyPalettesSidebarVisible(false); 
   };
   
+  // Abre el modal de confirmación
   const onDeletePalette = (paletteId) => {
-    // ... (código sin cambios) ...
     const palette = savedPalettes.find(p => p.id === paletteId);
     setConfirmModalState({
         isOpen: true,
@@ -357,24 +344,21 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
 
   const handleExportSpecificPalette = (palette) => {
-    // ... (código sin cambios) ...
     const specificThemeData = handleLoadSpecificPalette(palette);
     setExportingPaletteData(specificThemeData);
     setIsExportModalVisible(true);
   };
   
   const handleDuplicateClick = (paletteId) => {
-    // ... (código sin cambios) ...
     handleDuplicatePalette(paletteId);
   };
 
   const handleUpdateNameClick = (paletteId, newName) => {
-    // ... (código sin cambios) ...
     handleUpdatePaletteName(paletteId, newName);
   };
   
+  // --- ¡NUEVO! --- Handlers para el modal de confirmación de Proyectos/Colecciones
   const onDeleteProject = (projectId, projectName) => {
-    // ... (código sin cambios) ...
     setConfirmModalState({
         isOpen: true,
         title: "Eliminar Proyecto",
@@ -387,7 +371,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   };
   
   const onDeleteCollection = (collectionId, collectionName) => {
-    // ... (código sin cambios) ...
     setConfirmModalState({
         isOpen: true,
         title: "Eliminar Colección",
@@ -398,6 +381,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         }
     });
   };
+  // --- FIN ---
 
 
   if (!themeData || !themeData.stylePalette || !themeData.stylePalette.fullActionColors) {
@@ -410,7 +394,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   }
 
   const pageThemeStyle = {
-    // ... (código sin cambios) ...
     backgroundColor: themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Predeterminado').color,
     color: themeData.stylePalette.fullForegroundColors.find(c => c.name === 'Predeterminado').color,
     transition: 'background-color 0.3s ease, color 0.3s ease',
@@ -419,7 +402,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
 
   return (
     <div className="flex flex-col min-h-screen w-full" style={pageThemeStyle}>
-      {/* ... (SVG filters sin cambios) ... */}
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
           <filter id="protanopia"><feColorMatrix in="SourceGraphic" type="matrix" values="0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0" /></filter>
@@ -452,15 +434,16 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         
         <div className="flex items-center gap-1.5 sm:gap-2">
           
-          {/* --- INICIO DE MODIFICACIÓN: Iconos de Explorer movidos aquí --- */}
-          <button
+          {/* --- INICIO DE MODIFICACIÓN: Iconos eliminados --- */}
+          {/* <button
               onClick={handleCyclePreviewMode}
               className="text-sm font-medium p-2 rounded-lg flex items-center gap-2"
               style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
               title={`Fondo: ${backgroundModeLabels[colorModePreview]}`}
           >
               <Layers size={16} />
-          </button>
+          </button> 
+          */}
           <button 
               onClick={() => setIsAIModalVisible(true)} 
               className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 bg-purple-600 text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400" 
@@ -495,6 +478,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           >
               <ImageIcon size={16} />
           </button>
+          {/*
           <button 
               onClick={() => setIsExpanded(true)} 
               className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
@@ -503,6 +487,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           >
               <Maximize size={16} /> 
           </button>
+          */}
           <button 
               onClick={handleOpenAdjusterSidebar} 
               className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
@@ -924,7 +909,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
 
         {/* --- Botón Flotante (Solo Generar) --- */}
         {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && (
-          <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40">
+          <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 lg:hidden">
             <button
               onClick={() => handleRandomTheme()}
               title="Generar Tema Aleatorio"

@@ -36,7 +36,13 @@ const GoogleAdBanner = ({
     } catch (err) {
       console.error("Error al 'empujar' el anuncio de Google:", err);
     }
-  }, [dataAdSlot, dataAdClient, dataAdFormat, dataAdLayoutKey]); // Se re-ejecuta si alguna prop clave cambia
+    
+    // --- ¡CORRECCIÓN! ---
+    // Hemos cambiado el array de dependencias a uno vacío: [].
+    // Esto asegura que el script de anuncios se ejecute SÓLO UNA VEZ
+    // cuando el componente se monta por primera vez, evitando el
+    // error de "anuncios duplicados" en los re-renders.
+  }, []); 
 
   // Si no hay ID de slot, no renderizar nada para evitar errores de AdSense
   if (!dataAdSlot) {

@@ -292,9 +292,11 @@ const Explorer = (props) => {
                 )}
                 
                 {/* "DESPUÉS" (Paleta Ajustada) o Paleta Única */}
-                {/* --- MODIFICACIÓN --- Altura y padding actualizados --- */}
+                {/* --- ¡¡¡MODIFICACIÓN!!! --- 
+                  - Se eliminó 'pt-4' de esta clase.
+                */}
                 <div 
-                    className={`overflow-hidden pt-4 ${isSplitView ? 'h-[calc((100vh-80px)/2)]' : 'h-[calc(100vh-80px)] rounded-b-md'}`}
+                    className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)] rounded-b-md'}`}
                     title={isAdjusterSidebarVisible ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
                 >
                     
@@ -344,7 +346,16 @@ const Explorer = (props) => {
                                                                     <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
                                                                 </div>
                                                             </div>
-                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}><button onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} className="bg-white/90 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform" title="Insertar color"><Plus size={16}/></button></div>
+                                                            {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
+                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                    className="bg-white/90 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
+                                                                    title="Insertar color"
+                                                                >
+                                                                    <Plus size={16}/>
+                                                                </button>
+                                                            </div>
                                                             {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
                                                         </div>
                                                     )}
@@ -426,7 +437,16 @@ const Explorer = (props) => {
                                                                     <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
                                                                 </div>
                                                             </div>
-                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}><button onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} className="bg-white/90 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform" title="Insertar color"><Plus size={16}/></button></div>
+                                                            {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
+                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                    className="bg-white/90 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
+                                                                    title="Insertar color"
+                                                                >
+                                                                    <Plus size={16}/>
+                                                                </button>
+                                                            </div>
                                                             {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
                                                         </div>
                                                     )}
@@ -442,14 +462,9 @@ const Explorer = (props) => {
                     
                 </div>
                 
-                <div className="mt-6 pt-4 border-t px-4 sm:px-6 pb-2" style={{ borderColor: tinycolor(colorModeBg).isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}>
-                     <ColorPalette
-                         isExplorer={true}
-                         shades={explorerGrayShades}
-                         onShadeCopy={setGrayColor}
-                         themeOverride={tinycolor(colorModeBg).isLight() ? 'light' : 'dark'}
-                     />
-                </div>
+                {/* --- ¡¡¡MODIFICACIÓN!!! --- 
+                  - Se eliminó toda la <div> que contenía la paleta de grises.
+                */}
             </section>
             
             {/* --- MENÚ EMERGENTE PARA MODO EXPANDIDO --- */}
@@ -548,8 +563,15 @@ const Explorer = (props) => {
                                                                         <p className="font-mono text-sm hidden sm:block" style={{ color: tinycolor(displayShade).isLight() ? '#000' : '#FFF' }}>{displayShade.toUpperCase()}</p>
                                                                     </div>
                                                                     <button onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}} className="absolute top-2 right-2 p-1 bg-black/20 rounded-full text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-all" title="Quitar color"><X size={16}/></button>
-                                                                    <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translateX(50%)' }}>
-                                                                        <button onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} className="bg-white/80 backdrop-blur-sm rounded-full p-1 text-black shadow-lg hover:scale-110 transition-transform" title="Insertar color"><Plus size={20}/></button>
+                                                                    {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
+                                                                    <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
+                                                                        <button 
+                                                                            onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                            className="bg-white/80 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
+                                                                            title="Insertar color"
+                                                                        >
+                                                                            <Plus size={20}/>
+                                                                        </button>
                                                                     </div>
                                                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                         <button onClick={(e) => { e.stopPropagation(); toggleShades(index); }} className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/40" title="Ver tonalidades"><div className="w-2 h-2 bg-white rounded-full"></div></button>
