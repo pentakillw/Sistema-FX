@@ -45,7 +45,7 @@ export const availableFonts = {
 export const generationMethods = [
     // --- Grupo: Métodos Clásicos ---
     { isHeader: true, name: 'Métodos Clásicos' },
-    { id: 'auto', name: 'Auto (Coolors)' },
+    { id: 'auto', name: 'Auto (Aleatorio)' },
     { id: 'mono', name: 'Monocromo' },
     { id: 'analogous', name: 'Análogo (Clásico)' },
     { id: 'complement', name: 'Complementario (Clásico)' },
