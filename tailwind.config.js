@@ -6,6 +6,11 @@ export default {
   ],
   theme: {
     extend: {
+      // --- INICIO DE LA MODIFICACIÓN ---
+      fontFamily: {
+        'pacifico': ['Pacifico', 'cursive'],
+      },
+      // --- FIN DE LA MODIFICACIÓN ---
       animation: {
         scroll: 'scroll 40s linear infinite',
       },

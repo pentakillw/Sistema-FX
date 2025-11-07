@@ -424,12 +424,19 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         style={{ borderColor: 'var(--border-default)'}}
       >
         <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-          <img src="https://raw.githubusercontent.com/pentakillw/sistema-de-diseno-react/main/Icono_FX.png" alt="Sistema FX Logo" className="h-10 w-10 rounded-lg"/>
-          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text-default)' }}>Sistema FX</h1>
+          <img src="https://raw.githubusercontent.com/pentakillw/Sistema-FX/f8cd5658ae02d604dfe6724b709b69c7f18de104/Logo.png" alt="Sistema FX Logo" className="h-10 w-10 rounded-lg"/>
+          
+          {/* --- INICIO DE LA MODIFICACIÓN --- */}
+          {/* Aplicamos la fuente 'pacifico' y la clase del degradado */}
+          {/* Ajustamos el padding inferior (pb-1) para centrar visualmente la fuente */}
+          <h1 className="font-pacifico text-rainbow-gradient pb-1">
+            Colores DaYam
+          </h1>
+          {/* --- FIN DE LA MODIFICACIÓN --- */}
           
           {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
             <p className="text-sm text-[var(--text-muted)] hidden lg:block ml-4">
-                ¡Pulsa la <kbd className="px-2 py-1 text-xs font-semibold text-[var(--text-default)] bg-[var(--bg-muted)] border border-[var(--border-default)] rounded-md">barra espaciadora</kbd> para generar colores!
+                ¡ <kbd className="px-2 py-1 text-xs font-semibold text-[var(--text-default)] bg-[var(--bg-muted)] border border-[var(--border-default)] rounded-md">barra espaciadora</kbd> para generar colores!
             </p>
           )}
         </div>

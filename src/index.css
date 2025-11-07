@@ -1,8 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto+Slab:wght@400;700&family=Inconsolata:wght@400;700&family=Playfair+Display:wght@400;700&family=Montserrat:wght@400;700&family=Lato:wght@400;700&family=Courier+Prime:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto+Slab:wght@400;700&family=Inconsolata:wght@400;700&family=Playfair+Display:wght@400;700&family=Montserrat:wght@400;700&family=Lato:wght@400;700&family=Courier+Prime:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Pacifico&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- INICIO DE LA MODIFICACIÓN --- */
+/* Clase personalizada para el título con degradado */
+@layer utilities {
+  .text-rainbow-gradient {
+    /* Degradado de colores similar al de la imagen */
+    background: linear-gradient(to right, #E0405A, #F59A44, #E9C952, #56B470, #4A90E2, #6F42C1);
+    /* Estas dos líneas recortan el fondo al texto */
+    -webkit-background-clip: text;
+    background-clip: text;
+    /* Hacemos el color del texto transparente para que se vea el fondo */
+    color: transparent;
+    /* La fuente Pacifico es un poco más pequeña, ajustamos el tamaño */
+    font-size: 1.65rem; /* Tamaño base */
+  }
+
+  /* Ajuste para pantallas más grandes */
+  @media (min-width: 640px) {
+    .text-rainbow-gradient {
+      font-size: 2rem; /* Tamaño en 'sm' y superior */
+    }
+  }
+}
+/* --- FIN DE LA MODIFICACIÓN --- */
+
 
 /* --- MODIFICACIÓN CLAVE ---
   Estas reglas aseguran que la página nunca tenga scroll horizontal
