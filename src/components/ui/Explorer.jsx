@@ -171,7 +171,7 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
             if (tinycolor(e.target.value).isValid()) {
                 // --- ¡MODIFICADO! --- Al presionar Enter, confirmamos y cerramos
                 onConfirm(e.target.value); // Llama a onConfirm (Aceptar)
-                onClose();
+                onClose(); // Llama a onClose (que ahora solo cierra)
             }
         }
     };
@@ -250,7 +250,8 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
     return (
         <div className="fixed inset-0 z-[70]" onClick={onClose} style={{ visibility: isPicking ? 'hidden' : 'visible' }}>
             <div
-                className="fixed z-[71] p-4 rounded-xl border shadow-2xl w-64"
+                // --- ¡FIX RESPONSIVO! ---
+                className="fixed z-[71] p-4 rounded-xl border shadow-2xl w-[90vw] max-w-[256px] sm:w-64"
                 style={{
                     ...style,
                     backgroundColor: 'var(--bg-card)',
@@ -370,7 +371,7 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
                         <button
                             onClick={() => {
                                 onConfirm(localColor); // "Aceptar" llama a onConfirm
-                                onClose();
+                                // ¡FIX! Ya no llamamos a onClose() aquí, onConfirm se encarga
                             }}
                             className="w-full text-center font-semibold text-sm py-2 rounded-md border"
                             style={{ 
@@ -930,18 +931,18 @@ const Explorer = (props) => {
                     color={pickerColor.color}
                     style={pickerColor.style} 
                     onClose={() => {
-                        // --- ¡MODIFICADO! --- Al cerrar (Cancelar), revertimos al color original
+                        // --- ¡FIX! --- Al cerrar (Cancelar), revertimos al color original
                         replaceColorInPalette(pickerColor.index, pickerColor.color);
                         setPickerColor(null);
                     }}
-                    // --- ¡AÑADIDO! --- Pasa la función de tiempo real
                     onRealtimeChange={(newColor) => {
+                        // --- ¡FIX! --- Pasa la función de tiempo real
                         replaceColorInPalette(pickerColor.index, newColor);
                     }}
-                    // --- ¡MODIFICADO! --- onConfirm es Aceptar
                     onConfirm={(newColor) => { 
+                        // --- ¡FIX! --- onConfirm ahora cierra el modal
                         replaceColorInPalette(pickerColor.index, newColor);
-                        // (onClose se llama dentro del popover, así que no necesitamos setPickerColor(null) aquí)
+                        setPickerColor(null);
                     }}
                 />
             )}
