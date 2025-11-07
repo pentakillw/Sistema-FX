@@ -52,7 +52,7 @@ export const generationMethods = [
 ];
 
 export const colorblindnessMatrices = {
-  protanopia: [0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 0, 1, 0],
+  protanopia: [0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0],
   deuteranopia: [0.625, 0.375, 0, 0, 0, 0.7, 0.3, 0, 0, 0, 0, 0.3, 0.7, 0, 0, 0, 0, 0, 1, 0],
   tritanopia: [0.95, 0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0],
   achromatopsia: [0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 1, 0],
@@ -1276,10 +1276,43 @@ export const generateAdvancedRandomPalette = (
         });
         
     } else {
-        // --- PASO 4: Barajar ---
-        // Barajamos la paleta generada (excepto en 'mono' que se ve mejor ordenado).
-        if (selectedTemplate !== 'gradiente-mono' && selectedTemplate !== 'grayscale' && selectedTemplate !== 'rampa-saturacion') {
-            finalHsbPalette.sort(() => 0.5 - Math.random());
+        // --- PASO 4: Ordenar (¡NUEVA LÓGICA!) ---
+        // ¡Tu idea! En lugar de barajar, ordenamos los colores
+        // para que sean atractivos a la vista.
+
+        const noSortTemplates = [
+            'gradiente-mono', 
+            'grayscale', 
+            'rampa-saturacion',
+            // Plantillas con un orden estructural específico
+            'high-key', 
+            'low-key', 
+            'neutral-accent',
+            'acentos-dobles-neutros',
+            'complemento-neutros',
+            'monotone-split',
+            'primary',
+            'secondary',
+            'bauhaus',
+            'artdeco',
+            'theme-artdeco' // Añadido por si acaso
+        ];
+
+        // Comprobar si es una plantilla de marca/medio
+        const isBranded = selectedTemplate.startsWith('brand-') || selectedTemplate.startsWith('game-') || selectedTemplate.startsWith('movie-');
+        // Comprobar si es un gradiente analogo
+        const isAnalogGradient = selectedTemplate.includes('gradiente-analogo');
+
+        if (noSortTemplates.includes(selectedTemplate) || isBranded) {
+            // No hacer nada. Mantener el orden icónico o estructural
+            // de la plantilla tal como fue definida.
+        } else if (isAnalogGradient) {
+            // Los gradientes análogos se ven mejor ordenados por matiz (hue)
+            finalHsbPalette.sort((a, b) => a.h - b.h);
+        } else {
+            // Para TODAS las demás, ordenar por brillo (b)
+            // Esto crea una rampa de oscuro a claro, que es muy atractiva.
+            finalHsbPalette.sort((a, b) => a.b - b.b);
         }
     }
 
