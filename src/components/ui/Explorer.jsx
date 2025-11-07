@@ -16,6 +16,51 @@ import { generateShades, findClosestColorName } from '../../utils/colorUtils.js'
 import { HexColorPicker } from 'react-colorful';
 import ColorActionMenu from './ColorActionMenu.jsx';
 
+// --- ¡NUEVO! --- Componente para el menú de añadir color
+const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                onClose();
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [onClose]);
+
+    const counts = [1, 2, 3, 4, 5, +10, +15]; // Opciones
+
+    return (
+        <div 
+            ref={menuRef}
+            className="absolute z-50 flex flex-col items-center p-2 rounded-lg shadow-xl gap-1"
+            style={{ 
+                backgroundColor: 'var(--bg-card)', 
+                border: '1px solid var(--border-default)',
+                // Posicionamiento (ej. centrado arriba del botón +)
+                transform: 'translate(-50%, -100%)', 
+                marginTop: '-10px' // Pequeño espacio
+            }}
+            onClick={(e) => e.stopPropagation()}
+        >
+            {counts.map(count => (
+                <button
+                    key={count}
+                    disabled={count > maxAdd}
+                    onClick={() => { onAdd(count); onClose(); }}
+                    className="w-8 h-8 flex items-center justify-center font-semibold text-sm rounded-full bg-[var(--bg-muted)] text-[var(--text-default)] hover:bg-[var(--action-primary-default)] hover:text-white disabled:opacity-30"
+                    title={`Añadir ${count} ${count > 1 ? 'colores' : 'color'}`}
+                >
+                    {count}
+                </button>
+            ))}
+        </div>
+    );
+};
+// --- FIN NUEVO COMPONENTE ---
+
 // Componente para los botones de acción que aparecen al pasar el mouse
 const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMouseDown }) => (
     <button
@@ -120,6 +165,7 @@ const Explorer = (props) => {
         explorerPalette, reorderExplorerPalette, explorerGrayShades, 
         handleExplorerColorPick, setGrayColor,
         brandColor, updateBrandColor, themeData, insertColorInPalette,
+        insertMultipleColors, // <-- AÑADIR PROP
         removeColorFromPalette, 
         // Ya no se necesitan: explorerMethod, setExplorerMethod,
         // generatePaletteWithAI, showNotification, applySimulationToPalette
@@ -150,6 +196,12 @@ const Explorer = (props) => {
     const paletteContainerRef = useRef(null);
     const [displayMode, setDisplayMode] = useState('name');
     const [isDisplayModeModalVisible, setIsDisplayModeModalVisible] = useState(false);
+
+    // --- ¡NUEVO! --- Estado para el menú de añadir y el timer
+    const [addMenuState, setAddMenuState] = useState({ isVisible: false, index: 0, style: {} });
+    const longPressTimer = useRef();
+    const [isLongPress, setIsLongPress] = useState(false);
+    // --- FIN NUEVO ESTADO ---
 
     // Devuelve el valor de texto inferior (Nombre, RGB, HSL, HSB)
     const getDisplayValue = (colorStr, mode) => {
@@ -226,6 +278,35 @@ const Explorer = (props) => {
         });
     };
     
+    // --- ¡NUEVO! --- Lógica para el botón de añadir (+)
+    const handleAddButtonDown = (e, index) => {
+        e.stopPropagation();
+        setIsLongPress(false); // Resetea el estado
+        
+        // Posición para el menú
+        const rect = e.currentTarget.getBoundingClientRect();
+        const style = {
+            top: `${rect.top + window.scrollY}px`,
+            left: `${rect.left + window.scrollX + rect.width / 2}px`,
+        };
+
+        // Inicia el timer
+        longPressTimer.current = setTimeout(() => {
+            setIsLongPress(true); // Marca que fue long press
+            setAddMenuState({ isVisible: true, index, style });
+        }, 400); // 400ms para long press
+    };
+
+    const handleAddButtonUp = (e, index) => {
+        e.stopPropagation();
+        clearTimeout(longPressTimer.current); // Limpia el timer
+        // Si NO fue un long press (el timer no se completó)
+        if (!isLongPress) {
+            insertColorInPalette(index);
+        }
+    };
+    // --- FIN NUEVA LÓGICA ---
+
 
     return (
         <>
@@ -241,7 +322,7 @@ const Explorer = (props) => {
                 {/* Vista "ANTES" (Paleta Original) */}
                 {isSplitView && (
                     <div 
-                        className="h-[calc((100vh-80px)/2)] overflow-hidden" 
+                        className="h-[calc((100vh-65px)/2)] overflow-hidden" 
                         title="Paleta Original (Antes de ajustar)"
                     >
                         <DragDropContext onDragEnd={onDragEnd}>
@@ -292,9 +373,7 @@ const Explorer = (props) => {
                 )}
                 
                 {/* "DESPUÉS" (Paleta Ajustada) o Paleta Única */}
-                {/* --- ¡¡¡MODIFICACIÓN!!! --- 
-                  - Se eliminó 'pt-4' de esta clase.
-                */}
+                {/* --- MODIFICACIÓN --- Altura y padding actualizados --- */}
                 <div 
                     className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)] rounded-b-md'}`}
                     title={isAdjusterSidebarVisible ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
@@ -349,9 +428,16 @@ const Explorer = (props) => {
                                                             {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
                                                             <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                 <button 
-                                                                    onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                    // --- ¡¡¡MODIFICADO!!! ---
+                                                                    onClick={(e) => e.stopPropagation()} // Click se maneja en Up/Down
+                                                                    onMouseDown={(e) => handleAddButtonDown(e, index)}
+                                                                    onMouseUp={(e) => handleAddButtonUp(e, index)}
+                                                                    onTouchStart={(e) => handleAddButtonDown(e, index)}
+                                                                    onTouchEnd={(e) => handleAddButtonUp(e, index)}
+                                                                    onMouseLeave={() => clearTimeout(longPressTimer.current)} // Cancela si se sale
+                                                                    // --- FIN MODIFICACIÓN ---
                                                                     className="bg-white/90 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
-                                                                    title="Insertar color"
+                                                                    title="Añadir color (mantén presionado para más)"
                                                                 >
                                                                     <Plus size={16}/>
                                                                 </button>
@@ -440,9 +526,16 @@ const Explorer = (props) => {
                                                             {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
                                                             <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                 <button 
-                                                                    onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                    // --- ¡¡¡MODIFICADO!!! ---
+                                                                    onClick={(e) => e.stopPropagation()} // Click se maneja en Up/Down
+                                                                    onMouseDown={(e) => handleAddButtonDown(e, index)}
+                                                                    onMouseUp={(e) => handleAddButtonUp(e, index)}
+                                                                    onTouchStart={(e) => handleAddButtonDown(e, index)}
+                                                                    onTouchEnd={(e) => handleAddButtonUp(e, index)}
+                                                                    onMouseLeave={() => clearTimeout(longPressTimer.current)} // Cancela si se sale
+                                                                    // --- FIN MODIFICACIÓN ---
                                                                     className="bg-white/90 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
-                                                                    title="Insertar color"
+                                                                    title="Añadir color (mantén presionado para más)"
                                                                 >
                                                                     <Plus size={16}/>
                                                                 </button>
@@ -462,10 +555,31 @@ const Explorer = (props) => {
                     
                 </div>
                 
-                {/* --- ¡¡¡MODIFICACIÓN!!! --- 
-                  - Se eliminó toda la <div> que contenía la paleta de grises.
+                {/* <div className="mt-6 pt-4 border-t px-4 sm:px-6 pb-2" style={{ borderColor: tinycolor(colorModeBg).isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}>
+                     <ColorPalette
+                         isExplorer={true}
+                         shades={explorerGrayShades}
+                         onShadeCopy={setGrayColor}
+                         themeOverride={tinycolor(colorModeBg).isLight() ? 'light' : 'dark'}
+                     />
+                </div>
                 */}
             </section>
+            
+            {/* --- ¡NUEVO! --- Renderizar el menú de añadir */}
+            {addMenuState.isVisible && (
+                <div 
+                    className="fixed z-[60]" 
+                    style={addMenuState.style}
+                    // Este div fantasma se posiciona donde fue el clic
+                >
+                    <AddColorMenu
+                        onClose={() => setAddMenuState({ isVisible: false, index: 0, style: {} })}
+                        onAdd={(count) => insertMultipleColors(addMenuState.index, count)}
+                        maxAdd={20 - explorerPalette.length} // Límite de 20
+                    />
+                </div>
+            )}
             
             {/* --- MENÚ EMERGENTE PARA MODO EXPANDIDO --- */}
             {activeColorMenu && (
@@ -566,9 +680,16 @@ const Explorer = (props) => {
                                                                     {/* --- MODIFICACIÓN --- (top-1/3 -> top-1/2) Vuelve al centro vertical */}
                                                                     <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                         <button 
-                                                                            onClick={(e) => { e.stopPropagation(); insertColorInPalette(index); }} 
+                                                                            // --- ¡¡¡MODIFICADO!!! ---
+                                                                            onClick={(e) => e.stopPropagation()} // Click se maneja en Up/Down
+                                                                            onMouseDown={(e) => handleAddButtonDown(e, index)}
+                                                                            onMouseUp={(e) => handleAddButtonUp(e, index)}
+                                                                            onTouchStart={(e) => handleAddButtonDown(e, index)}
+                                                                            onTouchEnd={(e) => handleAddButtonUp(e, index)}
+                                                                            onMouseLeave={() => clearTimeout(longPressTimer.current)} // Cancela si se sale
+                                                                            // --- FIN MODIFICACIÓN ---
                                                                             className="bg-white/80 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
-                                                                            title="Insertar color"
+                                                                            title="Añadir color (mantén presionado para más)"
                                                                         >
                                                                             <Plus size={20}/>
                                                                         </button>

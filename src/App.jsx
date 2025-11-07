@@ -107,7 +107,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     simulationMode, cyclePreviewMode, 
     explorerPalette, reorderExplorerPalette, explorerGrayShades, 
     handleExplorerColorPick, paletteAdjustments, 
-    insertColorInPalette, removeColorFromPalette, explorerMethod, 
+    insertColorInPalette, removeColorFromPalette, explorerMethod,
+    insertMultipleColors,
     setExplorerMethod, replaceColorInPalette, setSimulationMode, 
     generatePaletteWithAI, applySimulationToPalette,
     setPaletteAdjustments, commitPaletteAdjustments, cancelPaletteAdjustments,
@@ -708,6 +709,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 updateBrandColor={updateBrandColor}
                 themeData={themeData}
                 insertColorInPalette={insertColorInPalette}
+                insertMultipleColors={insertMultipleColors} 
                 removeColorFromPalette={removeColorFromPalette}
                 explorerMethod={explorerMethod}
                 setExplorerMethod={setExplorerMethod}

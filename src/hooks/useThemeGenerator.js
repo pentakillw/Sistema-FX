@@ -232,6 +232,38 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
         updatePaletteState(newPalette);
     };
 
+    const insertMultipleColors = (index, count) => {
+        const currentCount = originalExplorerPalette.length;
+        const canAdd = 20 - currentCount;
+        const addCount = Math.min(count, canAdd);
+        
+        if (addCount <= 0) {
+            showNotification("Límite de 20 colores alcanzado.", "error");
+            return;
+        }
+
+        const newColors = [];
+        const colorA = tinycolor(originalExplorerPalette[index]);
+        const colorB = originalExplorerPalette[index + 1] 
+            ? tinycolor(originalExplorerPalette[index + 1]) 
+            : colorA.clone().spin(30);
+
+        for (let i = 1; i <= addCount; i++) {
+            // Interpolar entre los dos colores
+            const mixAmount = (i / (addCount + 1)) * 100;
+            newColors.push(tinycolor.mix(colorA, colorB, mixAmount).toHexString());
+        }
+
+        const newPalette = [
+            ...originalExplorerPalette.slice(0, index + 1), 
+            ...newColors, 
+            ...originalExplorerPalette.slice(index + 1)
+        ];
+        
+        updatePaletteState(newPalette);
+        showNotification(`${addCount} ${addCount > 1 ? 'colores añadidos' : 'color añadido'}.`);
+    };
+
     const replaceColorInPalette = (index, newColor) => {
         const oldColor = originalExplorerPalette[index];
         const newPalette = [...originalExplorerPalette];
@@ -587,53 +619,22 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
         // elegirá uno de la lista CURATED_BASE_COLORS (comportamiento correcto).
         // --- FIN DE LÓGICA DE BLOQUEO ---
 
-        if (explorerMethod === 'auto') {
-            const { palette: newPalette, brandColor: newBrandColor } =
-                generateAdvancedRandomPalette(
-                    originalExplorerPalette.length || 5,
-                    'auto', 
-                    effectiveBaseColor, // <--- ¡USAR LA NUEVA VARIABLE!
-                    lockedColors,
-                    originalExplorerPalette
-                );
-            updatePaletteState(newPalette, newBrandColor);
-            
-        } else {
-            // --- LÓGICA ANTIGUA (para 'mono', 'triad', etc.) ---
-            // También debemos aplicar esta lógica aquí.
-            const { palette: newRandomPalette, brandColor: newBrandColorSuggestion } = 
-                generateAdvancedRandomPalette(
-                    originalExplorerPalette.length || 5, 
-                    explorerMethod,
-                    effectiveBaseColor // <--- ¡USAR LA NUEVA VARIABLE!
-                ); 
-            
-            let randomColorsUsed = 0;
-            let baseColorPlaced = false;
-            
-            // Esta lógica de reemplazo ya respeta los lockedColors.
-            const finalPalette = originalExplorerPalette.map((oldColor) => {
-                if (lockedColors.includes(oldColor)) {
-                    return oldColor;
-                }
-                if (effectiveBaseColor && !baseColorPlaced) { // <-- Lógica actualizada
-                    baseColorPlaced = true;
-                    return effectiveBaseColor;
-                }
-                const newColor = newRandomPalette[randomColorsUsed % newRandomPalette.length];
-                randomColorsUsed++;
-                return newColor;
-            });
-            
-            let newBrandColor;
-            if (effectiveBaseColor) { // <-- Lógica actualizada
-                newBrandColor = effectiveBaseColor;
-            } else {
-                const unLockedColors = finalPalette.filter(c => !lockedColors.includes(c));
-                newBrandColor = unLockedColors.length > 0 ? unLockedColors[0] : (lockedColors.length > 0 ? lockedColors[0] : newBrandColorSuggestion);
-            }
-            updatePaletteState(finalPalette, newBrandColor);
-        }
+        // ¡Corregido! Pasamos el 'explorerMethod' actual
+        const { palette: newPalette, brandColor: newBrandColor } =
+            generateAdvancedRandomPalette(
+                originalExplorerPalette.length || 5,
+                explorerMethod, // <--- ¡USA EL MÉTODO SELECCIONADO!
+                effectiveBaseColor, // <--- ¡USAR LA NUEVA VARIABLE!
+                lockedColors,
+                originalExplorerPalette
+            );
+        
+        // Esta lógica ya no es necesaria porque generateAdvancedRandomPalette
+        // ahora maneja los métodos 'clásicos' y los 'temáticos'
+        
+        // const finalPalette = ... (lógica eliminada)
+        
+        updatePaletteState(newPalette, newBrandColor);
     };
     // --- FIN DE FUNCIÓN MODIFICADA ---
 
@@ -1180,6 +1181,7 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
         cyclePreviewMode, setLightPreviewMode, setDarkPreviewMode, setSemanticPreviewMode,
         reorderExplorerPalette,
         insertColorInPalette, removeColorFromPalette,
+        insertMultipleColors, // <-- AÑADIDO
         replaceColorInPalette,
         originalExplorerPalette,
         history, historyIndex,
