@@ -63,6 +63,11 @@ const useThemeGenerator = (user) => {
     
     const isUpdatingFromHistory = useRef(false);
 
+    // --- ¡NUEVO! ---
+    // Añadimos una referencia para controlar el "throttle" (límite de ejecución)
+    const throttleTimer = useRef(null);
+    // --- FIN DE LA MODIFICACIÓN ---
+
     const [simulationMode, setSimulationMode] = useState('none');
     const [fxSeparator, setFxSeparator] = useState(defaultState.fxSeparator);
     const [useFxQuotes, setUseFxQuotes] = useState(defaultState.useFxQuotes);
@@ -157,37 +162,35 @@ const useThemeGenerator = (user) => {
     };
     
     // --- ¡¡¡FUNCIÓN MODIFICADA!!! ---
-    // Esta es la corrección principal.
-    // Ahora, `updateBrandColor` (la función de tiempo real)
-    // regenera la `explorerPalette` (la paleta de tiempo real)
-    // usando la nueva lógica.
+    // Esta función ahora será "throttled" (limitada)
+    // para no ejecutarse 60 veces por segundo.
     const updateBrandColor = useCallback((newColor) => {
         if (!newColor || !tinycolor(newColor).isValid()) return;
-        
-        // 1. Actualiza el color de marca en tiempo real
-        setBrandColor(newColor);
-        
-        // 2. Actualiza el gris si es automático
-        if (isGrayAuto) { 
-            const newGrayColor = getHarmonicGrayColor(newColor) || defaultState.grayColor;
-            setGrayColor(newGrayColor); 
+
+        // Si ya hay un temporizador en marcha, lo cancelamos.
+        // Esto asegura que solo la última actualización se procese.
+        if (throttleTimer.current) {
+            clearTimeout(throttleTimer.current);
         }
 
-        // 3. ¡NUEVO! Regenera la paleta de exploración en tiempo real
-        //    basado en el nuevo color de marca, pero respetando
-        //    los colores bloqueados y la paleta original.
-        const { palette: newRealtimePalette } = generateAdvancedRandomPalette(
-            originalExplorerPalette.length || 5, // Usa la longitud de la paleta original
-            explorerMethod,
-            newColor, // Usa el NUEVO color de marca como base
-            lockedColors,
-            originalExplorerPalette // Pasa la paleta original para respetar los bloqueos
-        );
-        
-        // 4. Actualiza solo la paleta de tiempo real (`explorerPalette`)
-        setExplorerPalette(newRealtimePalette);
+        // Creamos un nuevo temporizador.
+        // La función costosa solo se ejecutará después de 50ms.
+        throttleTimer.current = setTimeout(() => {
+            const { palette: newRealtimePalette } = generateAdvancedRandomPalette(
+                originalExplorerPalette.length || 5, // Usa la longitud de la paleta original
+                explorerMethod,
+                newColor, // Usa el NUEVO color de marca como base
+                lockedColors,
+                originalExplorerPalette // Pasa la paleta original para respetar los bloqueos
+            );
+            
+            // Actualiza solo la paleta de tiempo real (`explorerPalette`)
+            setExplorerPalette(newRealtimePalette);
 
-    }, [isGrayAuto, originalExplorerPalette, explorerMethod, lockedColors]); 
+            throttleTimer.current = null; // Limpiamos el temporizador
+        }, 150); // 50ms de "throttle" (20 actualizaciones por segundo) <-- ¡¡¡CAMBIO A 150ms!!!
+
+    }, [originalExplorerPalette, explorerMethod, lockedColors]); 
     // Se quitó brandColor de las dependencias para evitar bucles
 
     const replaceColorInPalette = (index, newColor) => {
@@ -224,31 +227,31 @@ const useThemeGenerator = (user) => {
     // en tiempo real) como la nueva `originalExplorerPalette`.
     const confirmBrandColor = (newColor) => {
         
-        // 1. El `explorerPalette` (realtime) ya tiene los últimos cambios
-        //    gracias a `updateBrandColor`. Lo tomamos como el estado final.
-        const finalPalette = explorerPalette; 
-        const finalBrandColor = newColor;
-
-        setBrandColor(finalBrandColor);
+        // 1. CONFIRMAR el color de marca.
+        // Esto es "caro" y ahora solo se ejecuta UNA VEZ.
+        setBrandColor(newColor); 
         
         let newGrayColor = grayColor;
         if (isGrayAuto) {
-            newGrayColor = getHarmonicGrayColor(finalBrandColor) || defaultState.grayColor;
+            newGrayColor = getHarmonicGrayColor(newColor) || defaultState.grayColor;
             setGrayColor(newGrayColor);
         }
+
+        // 2. Tomamos la `explorerPalette` (que fue actualizada en tiempo real)
+        //    y la establecemos como la nueva `originalExplorerPalette`.
+        const finalPalette = explorerPalette;
         
-        // 2. Confirmamos la paleta de tiempo real como la nueva "original"
         setOriginalExplorerPalette(finalPalette); 
-        setExplorerPalette(finalPalette); // Sincroniza (aunque ya debería estarlo)
         setCurrentPaletteId(null);
         
-        // 3. Guardamos todo el nuevo estado en el historial
+        // 3. Guardamos el estado final en el historial.
         saveCurrentStateToHistory({ 
-            brandColor: finalBrandColor, 
+            brandColor: newColor, 
             grayColor: newGrayColor,
             explorerPalette: finalPalette, // Guarda la nueva paleta
-            lockedColors: lockedColors,
-            isGrayAuto: isGrayAuto
+            // ¡¡¡CORRECCIÓN!!! Añadir isGrayAuto y lockedColors al historial
+            isGrayAuto: isGrayAuto,
+            lockedColors: lockedColors
         });
     };
 
@@ -280,35 +283,12 @@ const useThemeGenerator = (user) => {
 
 
     // --- ¡NUEVO! ---
-    // Esta es la lógica que faltaba para el *antiguo* PaletteAdjusterSidebar (si se restaura).
-    // Escucha los cambios en `paletteAdjustments` y actualiza la paleta en tiempo real.
-    useEffect(() => {
-        // Si no hay ajustes, nos aseguramos de que la paleta real y la original sean la misma.
-        if (paletteAdjustments.hue === 0 && paletteAdjustments.saturation === 0 && paletteAdjustments.brightness === 0 && paletteAdjustments.temperature === 0) {
-            if (explorerPalette !== originalExplorerPalette) {
-                setExplorerPalette(originalExplorerPalette);
-            }
-            return;
-        }
-        
-        // Si hay ajustes, los aplicamos a la paleta *original*
-        const newPalette = originalExplorerPalette.map(color => {
-            if (lockedColors.includes(color)) {
-                return color; // Respeta los colores bloqueados
-            }
-            return applyAdjustments(color, paletteAdjustments);
-        });
-        
-        // Actualizamos la paleta de tiempo real
-        setExplorerPalette(newPalette);
-
-    // --- ¡¡¡MODIFICACIÓN CLAVE!!! ---
-    // Se elimina `explorerPalette` de las dependencias.
-    // Esto evita el "parpadeo" (flicker) al usar el ColorPickerSidebar,
-    // ya que este hook ya no re-evaluará y revertirá la paleta
-    // cada vez que `updateBrandColor` la actualice en tiempo real.
-    }, [originalExplorerPalette, paletteAdjustments, lockedColors]);
-
+    // Función para cancelar la actualización del brandColor
+    const cancelBrandColorUpdate = () => {
+        // Simplemente revierte la paleta de tiempo real a la original.
+        // No toques brandColor o grayColor.
+        setExplorerPalette(originalExplorerPalette);
+    };
 
     // --- ¡NUEVO! ---
     // Lógica para confirmar (commit) o cancelar los ajustes globales.
@@ -536,16 +516,40 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
 
 
     // --- ¡¡¡MODIFICACIÓN CLAVE!!! ---
-    // Se ha ELIMINADO un `useEffect` duplicado que también
-    // reseteaba `explorerPalette` cuando `paletteAdjustments` era 0.
-    // Estaba en conflicto con el `useEffect` de arriba y causaba
-    // el parpadeo.
+    // Este useEffect ahora aplica los ajustes globales (H, S, B, Temp)
+    // a la paleta en tiempo real.
     useEffect(() => {
         if (isUpdatingFromHistory.current) {
             isUpdatingFromHistory.current = false;
+            // Asegurarse de que los ajustes se reseteen al cambiar de historial
+            setPaletteAdjustments({ hue: 0, saturation: 0, brightness: 0, temperature: 0 });
+            setExplorerPalette(originalExplorerPalette);
+            return;
         }
-        // El código conflictivo (`if (paletteAdjustments.hue === 0 && ... ) { setExplorerPalette(originalExplorerPalette); }`) ha sido eliminado.
-    }, [originalExplorerPalette, paletteAdjustments]); // Añadido paletteAdjustments
+
+        // Comprueba si hay algún ajuste aplicado
+        const hasAdjustments = 
+            paletteAdjustments.hue !== 0 ||
+            paletteAdjustments.saturation !== 0 ||
+            paletteAdjustments.brightness !== 0 ||
+            paletteAdjustments.temperature !== 0;
+
+        if (hasAdjustments) {
+            // Si hay ajustes, calcula la nueva paleta en tiempo real
+            const adjustedPalette = originalExplorerPalette.map(color => {
+                if (lockedColors.includes(color)) {
+                    return color; // Respeta los colores bloqueados
+                }
+                // Aplica los ajustes globales
+                return applyAdjustments(color, paletteAdjustments);
+            });
+            setExplorerPalette(adjustedPalette);
+        } else {
+            // Si no hay ajustes, la paleta en tiempo real es la original
+            setExplorerPalette(originalExplorerPalette);
+        }
+    // ¡IMPORTANTE! Este hook reacciona a `originalExplorerPalette`, `paletteAdjustments` y `lockedColors`
+    }, [originalExplorerPalette, paletteAdjustments, lockedColors]);
     
     useEffect(() => {
         if (!brandColor || !grayColor) return; 
@@ -1295,6 +1299,9 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
         toggleLockColor,
         
         saveCurrentStateToHistory, 
+
+        // --- ¡NUEVO! ---
+        cancelBrandColorUpdate, // <-- Exportar la nueva función
         
         savedPalettes: filteredPalettes, 
         currentPaletteId,

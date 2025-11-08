@@ -40,7 +40,22 @@ const sliderStyles = `
   }
 `;
 
-// --- ELIMINADO --- Hook useOnClickOutside
+// Hook para detectar clics fuera (solo para móvil)
+function useOnClickOutside(ref, handler) {
+  useEffect(() => {
+    const listener = (event) => {
+      if (window.innerWidth >= 768) return;
+      if (!ref.current || ref.current.contains(event.target)) return;
+      handler(event);
+    };
+    document.addEventListener("mousedown", listener);
+    document.addEventListener("touchstart", listener);
+    return () => {
+      document.removeEventListener("mousedown", listener);
+      document.removeEventListener("touchstart", listener);
+    };
+  }, [ref, handler]);
+}
 
 // Componente de Slider Personalizado (Actualizado)
 const CustomSlider = ({ min, max, value, onChange, gradient }) => {
@@ -195,6 +210,8 @@ const PaletteAdjusterSidebar = ({
   explorerPalette,
   lockedColors,
 }) => {
+  const sidebarRef = useRef();
+  useOnClickOutside(sidebarRef, cancelPaletteAdjustments); // Llama a cancelar al hacer clic fuera
 
   const baseForGradient = (originalExplorerPalette || []).find(c => !(lockedColors || []).includes(c)) || (originalExplorerPalette || [])[0] || '#808080';
   const originalIndex = (originalExplorerPalette || []).indexOf(baseForGradient);
@@ -231,18 +248,19 @@ const PaletteAdjusterSidebar = ({
     }));
   };
   
-  const sidebarRef = useRef();
-  // --- ELIMINADO --- useOnClickOutside
 
   return (
     <>
       {/* --- ¡NUEVO! --- Añadir los estilos del slider --- */}
       <style>{sliderStyles}</style>
       
-      {/* --- ELIMINADO --- Backdrop */}
+      {/* --- Backdrop para móvil --- */}
+       <div 
+        className="fixed inset-0 bg-black/30 z-40 md:hidden"
+        onClick={closeHandler}
+      />
       
       {/* Panel del Sidebar */}
-      {/* --- ¡MODIFICACIÓN CLAVE! --- Clases de <aside> actualizadas --- */}
       <aside
         ref={sidebarRef}
         className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform

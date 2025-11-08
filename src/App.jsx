@@ -18,12 +18,13 @@ import {
     MoreHorizontal, Palette, ShieldCheck, Accessibility, TestTube2
 } from 'lucide-react';
 
-// --- ¡ELIMINADO! --- Se quita PaletteAdjusterSidebar
+// --- ¡MODIFICADO! ---
+// Restaurada la importación de PaletteAdjusterSidebar
 import ColorBlindnessSidebar from './components/ui/ColorBlindnessSidebar.jsx';
 import SavePaletteSidebar from './components/ui/SavePaletteSidebar.jsx';
 import MyPalettesSidebar from './components/ui/MyPalettesSidebar.jsx';
-// --- ¡NUEVO! --- Se importa el único sidebar de color
 import ColorPickerSidebar from './components/ui/ColorPickerSidebar.jsx';
+import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx'; // <-- ¡NUEVO!
 
 import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -104,6 +105,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     confirmColorInPalette, // (confirm)
     saveCurrentStateToHistory, // (confirm)
     
+    // --- ¡NUEVO! ---
+    cancelBrandColorUpdate, // (para el sidebar de "Ajustar Paleta")
+    
     setGrayColor, setIsGrayAuto,
     handleImport, handleReset, showNotification, 
     handleRandomTheme, handleThemeToggle, 
@@ -122,7 +126,12 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     explorerGrayShades, 
     handleExplorerColorPick, // (confirm)
     
-    // --- ¡ELIMINADO! --- 'paletteAdjustments' ya no existe
+    // --- ¡RESTAURADO! ---
+    // Se necesita la lógica de ajustes
+    paletteAdjustments,
+    setPaletteAdjustments,
+    commitPaletteAdjustments,
+    cancelPaletteAdjustments,
     
     insertColorInPalette, // (confirm)
     removeColorFromPalette, // (confirm)
@@ -181,7 +190,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
   
   // --- ¡MODIFICADO! ---
-  // Se elimina 'isAdjusterSidebarVisible'
+  // Se restaura 'isAdjusterSidebarVisible'
+  const [isAdjusterSidebarVisible, setIsAdjusterSidebarVisible] = useState(false); // <-- ¡RESTAURADO!
   const [isSimulationSidebarVisible, setIsSimulationSidebarVisible] = useState(false);
   const [isSaveSidebarVisible, setIsSaveSidebarVisible] = useState(false);
   const [isMyPalettesSidebarVisible, setIsMyPalettesSidebarVisible] = useState(false);
@@ -315,6 +325,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   // Lógica de 'closeAllSidebars' actualizada
   const closeAllSidebars = (isConfirming = false) => {
     // Cierra todos los sidebars
+    setIsAdjusterSidebarVisible(false); // <-- ¡AÑADIDO!
     setIsSimulationSidebarVisible(false);
     setIsSaveSidebarVisible(false);
     setIsMyPalettesSidebarVisible(false);
@@ -325,7 +336,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     if (isColorPickerSidebarVisible && colorPickerSidebarData && !isConfirming) {
       if (colorPickerSidebarData.index === null) {
         // Si era el Brand Color, revierte al original
-        updateBrandColor(colorPickerSidebarData.originalColor);
+        // --- ¡¡¡INICIO DE LA MODIFICACIÓN!!! (del 7/Nov) ---
+        // updateBrandColor(colorPickerSidebarData.originalColor); // <-- ELIMINADO (Lento)
+        hook.cancelBrandColorUpdate(); // <-- NUEVO (Rápido)
+        // --- ¡¡¡FIN DE LA MODIFICACIÓN!!! ---
       } else {
         // Si era un color de la paleta, revierte al original
         replaceColorInPalette(colorPickerSidebarData.index, colorPickerSidebarData.originalColor);
@@ -334,19 +348,25 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     
     setColorPickerSidebarData(null); // Limpia los datos
     
-    // 'cancelPaletteAdjustments' ya no existe
+    // --- ¡MODIFICADO! ---
+    // Llama a la función de cancelar ajustes si el sidebar de ajuste estaba abierto
+    if(isAdjusterSidebarVisible) {
+        cancelPaletteAdjustments();
+    }
+    
     setSimulationMode('none'); // Resetea el modo simulación
   };
 
-  // --- ¡NUEVO! ---
-  // Abre el sidebar para editar el Color de Marca
+  // --- ¡MODIFICADO! ---
+  // Esta función ahora abre el sidebar de AJUSTES GLOBALES
   const handleOpenBrandColorPicker = () => {
     closeAllSidebars();
-    setColorPickerSidebarData({
-        index: null, // 'null' significa que es el Brand Color
-        originalColor: brandColor
-    });
-    setIsColorPickerSidebarVisible(true);
+    // setColorPickerSidebarData({ // <-- ELIMINADO
+    //     index: null, 
+    //     originalColor: brandColor
+    // });
+    // setIsColorPickerSidebarVisible(true); // <-- ELIMINADO
+    setIsAdjusterSidebarVisible(true); // <-- ¡NUEVO!
     setIsSplitViewActive(true); // Activa la vista dividida
   };
   
@@ -856,9 +876,33 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           
           {/* --- ¡INICIO DE LA LÓGICA DE RENDERIZADO DE SIDEBARS! --- */}
           
-          {/* --- ¡ELIMINADO! --- 'isAdjusterSidebarVisible' y 'PaletteAdjusterSidebar' */}
-          
-          {/* --- ¡NUEVO! --- Renderizado del ColorPickerSidebar */}
+          {/* --- ¡RESTAURADO! ---
+              Ahora se renderiza el PaletteAdjusterSidebar cuando
+              isAdjusterSidebarVisible es true
+          */}
+          {isAdjusterSidebarVisible && (
+            <PaletteAdjusterSidebar
+                paletteAdjustments={paletteAdjustments}
+                setPaletteAdjustments={setPaletteAdjustments}
+                commitPaletteAdjustments={() => {
+                    commitPaletteAdjustments();
+                    closeAllSidebars(true); // Confirmar cierre
+                }}
+                cancelPaletteAdjustments={() => {
+                    cancelPaletteAdjustments();
+                    closeAllSidebars(false); // Cancelar cierre
+                }}
+                setIsAdjusterSidebarVisible={setIsAdjusterSidebarVisible}
+                originalExplorerPalette={originalExplorerPalette}
+                explorerPalette={explorerPalette}
+                lockedColors={lockedColors}
+            />
+          )}
+
+          {/* --- ¡MODIFICADO! ---
+              El ColorPickerSidebar ahora se renderiza
+              solo cuando isColorPickerSidebarVisible es true
+          */}
           {isColorPickerSidebarVisible && colorPickerSidebarData && (
             <ColorPickerSidebar
               // 'key' ayuda a React a resetear el estado interno del sidebar
@@ -870,7 +914,11 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 // Actualiza en tiempo real sin guardar en historial
                 if (colorPickerSidebarData.index === null) {
                   // Es el Color de Marca
-                  updateBrandColor(newColor);
+                  // --- ¡MODIFICACIÓN! (del 7/Nov) ---
+                  // ¡¡¡ESTO YA NO DEBERÍA OCURRIR, PERO LO DEJAMOS POR SEGURIDAD!!!
+                  // El ajuste global ahora usa PaletteAdjusterSidebar
+                  hook.updateBrandColor(newColor); // Llama a la función de tiempo real RÁPIDA
+                  // --- ¡FIN! ---
                 } else {
                   // Es un color de la paleta
                   replaceColorInPalette(colorPickerSidebarData.index, newColor);
@@ -879,7 +927,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               onConfirm={(newColor) => {
                 // Confirma el cambio y guarda en el historial
                 if (colorPickerSidebarData.index === null) {
-                  confirmBrandColor(newColor);
+                  // --- ¡MODIFICACIÓN! (del 7/Nov) ---
+                  // ¡¡¡ESTO YA NO DEBERÍA OCURRIR!!!
+                  hook.confirmBrandColor(newColor); // Llama a la función de confirmación LENTA
+                  // --- ¡FIN! ---
                 } else {
                   confirmColorInPalette(colorPickerSidebarData.index, newColor);
                 }
@@ -1018,8 +1069,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
 
         {/* --- ¡MODIFICADO! --- */}
-        {/* Se añade la condición !isColorPickerSidebarVisible */}
-        {!isSplitViewActive && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && !isColorPickerSidebarVisible && (
+        {/* Se añade la condición !isColorPickerSidebarVisible Y !isAdjusterSidebarVisible */}
+        {!isSplitViewActive && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && !isColorPickerSidebarVisible && !isAdjusterSidebarVisible && (
           <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 lg:hidden">
             <button
               onClick={() => handleRandomTheme()}
