@@ -745,9 +745,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 // --- FIN PROPS MOVIDAS ---
               />
               
-              <div className="px-4 md:px-8">
-                {/* --- MODIFICACIÓN: Reducido el espacio vertical --- */}
-                <div className="space-y-4 mb-4">
+              {/* --- MODIFICACIÓN: Eliminado el padding horizontal --- */}
+              <div className="">
+                {/* --- MODIFICACIÓN: Eliminados space-y y mb --- */}
+                <div className="">
                   <ColorPreviewer 
                     title="Modo Claro" 
                     themeOverride="light" 
@@ -859,7 +860,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         </div>
       </div>
 
-        <div className="px-4 md:px-8 my-8 flex justify-center">
+        {/* --- MODIFICACIÓN: Eliminado el padding horizontal --- */}
+        <div className="my-8 flex justify-center">
           {/* --- ¡MODIFICACIÓN CLAVE! ---
               Se ha eliminado la prop 'dataAdClient' para evitar
               la advertencia de 'import.meta'. El componente

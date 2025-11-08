@@ -67,7 +67,9 @@ const ColorPreviewer = ({
     };
 
     return (
-        <div className="p-4 sm:p-6 rounded-xl border" style={{ backgroundColor: bgColor, borderColor: 'var(--border-default)', ...simulationFilterStyle }}>
+        // --- MODIFICACIÓN: Eliminados rounded-xl y border ---
+        // --- Se mantiene el padding p-4 sm:p-6 para que el contenido no se pegue a los bordes ---
+        <div className="p-4 sm:p-6" style={{ backgroundColor: bgColor, ...simulationFilterStyle }}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                  <h2 className="font-bold text-lg" style={{ color: mainTextColor }}>{title}</h2>
                 {/* --- MODIFICACIÓN --- Se ha re-añadido el div con el Switch */}

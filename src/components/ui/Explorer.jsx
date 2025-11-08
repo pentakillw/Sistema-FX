@@ -19,7 +19,7 @@ import { colorNameList } from '../../utils/colorNameList.js';
 import { HexColorPicker } from 'react-colorful';
 import ColorActionMenu from './ColorActionMenu.jsx';
 
-// --- (Componente AddColorMenu sin cambios) ---
+// Componente para el menú de añadir color
 const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
     const menuRef = useRef(null);
     useEffect(() => {
@@ -59,7 +59,7 @@ const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
     );
 };
 
-// --- (Componente ActionButtonHover sin cambios) ---
+// Componente para los botones de acción al pasar el ratón
 const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMouseDown }) => (
     <button
         onMouseDown={onMouseDown}
@@ -71,7 +71,7 @@ const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMou
     </button>
 );
 
-// --- (Función getPreviewBgColor sin cambios) ---
+// Función para obtener el color de fondo del preview
 const getPreviewBgColor = (mode, shades, cardColor) => {
     if (!shades || shades.length === 0) return '#FFFFFF';
     switch (mode) {
@@ -84,7 +84,6 @@ const getPreviewBgColor = (mode, shades, cardColor) => {
     }
 }
 
-// --- ¡COMPONENTE MODIFICADO! ---
 // Componente de Slider (Layout "finito" H | ---o--- | 123)
 const ColorSlider = ({ label, value, min, max, onChange, gradientStyle }) => {
     const handleSliderChange = (e) => {
@@ -133,7 +132,6 @@ const ColorSlider = ({ label, value, min, max, onChange, gradientStyle }) => {
 };
 
 
-// --- ¡COMPONENTE MODIFICADO! ---
 // Pop-over para el selector de color (Layout Moderno)
 const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange }) => {
     const [localColor, setLocalColor] = useState(color);
@@ -152,7 +150,6 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
         }
     };
 
-    // --- (Handlers de Texto sin cambios) ---
     const handleTextChange = (e) => {
         const newColorStr = e.target.value;
         setLocalColor(newColorStr);
@@ -182,7 +179,6 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
         return c.toHexString().toUpperCase();
     };
 
-    // --- (Handlers de Sliders sin cambios) ---
     const colorTiny = tinycolor(localColor);
     const rgb = colorTiny.toRgb();
     const hsl = colorTiny.toHsl();
@@ -208,7 +204,6 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
         }
     };
     
-    // --- (Gradientes sin cambios) ---
     const gradients = {
         hue: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
         saturationHsl: `linear-gradient(to right, ${tinycolor({h: hsl.h, s: 0, l: 0.5}).toHexString()}, ${tinycolor({h: hsl.h, s: 1, l: 0.5}).toHexString()})`,
@@ -222,7 +217,6 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
 
     const inputModes = ['hex', 'rgb', 'hsl', 'hsv', 'name'];
 
-    // --- (Lógica Eyedropper sin cambios) ---
     const openEyedropper = async () => {
         if (!('EyeDropper' in window)) {
             console.warn('Eyedropper API no soportada');
@@ -243,7 +237,6 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
     return (
         <div className="fixed inset-0 z-[70]" onClick={onClose} style={{ visibility: isPicking ? 'hidden' : 'visible' }}>
             <div
-                // --- (Responsividad sin cambios) ---
                 className="fixed z-[71] p-3 rounded-xl border shadow-2xl w-[90vw] max-w-[256px] sm:w-64"
                 style={{
                     ...style,
@@ -254,7 +247,6 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
             >
                 <HexColorPicker color={localColor} onChange={handlePickerChange} />
                 
-                {/* --- ¡LAYOUT REORDENADO! --- */}
                 <div className="mt-3 space-y-3">
                     {/* Row 1: Info Bar */}
                     <div className="flex items-center gap-1.5">
@@ -406,9 +398,8 @@ const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange
         </div>
     );
 };
-// --- FIN DEL COMPONENTE MODIFICADO ---
 
-// --- (Componentes PopoverMenu y MenuButton sin cambios) ---
+// Componente PopoverMenu (para menús desplegables)
 export const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     const menuRef = useRef(null);
     useEffect(() => {
@@ -432,6 +423,7 @@ export const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     );
 };
 
+// Componente MenuButton (para botones dentro de PopoverMenu)
 export const MenuButton = ({ icon, label, onClick, className = "" }) => (
     <button
         onClick={onClick}
@@ -443,7 +435,7 @@ export const MenuButton = ({ icon, label, onClick, className = "" }) => (
 );
 
 
-// --- ¡ESTILOS MODIFICADOS! ---
+// Estilos para los sliders
 const sliderStyles = `
   .custom-slider {
     -webkit-appearance: none;
@@ -608,8 +600,7 @@ const Explorer = (props) => {
                 className={`transition-all duration-300`} 
                 style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
             >
-                {/* ... (Tu Header de Explorer va aquí, si lo tienes) ... */}
-                
+                {/* --- SECCIÓN DE VISTA DIVIDIDA (AJUSTADOR/SIMULADOR) --- */}
                 {isSplitView && (
                     <div 
                         className="h-[calc((100vh-65px)/2)] overflow-hidden" 
@@ -637,19 +628,37 @@ const Explorer = (props) => {
                                                             minWidth: '50px' 
                                                         }}
                                                     >
+                                                        {/* --- INICIO DE LA MODIFICACIÓN (VISTA DIVIDIDA - ORIGINAL) --- */}
+                                                        
+                                                        {/* 1. Bloque de Texto (Movido Arriba) */}
+                                                        {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
+                                                        <div 
+                                                            className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 z-10"
+                                                            style={{ pointerEvents: 'none' }} 
+                                                        >
+                                                            <button 
+                                                                className={`font-mono text-xl font-bold p-1 rounded-lg transition-colors`} 
+                                                                style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF', textShadow: tinycolor(shade).isLight() ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)', pointerEvents: 'none' }}
+                                                            >
+                                                                {getHexValue(shade)}
+                                                            </button>
+                                                            <button 
+                                                                className={`text-sm capitalize transition-colors px-1 truncate w-full max-w-full`} 
+                                                                style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF', textShadow: tinycolor(shade).isLight() ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)', pointerEvents: 'none' }}
+                                                            >
+                                                                {getDisplayValue(shade, displayMode)}
+                                                            </button>
+                                                        </div>
+
+                                                        {/* 2. Iconos (Movidos Abajo) */}
+                                                        {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
                                                         {lockedColors.includes(shade) && (
-                                                            <div className="absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
+                                                            <div className="absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
                                                                 <Lock size={12} strokeWidth={1.5} />
                                                             </div>
                                                         )}
-                                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 z-10">
-                                                            <span 
-                                                                className="font-mono text-lg font-bold p-1 rounded-lg"
-                                                                style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF', textShadow: tinycolor(shade).isLight() ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)' }}
-                                                            >
-                                                                {getHexValue(shade)}
-                                                            </span>
-                                                        </div>
+                                                        {/* --- FIN DE LA MODIFICACIÓN --- */}
+                                                        
                                                     </div>
                                                 )}
                                             </Draggable>
@@ -662,100 +671,13 @@ const Explorer = (props) => {
                     </div>
                 )}
                 
+                {/* --- SECCIÓN DE PALETA PRINCIPAL (AJUSTADA O NORMAL) --- */}
                 <div 
-                    className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)] rounded-b-md'}`}
+                    className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)]'} ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
                     title={isAdjusterSidebarVisible ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
                 >
                     
-                    {isAdjusterSidebarVisible && (
-                         <DragDropContext onDragEnd={onDragEnd}>
-                            <Droppable droppableId="palette-main" direction="horizontal">
-                                {(provided) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
-                                    >
-                                        {explorerPalette.map((shade, index) => {
-                                            const originalColor = originalExplorerPalette[index];
-                                            const isLocked = lockedColors.includes(originalColor);
-                                            const displayShade = isLocked ? originalColor : shade;
-                                            const isLight = tinycolor(displayShade).isLight();
-                                            const iconColor = isLight ? 'text-gray-900' : 'text-white';
-                                            const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
-                                            const textColor = isLight ? '#000' : '#FFF';
-                                            const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
-                                            const hexValue = getHexValue(displayShade);
-                                            const displayValue = getDisplayValue(displayShade, displayMode);
-                                            
-                                            return (
-                                                <Draggable key={"main-" + originalColor + index} draggableId={"main-" + originalColor + index} index={index}>
-                                                    {(provided) => (
-                                                        <div ref={provided.innerRef} {...provided.draggableProps} className="relative h-full flex-1 flex items-center justify-center group/color-wrapper" style={{...provided.draggableProps.style}}>
-                                                            <div className="relative group/item h-full w-full flex items-center justify-center transition-colors duration-100 ease-in-out" style={{ backgroundColor: displayShade, minWidth: '50px' }} title={displayShade.toUpperCase()}>
-                                                                {displayShade === brandColor && (<div className={`absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color de Marca Actual"><Star size={12} className="fill-current" strokeWidth={1.5} /></div>)}
-                                                                {isLocked && (<div className={`absolute top-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
-                                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
-                                                                    <div title="Arrastrar para mover" className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`} {...provided.dragHandleProps} onClick={(e) => e.stopPropagation()}>
-                                                                        <ArrowLeftRight size={18} strokeWidth={1.5} />
-                                                                    </div>
-                                                                    <ActionButtonHover title="Usar como Marca" onClick={() => handleExplorerColorPick(displayShade)} iconColor={iconColor} hoverBg={hoverBg}><Star size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                    <ActionButtonHover title="Ver Tonalidades" onClick={() => toggleShades(index)} iconColor={iconColor} hoverBg={hoverBg}><Palette size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                    <ActionButtonHover title="Copiar H E X" onClick={() => { navigator.clipboard.writeText(hexValue); showNotification(`H E X ${hexValue} copiado!`); }} iconColor={iconColor} hoverBg={hoverBg}><Copy size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                    <ActionButtonHover title={isLocked ? "Desbloquear" : "Bloquear"} onClick={() => toggleLockColor(originalColor)} iconColor={iconColor} hoverBg={hoverBg}>{isLocked ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}</ActionButtonHover>
-                                                                    <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
-                                                                </div>
-                                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10">
-                                                                    <button 
-                                                                        className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} 
-                                                                        style={{ color: textColor, textShadow: textShadow }} 
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            const rect = e.currentTarget.getBoundingClientRect();
-                                                                            let pickerStyle = {
-                                                                                top: `${rect.top + window.scrollY - 10}px`,
-                                                                                left: `${rect.left + window.scrollX + rect.width / 2}px`,
-                                                                                transform: 'translate(-50%, -100%)',
-                                                                            };
-                                                                            if (window.innerWidth < 768) {
-                                                                                pickerStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-                                                                            }
-                                                                            setPickerColor({ index, color: displayShade, style: pickerStyle }); 
-                                                                        }} 
-                                                                        title="Editar Color"
-                                                                    >
-                                                                        {hexValue}
-                                                                    </button>
-                                                                    <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
-                                                                </div>
-                                                            </div>
-                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
-                                                                <button 
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    onMouseDown={(e) => handleAddButtonDown(e, index)}
-                                                                    onMouseUp={(e) => handleAddButtonUp(e, index)}
-                                                                    onTouchStart={(e) => handleAddButtonDown(e, index)}
-                                                                    onTouchEnd={(e) => handleAddButtonUp(e, index)}
-                                                                    onMouseLeave={() => clearTimeout(longPressTimer.current)}
-                                                                    className="bg-white/90 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
-                                                                    title="Añadir color (mantén presionado para más)"
-                                                                >
-                                                                    <Plus size={16}/>
-                                                                </button>
-                                                            </div>
-                                                            {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
-                                                        </div>
-                                                    )}
-                                                </Draggable>
-                                            )
-                                        })}
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </Droppable>
-                        </DragDropContext>
-                    )}
-                    
+                    {/* --- VISTA DE SIMULACIÓN --- */}
                     {isSimulationSidebarVisible && (
                         <div 
                             className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
@@ -769,27 +691,52 @@ const Explorer = (props) => {
 
                                 return (
                                     <div key={`sim-${index}`} className="relative h-full flex-1 flex items-center justify-center" style={{ backgroundColor: shade, minWidth: '50px' }}>
-                                        {lockedColors.includes(shade) && (<div className="absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
-                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 z-10">
-                                            <span className="font-mono text-lg font-bold p-1 rounded-lg" style={{ color: textColor, textShadow: textShadow }}>
+                                        {/* --- INICIO DE LA MODIFICACIÓN (VISTA SIMULACIÓN) --- */}
+                                        
+                                        {/* 1. Bloque de Texto (Movido Arriba) */}
+                                        {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
+                                        <div 
+                                            className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 z-10"
+                                            style={{ pointerEvents: 'none' }} 
+                                        >
+                                            <button 
+                                                className={`font-mono text-xl font-bold p-1 rounded-lg transition-colors`} 
+                                                style={{ color: textColor, textShadow: textShadow, pointerEvents: 'none' }}
+                                            >
                                                 {hexValue}
-                                            </span>
+                                            </button>
+                                            <button 
+                                                className={`text-sm capitalize transition-colors px-1 truncate w-full max-w-full`} 
+                                                style={{ color: textColor, textShadow: textShadow, pointerEvents: 'none' }}
+                                            >
+                                                {getDisplayValue(shade, displayMode)}
+                                            </button>
                                         </div>
+
+                                        {/* 2. Iconos (Movidos Abajo) */}
+                                        {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
+                                        {lockedColors.includes(shade) && (
+                                            <div className="absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
+                                                <Lock size={12} strokeWidth={1.5} />
+                                            </div>
+                                        )}
+                                        {/* --- FIN DE LA MODIFICACIÓN --- */}
                                     </div>
                                 );
                             })}
                         </div>
                     )}
                     
-                    {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
+                    {/* --- VISTA NORMAL O DE AJUSTE (SON IDÉNTICAS EN RENDERIZADO) --- */}
+                    {!isSimulationSidebarVisible && (
                          <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="palette-main" direction="horizontal">
                                 {(provided) => (
-                                    <div ref={provided.innerRef} {...provided.droppableProps} className={`flex items-center h-full relative group rounded-md`}>
+                                    <div ref={provided.innerRef} {...provided.droppableProps} className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}>
                                         {explorerPalette.map((shade, index) => {
                                             const originalColor = (originalExplorerPalette && originalExplorerPalette[index]) ? originalExplorerPalette[index] : shade;
                                             const isLocked = lockedColors.includes(originalColor);
-                                            const displayShade = shade;
+                                            const displayShade = (isAdjusterSidebarVisible && isLocked) ? originalColor : shade;
                                             const isLight = tinycolor(displayShade).isLight();
                                             const iconColor = isLight ? 'text-gray-900' : 'text-white';
                                             const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
@@ -803,8 +750,61 @@ const Explorer = (props) => {
                                                     {(provided) => (
                                                         <div ref={provided.innerRef} {...provided.draggableProps} className="relative h-full flex-1 flex items-center justify-center group/color-wrapper" style={{...provided.draggableProps.style}}>
                                                             <div className="relative group/item h-full w-full flex items-center justify-center transition-colors duration-100 ease-in-out" style={{ backgroundColor: displayShade, minWidth: '50px' }} title={displayShade.toUpperCase()}>
-                                                                {displayShade === brandColor && (<div className={`absolute top-3 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color de Marca Actual"><Star size={12} className="fill-current" strokeWidth={1.5} /></div>)}
-                                                                {isLocked && (<div className={`absolute top-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor}`} title="Color Bloqueado"><Lock size={12} strokeWidth={1.5} /></div>)}
+                                                                
+                                                                {/* --- INICIO DE LA MODIFICACIÓN (VISTA PRINCIPAL/AJUSTE) --- */}
+                                                                
+                                                                {/* 1. Bloque de Texto (Movido Arriba) */}
+                                                                {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
+                                                                <div 
+                                                                    className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10"
+                                                                >
+                                                                    <button 
+                                                                        className={`font-mono text-xl font-bold p-1 rounded-lg transition-colors ${hoverBg}`} 
+                                                                        style={{ color: textColor, textShadow: textShadow, pointerEvents: 'auto' }} 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                                            let pickerStyle = {
+                                                                                // --- MODIFICACIÓN: Abrir hacia abajo ---
+                                                                                top: `${rect.bottom + window.scrollY + 10}px`, 
+                                                                                left: `${rect.left + window.scrollX + rect.width / 2}px`,
+                                                                                transform: 'translateX(-50%)', 
+                                                                            };
+                                                                            if (window.innerWidth < 768) {
+                                                                                pickerStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+                                                                            }
+                                                                            setPickerColor({ index, color: displayShade, style: pickerStyle }); 
+                                                                        }} 
+                                                                        title="Editar Color"
+                                                                    >
+                                                                        {hexValue}
+                                                                    </button>
+                                                                    <button 
+                                                                        className={`text-sm capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} 
+                                                                        style={{ color: textColor, textShadow: textShadow, pointerEvents: 'auto' }} 
+                                                                        onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} 
+                                                                        title="Cambiar formato de color"
+                                                                    >
+                                                                        {displayValue}
+                                                                    </button>
+                                                                </div>
+
+                                                                {/* 2. Iconos (Movidos Abajo) */}
+                                                                {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
+                                                                {displayShade === brandColor && (
+                                                                    <div className={`absolute top-24 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor} opacity-100 transition-opacity duration-200`} title="Color de Marca Actual">
+                                                                        <Star size={12} className="fill-current" strokeWidth={1.5} />
+                                                                    </div>
+                                                                )}
+                                                                {isLocked && (
+                                                                    <div className={`absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor} opacity-100 transition-opacity duration-200`} title="Color Bloqueado">
+                                                                        <Lock size={12} strokeWidth={1.5} />
+                                                                    </div>
+                                                                )}
+                                                                {/* --- FIN DE LA MODIFICACIÓN --- */}
+
+
+                                                                {/* Botones de hover (sin cambios, ya se ocultan/muestran) */}
                                                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
                                                                     <div title="Arrastrar para mover" className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`} {...provided.dragHandleProps} onClick={(e) => e.stopPropagation()}>
                                                                         <ArrowLeftRight size={18} strokeWidth={1.5} />
@@ -815,34 +815,11 @@ const Explorer = (props) => {
                                                                     <ActionButtonHover title={isLocked ? "Desbloquear" : "Bloquear"} onClick={() => toggleLockColor(originalColor)} iconColor={iconColor} hoverBg={hoverBg}>{isLocked ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}</ActionButtonHover>
                                                                     <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
                                                                 </div>
-                                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10">
-                                                                    <button 
-                                                                        className={`font-mono text-lg font-bold p-1 rounded-lg transition-colors ${hoverBg}`} 
-                                                                        style={{ color: textColor, textShadow: textShadow }} 
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            const rect = e.currentTarget.getBoundingClientRect();
-                                                                            let pickerStyle = {
-                                                                                top: `${rect.top + window.scrollY - 10}px`,
-                                                                                left: `${rect.left + window.scrollX + rect.width / 2}px`,
-                                                                                transform: 'translate(-50%, -100%)',
-                                                                            };
-                                                                            if (window.innerWidth < 768) {
-                                                                                pickerStyle = {
-                                                                                    top: '50%',
-                                                                                    left: '50%',
-                                                                                    transform: 'translate(-50%, -50%)',
-                                                                                };
-                                                                            }
-                                                                            setPickerColor({ index, color: displayShade, style: pickerStyle }); 
-                                                                        }} 
-                                                                        title="Editar Color"
-                                                                    >
-                                                                        {hexValue}
-                                                                    </button>
-                                                                    <button className={`text-xs capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} style={{ color: textColor, textShadow: textShadow }} onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} title="Cambiar formato de color">{displayValue}</button>
-                                                                </div>
+                                                                
+                                                                {/* Bloque de texto inferior (ELIMINADO) */}
+
                                                             </div>
+                                                            {/* Botón de Añadir (sin cambios) */}
                                                             <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                 <button 
                                                                     onClick={(e) => e.stopPropagation()}
@@ -857,6 +834,7 @@ const Explorer = (props) => {
                                                                     <Plus size={16}/>
                                                                 </button>
                                                             </div>
+                                                            {/* Tonalidades (sin cambios) */}
                                                             {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
                                                         </div>
                                                     )}
@@ -873,6 +851,8 @@ const Explorer = (props) => {
                 </div>
                 
             </section>
+            
+            {/* --- RESTO DEL ARCHIVO (MODALES Y POP-UPS) --- */}
             
             {addMenuState.isVisible && (
                 <div 
@@ -922,16 +902,13 @@ const Explorer = (props) => {
                     color={pickerColor.color}
                     style={pickerColor.style} 
                     onClose={() => {
-                        // --- ¡FIX! --- Al cerrar (Cancelar), revertimos al color original
                         replaceColorInPalette(pickerColor.index, pickerColor.color);
                         setPickerColor(null);
                     }}
                     onRealtimeChange={(newColor) => {
-                        // --- ¡FIX! --- Pasa la función de tiempo real
                         replaceColorInPalette(pickerColor.index, newColor);
                     }}
                     onConfirm={(newColor) => { 
-                        // --- ¡FIX! --- onConfirm ahora cierra el modal
                         replaceColorInPalette(pickerColor.index, newColor);
                         setPickerColor(null);
                     }}
@@ -973,19 +950,32 @@ const Explorer = (props) => {
                                                             
                                                             {activeColorMenu?.index !== index && (
                                                                 <>
+                                                                    {/* --- MODIFICACIÓN (VISTA EXPANDIDA) --- */}
+                                                                    <div 
+                                                                        className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 z-10"
+                                                                        style={{ pointerEvents: 'none' }}
+                                                                    >
+                                                                        <p className="font-mono text-xl font-bold" style={{ color: tinycolor(displayShade).isLight() ? '#000' : '#FFF', textShadow: tinycolor(displayShade).isLight() ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)' }}>
+                                                                            {getHexValue(displayShade)}
+                                                                        </p>
+                                                                        <p className="text-sm capitalize" style={{ color: tinycolor(displayShade).isLight() ? '#000' : '#FFF', textShadow: tinycolor(displayShade).isLight() ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)' }}>
+                                                                            {getDisplayValue(displayShade, displayMode)}
+                                                                        </p>
+                                                                    </div>
+                                                                
                                                                     {displayShade === brandColor && (
-                                                                        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color de Marca Actual">
+                                                                        <div className="absolute top-24 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color de Marca Actual">
                                                                             <Star size={14} className="fill-white" />
                                                                         </div>
                                                                     )}
                                                                     {isLocked && (
-                                                                        <div className="absolute top-2 left-2 p-1 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
+                                                                        <div className="absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
                                                                             <Lock size={12} />
                                                                         </div>
                                                                     )}
-                                                                    <div className="text-center transition-opacity duration-300 pointer-events-none absolute bottom-4">
-                                                                        <p className="font-mono text-sm hidden sm:block" style={{ color: tinycolor(displayShade).isLight() ? '#000' : '#FFF' }}>{displayShade.toUpperCase()}</p>
-                                                                    </div>
+                                                                    {/* Texto inferior original (eliminado) */}
+                                                                    {/* --- FIN MODIFICACIÓN --- */}
+
                                                                     <button onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}} className="absolute top-2 right-2 p-1 bg-black/20 rounded-full text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-all" title="Quitar color"><X size={16}/></button>
                                                                     <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                         <button 

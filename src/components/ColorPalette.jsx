@@ -70,7 +70,9 @@ const ColorPalette = ({
   }
 
   return (
-    <div className="mb-4">
+    // --- MODIFICACIÓN: Reducido el margen inferior ---
+    // --- CAMBIO de 'mb-4' a 'mb-2' ---
+    <div className="mb-2">
       {!isExplorer && (
         <div className="relative">
           <div

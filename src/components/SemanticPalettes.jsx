@@ -94,7 +94,8 @@ const SemanticPalettes = ({ stylePalette, onCopy, themeData, previewMode, onCycl
     };
 
     return (
-        <section className="p-2 sm:p-6 rounded-xl border mb-4 sm:mb-8" style={{ backgroundColor: bgColor, borderColor: 'var(--border-default)', ...simulationFilterStyle }}>
+        // --- MODIFICACIÓN: Eliminados rounded-xl, border y mb ---
+        <section className="p-2 sm:p-6" style={{ backgroundColor: bgColor, ...simulationFilterStyle }}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <h2 className="font-bold text-lg" style={{ color: textColor }}>Paletas Semánticas</h2>
                 <div className="flex items-center gap-1 sm:gap-2 self-start sm:self-center flex-wrap">
