@@ -2,32 +2,47 @@ import React, { memo, useRef, useCallback, useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 
-// Hook para detectar clics fuera del panel (solo para móvil)
-function useOnClickOutside(ref, handler) {
-  useEffect(() => {
-    const listener = (event) => {
-      // Si estamos en pantalla de escritorio (md o más), no hagas nada.
-      if (window.innerWidth >= 768) {
-        return;
-      }
-      if (!ref.current || ref.current.contains(event.target)) {
-        return;
-      }
-      handler(event);
-    };
-    
-    document.addEventListener("mousedown", listener);
-    document.addEventListener("touchstart", listener);
-    
-    return () => {
-      document.removeEventListener("mousedown", listener);
-      document.removeEventListener("touchstart", listener);
-    };
-  }, [ref, handler]);
-}
+// --- Estilos para los sliders (traídos de ColorPickerSidebar) ---
+const sliderStyles = `
+  .custom-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    opacity: 0.9;
+    transition: opacity .2s;
+  }
+  .custom-slider:hover {
+    opacity: 1;
+  }
+  .custom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    border: 2px solid #E5E7EB; /* Borde gris claro */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    margin-top: -4px;
+  }
+  .custom-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    border: 2px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+`;
 
+// --- ELIMINADO --- Hook useOnClickOutside
 
-// Componente de Slider Personalizado (sin cambios)
+// Componente de Slider Personalizado (Actualizado)
 const CustomSlider = ({ min, max, value, onChange, gradient }) => {
   const trackRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -117,11 +132,12 @@ const CustomSlider = ({ min, max, value, onChange, gradient }) => {
         onTouchStart={handleTrackTouchStart}
       >
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md border-2 border-gray-200 cursor-grab active:cursor-grabbing"
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md border-2"
           style={{ 
             left: `${percent}%`, 
             transform: `translate(-50%, -50%)`,
-            touchAction: 'none' 
+            touchAction: 'none',
+            borderColor: '#E5E7EB' // Borde gris claro
           }}
           onMouseDown={handleThumbMouseDown}
           onTouchStart={handleThumbTouchStart}
@@ -131,7 +147,7 @@ const CustomSlider = ({ min, max, value, onChange, gradient }) => {
   );
 };
 
-// Componente SliderControl (sin cambios)
+// Componente SliderControl (Actualizado)
 const SliderControl = ({ label, value, min, max, onChange, gradient, onInputChange }) => (
     <div 
       className="space-y-3" 
@@ -216,30 +232,29 @@ const PaletteAdjusterSidebar = ({
   };
   
   const sidebarRef = useRef();
-  // El hook se usa solo para cerrar el bottom-sheet en móvil
-  useOnClickOutside(sidebarRef, closeHandler);
+  // --- ELIMINADO --- useOnClickOutside
 
   return (
     <>
-      {/* --- ¡MODIFICADO! --- Se quita el backdrop, ya no es necesario */}
+      {/* --- ¡NUEVO! --- Añadir los estilos del slider --- */}
+      <style>{sliderStyles}</style>
+      
+      {/* --- ELIMINADO --- Backdrop */}
       
       {/* Panel del Sidebar */}
-      {/* --- ¡MODIFICACIÓN CLAVE! ---
-          Se cambió 'md:w-80 lg:w-96' por 'md:w-64 lg:w-72'
-          para hacerlo más delgado.
-      */}
+      {/* --- ¡MODIFICACIÓN CLAVE! --- Clases de <aside> actualizadas --- */}
       <aside
         ref={sidebarRef}
         className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform
                    md:transform-none md:relative md:w-64 lg:w-72 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
-        // --- ¡MODIFICADO! --- Fondo blanco
+        // --- ¡MODIFICADO! --- Fondo blanco y borde
         style={{
           backgroundColor: '#FFFFFF',
-          borderColor: '#E5E7EB', // Borde gris claro
+          borderColor: '#E5E7EB',
         }}
       >
         <div 
-          className="h-full px-6 py-4 overflow-y-auto flex flex-col"
+          className="h-full px-4 py-4 overflow-y-auto flex flex-col" // <-- Padding actualizado
           // Detiene la propagación del clic en el contenido del sidebar
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
@@ -265,7 +280,7 @@ const PaletteAdjusterSidebar = ({
             className="flex items-center justify-center h-24 rounded-lg mb-6 border"
             style={{ 
               backgroundColor: previewColor,
-              borderColor: 'var(--border-default)'
+              borderColor: '#E5E7EB' // Borde gris claro
             }}
           >
             <span 

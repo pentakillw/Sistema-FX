@@ -2,30 +2,29 @@ import React, { useEffect, useState, memo, useCallback, useRef } from 'react';
 import useThemeGenerator from './hooks/useThemeGenerator.js';
 import { availableFonts, generationMethods } from './utils/colorUtils.js';
 import Explorer from './components/ui/Explorer.jsx';
-// Se elimina la importación de FloatingActionButtons ya que no se usará
 import ColorPreviewer from './components/ColorPreviewer.jsx';
 import SemanticPalettes from './components/SemanticPalettes.jsx';
 import { 
     ExportModal, AccessibilityModal, ComponentPreviewModal, 
     HistoryModal, HelpModal, ConfirmDeleteModal,
-    // --- MODALES MOVIDOS DE EXPLORER ---
     AIPaletteModal, ImagePaletteModal, VariationsModal, PaletteContrastChecker
 } from './components/modals/index.jsx';
 import { 
     Settings, Type, Upload, Download, RefreshCcw, HelpCircle, 
     User, LogOut, LogIn, Save, FolderOpen,
     Undo2, Redo2, Clock, Sun, Moon, FileCode, Sparkles,
-    // --- ICONOS MOVIDOS DE EXPLORER ---
-    // Layers, // <--- ELIMINADO
     Wand2, Image as ImageIcon, 
-    // Maximize, // <--- ELIMINADO
     SlidersHorizontal, Eye, 
     MoreHorizontal, Palette, ShieldCheck, Accessibility, TestTube2
 } from 'lucide-react';
-import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
+
+// --- ¡ELIMINADO! --- Se quita PaletteAdjusterSidebar
 import ColorBlindnessSidebar from './components/ui/ColorBlindnessSidebar.jsx';
 import SavePaletteSidebar from './components/ui/SavePaletteSidebar.jsx';
 import MyPalettesSidebar from './components/ui/MyPalettesSidebar.jsx';
+// --- ¡NUEVO! --- Se importa el único sidebar de color
+import ColorPickerSidebar from './components/ui/ColorPickerSidebar.jsx';
+
 import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import GoogleAdBanner from './components/GoogleAdBanner.jsx';
@@ -33,8 +32,9 @@ import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx';
 import TermsOfServicePage from './components/TermsOfServicePage.jsx'; 
 import { supabase } from './supabaseClient.js';
 
-// --- Componentes de Menú (MODIFICADO) ---
+// --- Componentes de Menú (sin cambios) ---
 const PopoverMenu = ({ children, onClose, align = 'right' }) => {
+    // ... (código sin cambios) ...
     const menuRef = useRef(null);
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -56,9 +56,8 @@ const PopoverMenu = ({ children, onClose, align = 'right' }) => {
         </div>
     );
 };
-// --- FIN MODIFICACIÓN ---
-
 const MenuButton = ({ icon, label, onClick, className = "" }) => (
+    // ... (código sin cambios) ...
     <button
         onClick={onClick}
         className={`flex items-center w-full px-3 py-2 text-sm rounded-md text-gray-800 hover:bg-gray-100 transition-colors ${className}`}
@@ -70,7 +69,7 @@ const MenuButton = ({ icon, label, onClick, className = "" }) => (
 // --- FIN DE COMPONENTES DE MENÚ ---
 
 
-// --- Funciones simuladas para Capacitor ---
+// --- Funciones simuladas para Capacitor (sin cambios) ---
 const Capacitor = {
   isNativePlatform: () => false
 };
@@ -82,8 +81,9 @@ const Share = {
 };
 // --- Fin de funciones simuladas ---
 
-// --- LÓGICA MOVIDA DE EXPLORER ---
+// --- Lógica movida de Explorer (sin cambios) ---
 const backgroundModeLabels = {
+// ... (código sin cambios) ...
     'T950': 'Fondo T950',
     'T0': 'Fondo T0',
     'white': 'Fondo Blanco',
@@ -96,7 +96,15 @@ const backgroundModeLabels = {
 const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const { 
     themeData, font, setFont, brandColor, grayColor, isGrayAuto,
-    updateBrandColor, setGrayColor, setIsGrayAuto,
+    // --- ¡MODIFICADO! ---
+    // Se usan las nuevas funciones 'realtime' y 'confirm'
+    updateBrandColor, // (realtime)
+    confirmBrandColor, // (confirm)
+    replaceColorInPalette, // (realtime)
+    confirmColorInPalette, // (confirm)
+    saveCurrentStateToHistory, // (confirm)
+    
+    setGrayColor, setIsGrayAuto,
     handleImport, handleReset, showNotification, 
     handleRandomTheme, handleThemeToggle, 
     handleUndo, handleRedo, history, historyIndex, goToHistoryState,
@@ -105,17 +113,33 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     semanticPreviewMode, setSemanticPreviewMode,
     fxSeparator, setFxSeparator, useFxQuotes, setUseFxQuotes,
     simulationMode, cyclePreviewMode, 
-    explorerPalette, reorderExplorerPalette, explorerGrayShades, 
-    handleExplorerColorPick, paletteAdjustments, 
-    insertColorInPalette, removeColorFromPalette, explorerMethod,
-    insertMultipleColors,
-    setExplorerMethod, replaceColorInPalette, setSimulationMode, 
-    generatePaletteWithAI, applySimulationToPalette,
-    setPaletteAdjustments, commitPaletteAdjustments, cancelPaletteAdjustments,
-    originalExplorerPalette,
+    
+    // --- ¡MODIFICADO! ---
+    explorerPalette, // (realtime)
+    originalExplorerPalette, // (confirmado)
+    
+    reorderExplorerPalette, // (confirm)
+    explorerGrayShades, 
+    handleExplorerColorPick, // (confirm)
+    
+    // --- ¡ELIMINADO! --- 'paletteAdjustments' ya no existe
+    
+    insertColorInPalette, // (confirm)
+    removeColorFromPalette, // (confirm)
+    explorerMethod,
+    insertMultipleColors, // (confirm)
+    setExplorerMethod, 
+    
+    setSimulationMode, 
+    generatePaletteWithAI, // (confirm)
+    applySimulationToPalette, // (confirm)
+
+    // --- ¡ELIMINADO! --- 'commit' y 'cancel' ya no existen
+    
     lockedColors,
     toggleLockColor,
     savedPalettes,
+    // ... (resto de props de Supabase sin cambios) ...
     currentPaletteId,
     isLoadingPalettes,
     isSavingPalette,
@@ -141,7 +165,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     handleCreateTag 
   } = hook;
 
-  // --- ESTADO MOVIDO DE EXPLORER ---
+  // --- (Estado de Modales sin cambios) ---
   const [isVariationsVisible, setIsVariationsVisible] = useState(false);
   const [isContrastCheckerVisible, setIsContrastCheckerVisible] = useState(false);
   const [colorModePreview, setColorModePreview] = useState('card');
@@ -150,18 +174,23 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isAIModalVisible, setIsAIModalVisible] = useState(false);
   const [isMethodMenuVisible, setIsMethodMenuVisible] = useState(false);
   const [isToolsMenuVisible, setIsToolsMenuVisible] = useState(false);
-  // --- FIN ESTADO MOVIDO ---
-
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [isAccessibilityModalVisible, setIsAccessibilityModalVisible] = useState(false);
   const [isComponentPreviewModalVisible, setIsComponentPreviewModalVisible] = useState(false);
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
-  const [isAdjusterSidebarVisible, setIsAdjusterSidebarVisible] = useState(false);
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
+  
+  // --- ¡MODIFICADO! ---
+  // Se elimina 'isAdjusterSidebarVisible'
   const [isSimulationSidebarVisible, setIsSimulationSidebarVisible] = useState(false);
-
   const [isSaveSidebarVisible, setIsSaveSidebarVisible] = useState(false);
   const [isMyPalettesSidebarVisible, setIsMyPalettesSidebarVisible] = useState(false);
+  
+  // --- ¡NUEVO! --- Estado para el único sidebar de color
+  const [isColorPickerSidebarVisible, setIsColorPickerSidebarVisible] = useState(false);
+  const [colorPickerSidebarData, setColorPickerSidebarData] = useState(null); // { index, originalColor }
+  const [isSplitViewActive, setIsSplitViewActive] = useState(false); // Para la vista dividida
+  
   
   const [exportingPaletteData, setExportingPaletteData] = useState(null);
   
@@ -172,12 +201,13 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       onConfirm: () => {}
   });
 
-
+  // ... (Estado de menús de header sin cambios) ...
   const [isConfigMenuVisible, setIsConfigMenuVisible] = useState(false);
   const [isFontMenuVisible, setIsFontMenuVisible] = useState(false);
   const [isUserMenuVisible, setIsUserMenuVisible] = useState(false);
   const importFileRef = useRef(null); 
 
+  // ... (useEffect de 'barra espaciadora' sin cambios) ...
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.code !== 'Space') return;
@@ -198,16 +228,18 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     };
   }, [handleRandomTheme]);
 
-  // --- HANDLER MOVIDO DE EXPLORER ---
+  // --- (handleCyclePreviewMode sin cambios) ---
   const handleCyclePreviewMode = () => {
+    // ... (código sin cambios) ...
     const options = ['card', 'white', 'black', 'T0', 'T950'];
     const currentIndex = options.indexOf(colorModePreview);
     const nextIndex = (currentIndex + 1) % options.length;
     setColorModePreview(options[nextIndex]);
   };
-  // --- FIN HANDLER MOVIDO ---
 
+  // --- (handleNativeExport y handleWebExport sin cambios) ---
   const handleNativeExport = async () => {
+    // ... (código sin cambios) ...
     const data = { 
       brandColor: brandColor, 
       grayColor: grayColor, 
@@ -233,8 +265,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
        showNotification('La exportación nativa no está disponible en la web.', 'error');
     }
   };
-
   const handleWebExport = () => {
+    // ... (código sin cambios) ...
     const data = { 
       brandColor: brandColor, 
       grayColor: grayColor, 
@@ -251,6 +283,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     link.click();
   };
 
+  // --- (Handlers de menú de config sin cambios) ---
   const handleFontSelect = (fontName) => {
       setFont(fontName);
       setIsFontMenuVisible(false);
@@ -278,24 +311,64 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       setIsUserMenuVisible(false);
   };
   
-  const closeAllSidebars = () => {
-    setIsAdjusterSidebarVisible(false);
+  // --- ¡MODIFICADO! ---
+  // Lógica de 'closeAllSidebars' actualizada
+  const closeAllSidebars = (isConfirming = false) => {
+    // Cierra todos los sidebars
     setIsSimulationSidebarVisible(false);
     setIsSaveSidebarVisible(false);
     setIsMyPalettesSidebarVisible(false);
-    cancelPaletteAdjustments();
-    setSimulationMode('none');
+    setIsColorPickerSidebarVisible(false); 
+    setIsSplitViewActive(false); // Asegura que la vista dividida se cierre
+    
+    // Si cerramos el picker CANCELANDO (no confirmando)
+    if (isColorPickerSidebarVisible && colorPickerSidebarData && !isConfirming) {
+      if (colorPickerSidebarData.index === null) {
+        // Si era el Brand Color, revierte al original
+        updateBrandColor(colorPickerSidebarData.originalColor);
+      } else {
+        // Si era un color de la paleta, revierte al original
+        replaceColorInPalette(colorPickerSidebarData.index, colorPickerSidebarData.originalColor);
+      }
+    }
+    
+    setColorPickerSidebarData(null); // Limpia los datos
+    
+    // 'cancelPaletteAdjustments' ya no existe
+    setSimulationMode('none'); // Resetea el modo simulación
   };
+
+  // --- ¡NUEVO! ---
+  // Abre el sidebar para editar el Color de Marca
+  const handleOpenBrandColorPicker = () => {
+    closeAllSidebars();
+    setColorPickerSidebarData({
+        index: null, // 'null' significa que es el Brand Color
+        originalColor: brandColor
+    });
+    setIsColorPickerSidebarVisible(true);
+    setIsSplitViewActive(true); // Activa la vista dividida
+  };
+  
+  // --- ¡NUEVO! ---
+  // Abre el sidebar para editar un color específico de la paleta
+  const onOpenColorPickerSidebar = (index, originalColor) => {
+    closeAllSidebars();
+    setColorPickerSidebarData({
+        index: index,
+        originalColor: originalColor
+    });
+    setIsColorPickerSidebarVisible(true);
+    setIsSplitViewActive(false); // NO activa la vista dividida
+  };
+
 
   const handleOpenSimulationSidebar = () => {
     closeAllSidebars();
     setIsSimulationSidebarVisible(true);
   };
 
-  const handleOpenAdjusterSidebar = () => {
-    closeAllSidebars();
-    setIsAdjusterSidebarVisible(true);
-  };
+  // --- ¡ELIMINADO! --- 'handleOpenAdjusterSidebar' ya no existe
 
   const handleOpenSaveSidebar = () => {
     closeAllSidebars();
@@ -307,6 +380,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     setIsMyPalettesSidebarVisible(true);
   };
   
+  // ... (handleCancelSimulation, handleApplySimulation sin cambios) ...
   const handleCancelSimulation = () => {
     setSimulationMode('none');
     setIsSimulationSidebarVisible(false);
@@ -318,7 +392,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     setIsSimulationSidebarVisible(false);
   };
   
-  // Recibe el objeto 'saveData' completo
+  // ... (toda la lógica de Supabase (onSavePalette, onLoadPalette, etc.) sin cambios) ...
   const onSavePalette = async (saveData) => {
     const success = await handleSavePalette(saveData);
     if (success) {
@@ -331,7 +405,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     setIsMyPalettesSidebarVisible(false); 
   };
   
-  // Abre el modal de confirmación
   const onDeletePalette = (paletteId) => {
     const palette = savedPalettes.find(p => p.id === paletteId);
     setConfirmModalState({
@@ -359,7 +432,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     handleUpdatePaletteName(paletteId, newName);
   };
   
-  // --- ¡NUEVO! --- Handlers para el modal de confirmación de Proyectos/Colecciones
   const onDeleteProject = (projectId, projectName) => {
     setConfirmModalState({
         isOpen: true,
@@ -383,9 +455,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         }
     });
   };
-  // --- FIN ---
+  // --- FIN LÓGICA SUPABASE ---
 
 
+  // ... (fallback de 'Cargando...' sin cambios) ...
   if (!themeData || !themeData.stylePalette || !themeData.stylePalette.fullActionColors) {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white">
@@ -395,20 +468,17 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     );
   }
 
-  // --- ¡MODIFICACIÓN! ---
-  // Cambiamos el fondo de la página a blanco (#FFFFFF) para un look minimalista.
-  // También forzamos el color de texto principal a oscuro (#111827) para
-  // asegurar que el header y otro texto sigan siendo legibles.
+  // ... (estilo 'pageThemeStyle' sin cambios) ...
   const pageThemeStyle = {
-    backgroundColor: '#FFFFFF', // ¡MODIFICADO! - Fondo blanco minimalista
-    color: '#111827', // ¡MODIFICADO! - Color de texto oscuro
+    backgroundColor: '#FFFFFF', 
+    color: '#111827', 
     transition: 'background-color 0.3s ease, color 0.3s ease',
     fontFamily: availableFonts[font],
   };
-  // --- FIN DE MODIFICACIÓN ---
 
   return (
     <div className="flex flex-col min-h-screen w-full" style={pageThemeStyle}>
+      {/* --- (Filtros SVG sin cambios) --- */}
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
           <filter id="protanopia"><feColorMatrix in="SourceGraphic" type="matrix" values="0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0" /></filter>
@@ -424,6 +494,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       
       <input type="file" ref={importFileRef} onChange={handleImport} accept=".json" className="hidden"/>
       
+      {/* --- (HEADER) --- */}
       <header 
         className="flex justify-between items-center py-3 px-4 md:px-8 border-b"
         style={{ borderColor: 'var(--border-default)'}}
@@ -431,15 +502,13 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
           <img src="https://i.imgur.com/kOfAlJT.png" alt="Colores DaYam Logo" className="h-12 w-12 rounded-lg"/>
           
-          {/* --- INICIO DE LA MODIFICACIÓN --- */}
-          {/* Aplicamos la fuente 'pacifico' y la clase del degradado */}
-          {/* Ajustamos el padding inferior (pb-1) para centrar visualmente la fuente */}
           <h1 className="font-pacifico text-rainbow-gradient pb-1">
             Colores DaYam
           </h1>
-          {/* --- FIN DE LA MODIFICACIÓN --- */}
           
-          {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && (
+          {/* --- ¡MODIFICADO! --- */}
+          {/* Se añade la condición !isColorPickerSidebarVisible */}
+          {!isSplitViewActive && !isSimulationSidebarVisible && !isColorPickerSidebarVisible && (
             <p className="text-sm text-gray-500 hidden lg:block ml-4">
                 ¡ <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-md">barra espaciadora</kbd> para generar colores!
             </p>
@@ -448,18 +517,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         
         <div className="flex items-center gap-1.5 sm:gap-2">
           
-          {/* --- INICIO DE MODIFICACIÓN: Iconos eliminados --- */}
-          {/* <button
-              onClick={handleCyclePreviewMode}
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2"
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-              title={`Fondo: ${backgroundModeLabels[colorModePreview]}`}
-          >
-              <Layers size={16} />
-          </button> 
-          */}
-          
-          {/* --- ¡BOTÓN IA CON GRADIENTE! --- */}
+          {/* ... (Botones de IA, Método, Imagen sin cambios) ... */}
           <button 
               onClick={() => setIsAIModalVisible(true)} 
               className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-white transition-all hover:opacity-90 active:scale-95" 
@@ -469,7 +527,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               <Sparkles size={16} strokeWidth={1.75} />
           </button>
           
-          {/* --- ¡BOTONES DE ICONOS "FINITOS" Y MINIMALISTAS! --- */}
           <div className="relative">
               <button 
                   onClick={() => setIsMethodMenuVisible(true)} 
@@ -478,7 +535,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               >
                   <Wand2 size={16} strokeWidth={1.75}/>
               </button>
-                {/* --- MODIFICACIÓN: Lógica de Menú Clasificado --- */}
                 {isMethodMenuVisible && (
                   <PopoverMenu onClose={() => setIsMethodMenuVisible(false)}>
                       {generationMethods.map(method => (
@@ -501,7 +557,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                       ))}
                   </PopoverMenu>
               )}
-              {/* --- FIN MODIFICACIÓN --- */}
           </div>
           <button 
               onClick={() => setIsImageModalVisible(true)} 
@@ -510,23 +565,18 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           >
               <ImageIcon size={16} strokeWidth={1.75} />
           </button>
-          {/*
+          
+          {/* --- ¡MODIFICADO! --- */}
+          {/* 'onClick' ahora usa 'handleOpenBrandColorPicker' */}
           <button 
-              onClick={() => setIsExpanded(true)} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2" 
-              style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-default)' }}
-              title="Expandir Paleta"
-          >
-              <Maximize size={16} /> 
-          </button>
-          */}
-          <button 
-              onClick={handleOpenAdjusterSidebar} 
+              onClick={handleOpenBrandColorPicker} 
               className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
               title="Ajustar Paleta"
           >
               <SlidersHorizontal size={16} strokeWidth={1.75} /> 
           </button>
+          
+          {/* ... (Botón de Daltonismo y Menú 'Más' sin cambios) ... */}
           <button 
               onClick={handleOpenSimulationSidebar} 
               className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
@@ -552,8 +602,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               )}
           </div>
           <div className="h-6 w-px bg-gray-200 mx-1"></div>
-          {/* --- FIN DE MODIFICACIÓN --- */}
 
+          {/* ... (Botones de Historial, Tema, Exportar sin cambios) ... */}
           <button 
               onClick={handleUndo} 
               disabled={!history || historyIndex <= 0}
@@ -597,6 +647,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
 
           <div className="h-6 w-px bg-gray-200 mx-1"></div>
 
+          {/* ... (Lógica de Usuario (Guardar, Mis Paletas, Menú de Usuario) sin cambios) ... */}
           {user ? (
             <>
               <button 
@@ -636,7 +687,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               </div>
             </>
           ) : (
-            // Botones de Invitado
+            // ... (Botones de Invitado (Iniciar Sesión, Menú de Config) sin cambios) ...
             <>
               <button 
                 onClick={() => onNavigate('auth')}
@@ -695,32 +746,36 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         </div>
       </header>
       
+      {/* --- (CONTENIDO PRINCIPAL) --- */}
       <div className="flex-grow">
-        
-        {/* --- ¡MODIFICACIÓN CLAVE! ---
-            Se ha eliminado 'md:gap-4' de esta clase para
-            quitar el espacio entre la paleta y el sidebar.
-        */}
         <div className="flex flex-col md:flex-row">
           
           <div className="flex-grow w-full min-w-0">
             <main>
+              {/* --- ¡MODIFICADO! ---
+                  Se pasan las nuevas props a Explorer
+              */}
               <Explorer 
-                explorerPalette={explorerPalette}
+                explorerPalette={explorerPalette} // (realtime)
+                originalExplorerPalette={originalExplorerPalette} // (confirmado)
+                
                 reorderExplorerPalette={reorderExplorerPalette}
                 explorerGrayShades={explorerGrayShades}
                 handleExplorerColorPick={handleExplorerColorPick}
                 setGrayColor={setGrayColor}
-                paletteAdjustments={paletteAdjustments}
+                
                 brandColor={brandColor}
-                updateBrandColor={updateBrandColor}
+                updateBrandColor={updateBrandColor} // (realtime)
+                
                 themeData={themeData}
                 insertColorInPalette={insertColorInPalette}
                 insertMultipleColors={insertMultipleColors} 
                 removeColorFromPalette={removeColorFromPalette}
                 explorerMethod={explorerMethod}
                 setExplorerMethod={setExplorerMethod}
-                replaceColorInPalette={replaceColorInPalette}
+                
+                replaceColorInPalette={replaceColorInPalette} // (realtime)
+                
                 handleUndo={handleUndo}
                 handleRedo={handleRedo}
                 history={history}
@@ -729,25 +784,30 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 generatePaletteWithAI={generatePaletteWithAI}
                 showNotification={showNotification}
                 applySimulationToPalette={applySimulationToPalette}
-                onOpenAdjuster={handleOpenAdjusterSidebar}
+                
+                // --- ¡ELIMINADO! --- 'onOpenAdjuster' ya no existe
+                
                 onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
                 onOpenComponentPreviewModal={() => setIsComponentPreviewModal(true)}
                 lockedColors={lockedColors}
                 toggleLockColor={toggleLockColor}
-                isAdjusterSidebarVisible={isAdjusterSidebarVisible}
-                originalExplorerPalette={originalExplorerPalette}
+                
+                // --- ¡ELIMINADO! --- 'isAdjusterSidebarVisible' ya no existe
+                
                 isSimulationSidebarVisible={isSimulationSidebarVisible}
                 onOpenSimulationSidebar={handleOpenSimulationSidebar}
-                // --- PROPS MOVIDAS ---
+                
                 isExpanded={isExpanded}
                 setIsExpanded={setIsExpanded}
                 colorModePreview={colorModePreview}
-                // --- FIN PROPS MOVIDAS ---
+                
+                // --- ¡NUEVO! ---
+                onOpenColorPickerSidebar={onOpenColorPickerSidebar}
+                isSplitViewActive={isSplitViewActive}
               />
               
-              {/* --- MODIFICACIÓN: Eliminado el padding horizontal --- */}
+              {/* ... (ColorPreviewer y SemanticPalettes sin cambios) ... */}
               <div className="">
-                {/* --- MODIFICACIÓN: Eliminados space-y y mb --- */}
                 <div className="">
                   <ColorPreviewer 
                     title="Modo Claro" 
@@ -759,7 +819,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                     grayColor={grayColor}
                     isGrayAuto={isGrayAuto}
                     themeData={themeData}
-                    updateBrandColor={updateBrandColor}
+                    updateBrandColor={updateBrandColor} // Pasa el 'realtime'
                     setGrayColor={setGrayColor}
                     setIsGrayAuto={setIsGrayAuto}
                     simulationMode={simulationMode}
@@ -775,7 +835,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                     grayColor={grayColor}
                     isGrayAuto={isGrayAuto}
                     themeData={themeData}
-                    updateBrandColor={updateBrandColor}
+                    updateBrandColor={updateBrandColor} // Pasa el 'realtime'
                     setGrayColor={setGrayColor}
                     setIsGrayAuto={setIsGrayAuto}
                     simulationMode={simulationMode}
@@ -794,19 +854,41 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             </main>
           </div>
           
-          {isAdjusterSidebarVisible && (
-            <PaletteAdjusterSidebar
-              paletteAdjustments={paletteAdjustments}
-              setPaletteAdjustments={setPaletteAdjustments}
-              commitPaletteAdjustments={commitPaletteAdjustments}
-              cancelPaletteAdjustments={closeAllSidebars}
-              setIsAdjusterSidebarVisible={setIsAdjusterSidebarVisible}
-              originalExplorerPalette={originalExplorerPalette}
-              explorerPalette={explorerPalette}
-              lockedColors={lockedColors}
+          {/* --- ¡INICIO DE LA LÓGICA DE RENDERIZADO DE SIDEBARS! --- */}
+          
+          {/* --- ¡ELIMINADO! --- 'isAdjusterSidebarVisible' y 'PaletteAdjusterSidebar' */}
+          
+          {/* --- ¡NUEVO! --- Renderizado del ColorPickerSidebar */}
+          {isColorPickerSidebarVisible && colorPickerSidebarData && (
+            <ColorPickerSidebar
+              // 'key' ayuda a React a resetear el estado interno del sidebar
+              // cada vez que seleccionamos un color diferente.
+              key={colorPickerSidebarData.index === null ? 'brand' : colorPickerSidebarData.index}
+              initialColor={colorPickerSidebarData.originalColor}
+              onClose={() => closeAllSidebars(false)} // false = Cancelar
+              onRealtimeChange={(newColor) => {
+                // Actualiza en tiempo real sin guardar en historial
+                if (colorPickerSidebarData.index === null) {
+                  // Es el Color de Marca
+                  updateBrandColor(newColor);
+                } else {
+                  // Es un color de la paleta
+                  replaceColorInPalette(colorPickerSidebarData.index, newColor);
+                }
+              }}
+              onConfirm={(newColor) => {
+                // Confirma el cambio y guarda en el historial
+                if (colorPickerSidebarData.index === null) {
+                  confirmBrandColor(newColor);
+                } else {
+                  confirmColorInPalette(colorPickerSidebarData.index, newColor);
+                }
+                closeAllSidebars(true); // true = Confirmar
+              }}
             />
           )}
           
+          {/* ... (Renderizado de 'ColorBlindnessSidebar', 'SavePaletteSidebar', 'MyPalettesSidebar' sin cambios) ... */}
           {isSimulationSidebarVisible && (
             <ColorBlindnessSidebar
               simulationMode={simulationMode}
@@ -855,19 +937,14 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               onDeleteCollection={onDeleteCollection}
             />
           )}
-
+          
+          {/* --- FIN DE LA LÓGICA DE RENDERIZADO DE SIDEBARS --- */}
 
         </div>
       </div>
 
-        {/* --- MODIFICACIÓN: Eliminado el padding horizontal --- */}
+      {/* ... (Banner de Google Ad sin cambios) ... */}
         <div className="my-8 flex justify-center">
-          {/* --- ¡MODIFICACIÓN CLAVE! ---
-              Se ha eliminado la prop 'dataAdClient' para evitar
-              la advertencia de 'import.meta'. El componente
-              GoogleAdBanner.jsx (según el contexto) ya
-              obtiene este valor por sí mismo.
-          */}
           <GoogleAdBanner
             dataAdSlot="3746326433"
             style={{ display: 'block' }}
@@ -876,10 +953,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           />
         </div>
 
-        {/* --- ¡FOOTER MODIFICADO! ---
-            Cambiado 'themeData.controlsThemeStyle.color' a 'text-gray-500' 
-            para que sea legible sobre el fondo blanco.
-        */}
+      {/* ... (Footer sin cambios) ... */}
         <footer className="text-center py-8 px-4 md:px-8 border-t text-gray-500" style={{ borderColor: 'var(--border-default)'}}>
             <p className="text-sm">Creado por JD_DM.</p>
             <p className="text-xs mt-1">Un proyecto de código abierto para la comunidad de Power Apps.</p>
@@ -900,6 +974,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             </div>
         </footer>
 
+      {/* ... (Notificación y Modales sin cambios) ... */}
         {hook.notification.message && (
           <div className="fixed bottom-5 right-5 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-lg flex items-center gap-2" style={{ backgroundColor: hook.notification.type === 'error' ? '#EF4444' : '#10B981'}}>{hook.notification.message}</div>
         )}
@@ -937,16 +1012,14 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             />
         )}
         
-        {/* --- MODALES MOVIDOS DE EXPLORER --- */}
         {isAIModalVisible && ( <AIPaletteModal onClose={() => setIsAIModalVisible(false)} onGenerate={generatePaletteWithAI} /> )}
-        {isImageModalVisible && ( <ImagePaletteModal onColorSelect={updateBrandColor} onClose={() => setIsImageModalVisible(false)} /> )}
-        {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={updateBrandColor} />}
+        {isImageModalVisible && ( <ImagePaletteModal onColorSelect={confirmBrandColor} onClose={() => setIsImageModalVisible(false)} /> )}
+        {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={confirmBrandColor} />}
         {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
-        {/* --- FIN MODALES MOVIDOS --- */}
 
-        {/* --- Botón Flotante (Solo Generar) --- */}
-        {/* --- MODIFICACIÓN: Añadido lg:hidden --- */}
-        {!isAdjusterSidebarVisible && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && (
+        {/* --- ¡MODIFICADO! --- */}
+        {/* Se añade la condición !isColorPickerSidebarVisible */}
+        {!isSplitViewActive && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && !isColorPickerSidebarVisible && (
           <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 lg:hidden">
             <button
               onClick={() => handleRandomTheme()}
@@ -958,12 +1031,12 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             </button>
           </div>
         )}
-        {/* --- FIN MODIFICACIÓN --- */}
     </div>
   );
 });
 
 
+// --- (Función App() principal sin cambios) ---
 function App() {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);

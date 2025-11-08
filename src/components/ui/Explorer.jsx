@@ -4,7 +4,7 @@ import {
     Lock, Star, Unlock, Copy, Trash2, 
     ArrowLeftRight,
     ChevronDown,
-    Pipette // Añadido para Eyedropper
+    Pipette 
 } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -12,15 +12,15 @@ import ColorPalette from '../ColorPalette.jsx';
 import { 
     DisplayModeModal
 } from '../modals/index.jsx'; 
-// --- ¡CORRECCIÓN DE IMPORTACIÓN! ---
 import { generateShades, findClosestColorName } from '../../utils/colorUtils.js'; 
 import { colorNameList } from '../../utils/colorNameList.js';
-// --- FIN DE CORRECCIÓN ---
-import { HexColorPicker } from 'react-colorful';
-import ColorActionMenu from './ColorActionMenu.jsx';
+// --- ¡ELIMINADO! --- 'HexColorPicker' y 'ColorActionMenu' ya no se usan aquí
+import ColorActionMenu from './ColorActionMenu.jsx'; // (Se mantiene para 'isExpanded')
 
-// Componente para el menú de añadir color
+
+// Componente para el menú de añadir color (sin cambios)
 const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
+    // ... (código sin cambios) ...
     const menuRef = useRef(null);
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -59,8 +59,9 @@ const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
     );
 };
 
-// Componente para los botones de acción al pasar el ratón
+// Componente para los botones de acción al pasar el ratón (sin cambios)
 const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMouseDown }) => (
+    // ... (código sin cambios) ...
     <button
         onMouseDown={onMouseDown}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
@@ -71,8 +72,9 @@ const ActionButtonHover = ({ title, onClick, children, iconColor, hoverBg, onMou
     </button>
 );
 
-// Función para obtener el color de fondo del preview
+// Función para obtener el color de fondo del preview (sin cambios)
 const getPreviewBgColor = (mode, shades, cardColor) => {
+    // ... (código sin cambios) ...
     if (!shades || shades.length === 0) return '#FFFFFF';
     switch (mode) {
         case 'T950': return shades[shades.length - 1];
@@ -84,323 +86,13 @@ const getPreviewBgColor = (mode, shades, cardColor) => {
     }
 }
 
-// Componente de Slider (Layout "finito" H | ---o--- | 123)
-const ColorSlider = ({ label, value, min, max, onChange, gradientStyle }) => {
-    const handleSliderChange = (e) => {
-        onChange(parseFloat(e.target.value));
-    };
-    
-    const handleInputChange = (e) => {
-        let val = parseFloat(e.target.value);
-        if (isNaN(val)) val = min;
-        if (val < min) val = min;
-        if (val > max) val = max;
-        onChange(val);
-    };
+// --- ¡ELIMINADO! --- 'ColorSlider' y 'ColorPickerPopover'
+// (Se movieron a ColorPickerSidebar.jsx)
 
-    return (
-        <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-[var(--text-muted)] w-8 flex-shrink-0" title={label}>
-                {label}
-            </label>
-            <div className="relative h-4 flex-1 flex items-center">
-                <input
-                    type="range"
-                    min={min}
-                    max={max}
-                    value={value}
-                    onChange={handleSliderChange}
-                    className="w-full h-1.5 rounded-lg appearance-none cursor-pointer custom-slider"
-                    style={{ background: gradientStyle }}
-                />
-            </div>
-            <input
-                type="number"
-                value={Math.round(value)}
-                onChange={handleInputChange}
-                min={min}
-                max={max}
-                className="w-12 text-center text-sm py-0.5 px-1 rounded border"
-                style={{ 
-                    backgroundColor: 'var(--bg-muted)', 
-                    borderColor: 'var(--border-default)',
-                    color: 'var(--text-default)'
-                }}
-            />
-        </div>
-    );
-};
-
-
-// Pop-over para el selector de color (Layout Moderno)
-const ColorPickerPopover = ({ color, onClose, style, onConfirm, onRealtimeChange }) => {
-    const [localColor, setLocalColor] = useState(color);
-    const [inputMode, setInputMode] = useState('hex');
-    const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
-    const [isPicking, setIsPicking] = useState(false);
-
-    useEffect(() => {
-        setLocalColor(color);
-    }, [color]);
-
-    const handlePickerChange = (newColor) => {
-        setLocalColor(newColor);
-        if (onRealtimeChange) {
-            onRealtimeChange(newColor);
-        }
-    };
-
-    const handleTextChange = (e) => {
-        const newColorStr = e.target.value;
-        setLocalColor(newColorStr);
-        if (tinycolor(newColorStr).isValid() && onRealtimeChange) {
-            onRealtimeChange(newColorStr);
-        }
-    };
-    const handleTextBlur = (e) => {
-        if (!tinycolor(e.target.value).isValid()) {
-            setLocalColor(color); 
-        }
-    };
-    const handleTextKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            if (tinycolor(e.target.value).isValid()) {
-                onConfirm(e.target.value);
-                onClose();
-            }
-        }
-    };
-    const getFormattedColor = (mode) => {
-        const c = tinycolor(localColor);
-        if (!c.isValid()) return localColor;
-        if (mode === 'name') {
-            return findClosestColorName(localColor);
-        }
-        return c.toHexString().toUpperCase();
-    };
-
-    const colorTiny = tinycolor(localColor);
-    const rgb = colorTiny.toRgb();
-    const hsl = colorTiny.toHsl();
-    const hsv = colorTiny.toHsv();
-
-    const handleSliderChange = (mode, channel, value) => {
-        let newColor;
-        if (mode === 'rgb') {
-            const newRgb = { ...rgb, [channel]: value };
-            newColor = tinycolor(newRgb);
-        } else if (mode === 'hsl') {
-            const newHsl = { ...hsl, [channel]: value / (channel === 'h' ? 1 : 100) };
-            newColor = tinycolor(newHsl);
-        } else if (mode === 'hsv') {
-            const newHsv = { ...hsv, [channel]: value / (channel === 'h' ? 1 : 100) };
-            newColor = tinycolor(newHsv);
-        }
-        
-        if (newColor && newColor.isValid()) {
-            const newHex = newColor.toHexString();
-            setLocalColor(newHex);
-            if (onRealtimeChange) onRealtimeChange(newHex);
-        }
-    };
-    
-    const gradients = {
-        hue: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
-        saturationHsl: `linear-gradient(to right, ${tinycolor({h: hsl.h, s: 0, l: 0.5}).toHexString()}, ${tinycolor({h: hsl.h, s: 1, l: 0.5}).toHexString()})`,
-        luminance: `linear-gradient(to right, #000, ${tinycolor({h: hsl.h, s: hsl.s, l: 0.5}).toHexString()}, #fff)`,
-        saturationHsv: `linear-gradient(to right, ${tinycolor({h: hsv.h, s: 0, v: hsv.v}).toHexString()}, ${tinycolor({h: hsv.h, s: 1, v: hsv.v}).toHexString()})`,
-        brightness: `linear-gradient(to right, #000, ${tinycolor({h: hsv.h, s: hsv.s, v: 1}).toHexString()})`,
-        red: `linear-gradient(to right, ${tinycolor({...rgb, r: 0}).toHexString()}, ${tinycolor({...rgb, r: 255}).toHexString()})`,
-        green: `linear-gradient(to right, ${tinycolor({...rgb, g: 0}).toHexString()}, ${tinycolor({...rgb, g: 255}).toHexString()})`,
-        blue: `linear-gradient(to right, ${tinycolor({...rgb, b: 0}).toHexString()}, ${tinycolor({...rgb, b: 255}).toHexString()})`,
-    };
-
-    const inputModes = ['hex', 'rgb', 'hsl', 'hsv', 'name'];
-
-    const openEyedropper = async () => {
-        if (!('EyeDropper' in window)) {
-            console.warn('Eyedropper API no soportada');
-            return;
-        }
-        try {
-            const eyeDropper = new window.EyeDropper();
-            setIsPicking(true);
-            await new Promise(resolve => setTimeout(resolve, 100));
-            const { sRGBHex } = await eyeDropper.open();
-            setIsPicking(false);
-            handlePickerChange(sRGBHex);
-        } catch (e) {
-            setIsPicking(false);
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-[70]" onClick={onClose} style={{ visibility: isPicking ? 'hidden' : 'visible' }}>
-            <div
-                className="fixed z-[71] p-3 rounded-xl border shadow-2xl w-[90vw] max-w-[256px] sm:w-64"
-                style={{
-                    ...style,
-                    backgroundColor: 'var(--bg-card)',
-                    borderColor: 'var(--border-default)'
-                }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <HexColorPicker color={localColor} onChange={handlePickerChange} />
-                
-                <div className="mt-3 space-y-3">
-                    {/* Row 1: Info Bar */}
-                    <div className="flex items-center gap-1.5">
-                        <div 
-                            className="w-5 h-5 rounded border flex-shrink-0" 
-                            style={{ 
-                                backgroundColor: localColor, 
-                                borderColor: 'var(--border-default)' 
-                            }}
-                        />
-                        <button
-                            onClick={openEyedropper}
-                            className="p-1 rounded-md border"
-                            style={{ 
-                                backgroundColor: 'var(--bg-muted)', 
-                                borderColor: 'var(--border-default)', 
-                                color: 'var(--text-default)'
-                            }}
-                            title="Seleccionar color (Eyedropper)"
-                        >
-                            <Pipette size={14} />
-                        </button>
-                        
-                        {inputMode === 'hex' && (
-                            <input 
-                                type="text"
-                                value={getFormattedColor('hex')}
-                                onChange={handleTextChange}
-                                onBlur={handleTextBlur}
-                                onKeyDown={handleTextKeyDown}
-                                className="flex-1 w-full font-mono text-sm px-2 py-0.5 rounded-md border"
-                                style={{ 
-                                    backgroundColor: 'var(--bg-muted)', 
-                                    borderColor: 'var(--border-default)', 
-                                    color: 'var(--text-default)'
-                                }}
-                            />
-                        )}
-                        {inputMode === 'name' && (
-                            <input 
-                                type="text"
-                                value={getFormattedColor('name')}
-                                readOnly
-                                className="flex-1 w-full text-sm px-2 py-0.5 rounded-md border"
-                                style={{ 
-                                    backgroundColor: 'var(--bg-muted)', 
-                                    borderColor: 'var(--border-default)', 
-                                    color: 'var(--text-default)',
-                                    cursor: 'default'
-                                }}
-                            />
-                        )}
-                        {inputMode !== 'hex' && inputMode !== 'name' && (
-                            <span className="flex-1 w-full font-mono text-sm px-2 py-0.5 text-[var(--text-default)]">
-                                {getFormattedColor('hex')}
-                            </span>
-                        )}
-                        
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsModeMenuOpen(p => !p)}
-                                className="p-1 rounded-md border"
-                                style={{ 
-                                    backgroundColor: 'var(--bg-muted)', 
-                                    borderColor: 'var(--border-default)', 
-                                    color: 'var(--text-default)'
-                                }}
-                                title="Cambiar modo de input"
-                            >
-                                <ChevronDown size={14} />
-                            </button>
-                            {isModeMenuOpen && (
-                                <div className="absolute bottom-full right-0 mb-2 w-24 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-lg shadow-xl z-50 p-1">
-                                    {inputModes.map(mode => (
-                                        <button
-                                            key={mode}
-                                            onClick={() => {
-                                                setInputMode(mode);
-                                                setIsModeMenuOpen(false);
-                                            }}
-                                            className={`w-full text-left px-2 py-1 text-sm rounded ${inputMode === mode ? 'font-bold bg-[var(--bg-muted)]' : ''} hover:bg-[var(--bg-muted)]`}
-                                            style={{ color: 'var(--text-default)' }}
-                                        >
-                                            {mode.toUpperCase()}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    
-                    {/* Row 2: Sliders (si no es hex o name) */}
-                    {inputMode !== 'hex' && inputMode !== 'name' && (
-                        <div className="pt-3 border-t" style={{borderColor: 'var(--border-default)'}}>
-                            {inputMode === 'rgb' && (
-                                <div className="space-y-1">
-                                    <ColorSlider label="R" min={0} max={255} value={rgb.r} onChange={(v) => handleSliderChange('rgb', 'r', v)} gradientStyle={gradients.red} />
-                                    <ColorSlider label="G" min={0} max={255} value={rgb.g} onChange={(v) => handleSliderChange('rgb', 'g', v)} gradientStyle={gradients.green} />
-                                    <ColorSlider label="B" min={0} max={255} value={rgb.b} onChange={(v) => handleSliderChange('rgb', 'b', v)} gradientStyle={gradients.blue} />
-                                </div>
-                            )}
-                            {inputMode === 'hsl' && (
-                                <div className="space-y-1">
-                                    <ColorSlider label="H" min={0} max={360} value={Math.round(hsl.h)} onChange={(v) => handleSliderChange('hsl', 'h', v)} gradientStyle={gradients.hue} />
-                                    <ColorSlider label="S" min={0} max={100} value={Math.round(hsl.s * 100)} onChange={(v) => handleSliderChange('hsl', 's', v)} gradientStyle={gradients.saturationHsl} />
-                                    <ColorSlider label="L" min={0} max={100} value={Math.round(hsl.l * 100)} onChange={(v) => handleSliderChange('hsl', 'l', v)} gradientStyle={gradients.luminance} />
-                                </div>
-                            )}
-                            {inputMode === 'hsv' && (
-                                <div className="space-y-1">
-                                    <ColorSlider label="H" min={0} max={360} value={Math.round(hsv.h)} onChange={(v) => handleSliderChange('hsv', 'h', v)} gradientStyle={gradients.hue} />
-                                    <ColorSlider label="S" min={0} max={100} value={Math.round(hsv.s * 100)} onChange={(v) => handleSliderChange('hsv', 's', v)} gradientStyle={gradients.saturationHsv} />
-                                    <ColorSlider label="V" min={0} max={100} value={Math.round(hsv.v * 100)} onChange={(v) => handleSliderChange('hsv', 'v', v)} gradientStyle={gradients.brightness} />
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Row 3: Botones Aceptar/Cancelar (MOVIDOS AL FINAL) */}
-                    <div className="flex items-center gap-2 pt-2 border-t" style={{borderColor: 'var(--border-default)'}}>
-                        <button
-                            onClick={onClose}
-                            className="w-full text-center font-semibold text-sm py-1.5 rounded-md border"
-                            style={{ 
-                                backgroundColor: 'var(--bg-muted)', 
-                                borderColor: 'var(--border-default)', 
-                                color: 'var(--text-default)'
-                            }}
-                            title="Cancelar cambios"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            onClick={() => {
-                                onConfirm(localColor);
-                            }}
-                            // --- ¡BOTÓN CON GRADIENTE! ---
-                            className="w-full text-center font-semibold text-sm py-1.5 rounded-md border border-transparent text-white transition-all hover:opacity-90 active:scale-95"
-                            style={{ 
-                                background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)',
-                            }}
-                            title="Confirmar cambio"
-                        >
-                            Aceptar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Componente PopoverMenu (para menús desplegables)
+// --- (Componentes PopoverMenu y MenuButton) ---
+// (Se mantienen para el modo 'isExpanded' - sin cambios)
 export const PopoverMenu = ({ children, onClose, align = 'right' }) => {
+    // ... (código sin cambios) ...
     const menuRef = useRef(null);
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -422,9 +114,8 @@ export const PopoverMenu = ({ children, onClose, align = 'right' }) => {
         </div>
     );
 };
-
-// Componente MenuButton (para botones dentro de PopoverMenu)
 export const MenuButton = ({ icon, label, onClick, className = "" }) => (
+    // ... (código sin cambios) ...
     <button
         onClick={onClick}
         className={`flex items-center w-full px-3 py-2 text-sm rounded-md text-[var(--text-default)] hover:bg-[var(--bg-muted)] transition-colors ${className}`}
@@ -433,76 +124,70 @@ export const MenuButton = ({ icon, label, onClick, className = "" }) => (
         <span className="ml-3">{label}</span>
     </button>
 );
+// --- FIN POPUP/BUTTON ---
 
-
-// Estilos para los sliders
-const sliderStyles = `
-  .custom-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 6px; /* Más finito */
-    border-radius: 3px;
-    outline: none;
-    opacity: 0.9;
-    transition: opacity .2s;
-  }
-  .custom-slider:hover {
-    opacity: 1;
-  }
-  .custom-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 14px; /* Más finito */
-    height: 14px; /* Más finito */
-    border-radius: 50%;
-    background: #ffffff;
-    cursor: pointer;
-    border: 2px solid var(--border-default);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    margin-top: -4px; /* Centrado ( (6px - 14px) / 2 ) */
-  }
-  .custom-slider::-moz-range-thumb {
-    width: 14px; /* Más finito */
-    height: 14px; /* Más finito */
-    border-radius: 50%;
-    background: #ffffff;
-    cursor: pointer;
-    border: 2px solid var(--border-default);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-`;
+// --- ¡ELIMINADO! --- 'sliderStyles'
+// (Se movió a ColorPickerSidebar.jsx)
 
 
 const Explorer = (props) => {
-    // --- (Props sin cambios) ---
     const { 
-        explorerPalette, reorderExplorerPalette, explorerGrayShades, 
-        handleExplorerColorPick, setGrayColor,
-        brandColor, updateBrandColor, themeData, insertColorInPalette,
+        // --- ¡MODIFICADO! ---
+        explorerPalette, // (realtime)
+        originalExplorerPalette, // (confirmado)
+        
+        reorderExplorerPalette, 
+        explorerGrayShades, 
+        handleExplorerColorPick, 
+        setGrayColor,
+        brandColor, 
+        
+        updateBrandColor, // (realtime)
+        
+        themeData, 
+        insertColorInPalette,
         insertMultipleColors, 
         removeColorFromPalette, 
-        explorerMethod, setExplorerMethod,
-        generatePaletteWithAI, showNotification, applySimulationToPalette,
-        onOpenAdjuster, onOpenAccessibilityModal, onOpenComponentPreviewModal,
+        explorerMethod, 
+        setExplorerMethod,
+        generatePaletteWithAI, 
+        showNotification, 
+        applySimulationToPalette,
+        
+        // --- ¡ELIMINADO! --- 'onOpenAdjuster'
+        
+        onOpenAccessibilityModal, 
+        onOpenComponentPreviewModal,
         onOpenSimulationSidebar,
-        replaceColorInPalette,
-        handleUndo, handleRedo, history, historyIndex, 
+        
+        replaceColorInPalette, // (realtime)
+        
+        handleUndo, 
+        handleRedo, 
+        history, 
+        historyIndex, 
         simulationMode,
         lockedColors,
         toggleLockColor,
-        isAdjusterSidebarVisible,
-        originalExplorerPalette,
+        
+        // --- ¡ELIMINADO! --- 'isAdjusterSidebarVisible'
+        
         isSimulationSidebarVisible,
         isExpanded,
         setIsExpanded,
-        colorModePreview
+        colorModePreview,
+        
+        // --- ¡NUEVO! ---
+        onOpenColorPickerSidebar,
+        isSplitViewActive
     } = props;
     
     // --- (Estado local sin cambios) ---
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
     const [baseColorForShades, setBaseColorForShades] = useState(null);
-    const [pickerColor, setPickerColor] = useState(null);
+    
+    // --- ¡ELIMINADO! --- 'pickerColor'
+    
     const [activeColorMenu, setActiveColorMenu] = useState(null); 
     const paletteContainerRef = useRef(null);
     const [displayMode, setDisplayMode] = useState('name');
@@ -511,8 +196,9 @@ const Explorer = (props) => {
     const longPressTimer = useRef();
     const [isLongPress, setIsLongPress] = useState(false);
     
-    // --- (Funciones getDisplayValue y getHexValue sin cambios) ---
+    // --- (getDisplayValue y getHexValue sin cambios) ---
     const getDisplayValue = (colorStr, mode) => {
+        // ... (código sin cambios) ...
         const color = tinycolor(colorStr);
         switch (mode) {
             case 'rgb':
@@ -530,35 +216,44 @@ const Explorer = (props) => {
         }
     };
     const getHexValue = (colorStr) => {
+        // ... (código sin cambios) ...
         return tinycolor(colorStr).toHexString().substring(1).toUpperCase();
     }
 
-    // --- (Lógica de themeData, cardColor, colorModeBg, onDragEnd, etc. sin cambios) ---
+    // --- (Lógica de themeData, cardColor, etc. sin cambios) ---
     if (!themeData || !themeData.stylePalette || !themeData.grayShades) {
         return null; 
     }
     const cardColor = themeData.stylePalette.fullBackgroundColors.find(c => c.name === 'Apagado').color;
     const colorModeBg = getPreviewBgColor(colorModePreview, themeData.grayShades, cardColor);
+    
     const onDragEnd = (result) => {
         if (!result.destination) return;
         reorderExplorerPalette(result.source.index, result.destination.index);
     };
+    
     const toggleShades = (index) => {
         if (activeShadeIndex === index) {
             setActiveShadeIndex(null);
             setBaseColorForShades(null);
         } else {
             setActiveShadeIndex(index);
+            // ¡Usa la paleta 'en tiempo real' para las tonalidades!
             setBaseColorForShades(explorerPalette[index]);
         }
     };
+    
     const simulationFilterStyle = {
         filter: simulationMode !== 'none' ? `url(#${simulationMode})` : 'none'
     };
-    const isSplitView = isAdjusterSidebarVisible || isSimulationSidebarVisible;
+    
+    // --- ¡MODIFICADO! ---
+    // 'isSplitView' ahora depende de la nueva prop
+    const isSplitView = isSplitViewActive || isSimulationSidebarVisible;
 
-    // --- (Funciones handleColorBarClick, handleAddButtonDown, handleAddButtonUp sin cambios) ---
+    // --- (handleColorBarClick, handleAddButtonDown, handleAddButtonUp sin cambios) ---
     const handleColorBarClick = (e, index) => {
+        // ... (código sin cambios) ...
         const rect = e.currentTarget.getBoundingClientRect();
         let menuStyle = {};
         if (window.innerWidth >= 768) {
@@ -571,6 +266,7 @@ const Explorer = (props) => {
         setActiveColorMenu({ index, style: menuStyle });
     };
     const handleAddButtonDown = (e, index) => {
+        // ... (código sin cambios) ...
         e.stopPropagation();
         setIsLongPress(false);
         const rect = e.currentTarget.getBoundingClientRect();
@@ -584,6 +280,7 @@ const Explorer = (props) => {
         }, 400);
     };
     const handleAddButtonUp = (e, index) => {
+        // ... (código sin cambios) ...
         e.stopPropagation();
         clearTimeout(longPressTimer.current);
         if (!isLongPress) {
@@ -593,14 +290,15 @@ const Explorer = (props) => {
 
     return (
         <>
-            <style>{sliderStyles}</style>
+            {/* --- ¡ELIMINADO! --- <style>{sliderStyles}</style> */}
             
             <section 
                 ref={paletteContainerRef}
                 className={`transition-all duration-300`} 
                 style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
             >
-                {/* --- SECCIÓN DE VISTA DIVIDIDA (AJUSTADOR/SIMULADOR) --- */}
+                {/* --- SECCIÓN DE VISTA DIVIDIDA (ORIGINAL) --- */}
+                {/* Esta lógica se mantiene, pero ahora usa 'originalExplorerPalette' */}
                 {isSplitView && (
                     <div 
                         className="h-[calc((100vh-65px)/2)] overflow-hidden" 
@@ -614,6 +312,7 @@ const Explorer = (props) => {
                                         {...provided.droppableProps}
                                         className="flex items-center h-full relative"
                                     >
+                                        {/* ¡Usa 'originalExplorerPalette' aquí! */}
                                         {originalExplorerPalette.map((shade, index) => (
                                             <Draggable key={"original-" + shade + index} draggableId={"original-" + shade + index} index={index}>
                                                 {(provided) => (
@@ -628,10 +327,7 @@ const Explorer = (props) => {
                                                             minWidth: '50px' 
                                                         }}
                                                     >
-                                                        {/* --- INICIO DE LA MODIFICACIÓN (VISTA DIVIDIDA - ORIGINAL) --- */}
-                                                        
-                                                        {/* 1. Bloque de Texto (Movido Arriba) */}
-                                                        {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
+                                                        {/* ... (Bloque de Texto y Iconos sin cambios) ... */}
                                                         <div 
                                                             className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 z-10"
                                                             style={{ pointerEvents: 'none' }} 
@@ -649,16 +345,11 @@ const Explorer = (props) => {
                                                                 {getDisplayValue(shade, displayMode)}
                                                             </button>
                                                         </div>
-
-                                                        {/* 2. Iconos (Movidos Abajo) */}
-                                                        {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
                                                         {lockedColors.includes(shade) && (
                                                             <div className="absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
                                                                 <Lock size={12} strokeWidth={1.5} />
                                                             </div>
                                                         )}
-                                                        {/* --- FIN DE LA MODIFICACIÓN --- */}
-                                                        
                                                     </div>
                                                 )}
                                             </Draggable>
@@ -671,19 +362,21 @@ const Explorer = (props) => {
                     </div>
                 )}
                 
-                {/* --- SECCIÓN DE PALETA PRINCIPAL (AJUSTADA O NORMAL) --- */}
+                {/* --- SECCIÓN DE PALETA PRINCIPAL (TIEMPO REAL) --- */}
                 <div 
                     className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)]'} ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
-                    title={isAdjusterSidebarVisible ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
+                    title={isSplitViewActive ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
                 >
                     
-                    {/* --- VISTA DE SIMULACIÓN --- */}
+                    {/* --- VISTA DE SIMULACIÓN (sin cambios) --- */}
                     {isSimulationSidebarVisible && (
                         <div 
                             className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
                             style={simulationFilterStyle}
                         >
+                            {/* ¡Usa 'originalExplorerPalette' para simular! */}
                             {originalExplorerPalette.map((shade, index) => {
+                                // ... (código de renderizado sin cambios) ...
                                 const isLight = tinycolor(shade).isLight();
                                 const textColor = isLight ? '#000' : '#FFF';
                                 const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
@@ -691,10 +384,6 @@ const Explorer = (props) => {
 
                                 return (
                                     <div key={`sim-${index}`} className="relative h-full flex-1 flex items-center justify-center" style={{ backgroundColor: shade, minWidth: '50px' }}>
-                                        {/* --- INICIO DE LA MODIFICACIÓN (VISTA SIMULACIÓN) --- */}
-                                        
-                                        {/* 1. Bloque de Texto (Movido Arriba) */}
-                                        {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
                                         <div 
                                             className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 z-10"
                                             style={{ pointerEvents: 'none' }} 
@@ -712,31 +401,33 @@ const Explorer = (props) => {
                                                 {getDisplayValue(shade, displayMode)}
                                             </button>
                                         </div>
-
-                                        {/* 2. Iconos (Movidos Abajo) */}
-                                        {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
                                         {lockedColors.includes(shade) && (
                                             <div className="absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
                                                 <Lock size={12} strokeWidth={1.5} />
                                             </div>
                                         )}
-                                        {/* --- FIN DE LA MODIFICACIÓN --- */}
                                     </div>
                                 );
                             })}
                         </div>
                     )}
                     
-                    {/* --- VISTA NORMAL O DE AJUSTE (SON IDÉNTICAS EN RENDERIZADO) --- */}
+                    {/* --- VISTA NORMAL O DE AJUSTE (TIEMPO REAL) --- */}
                     {!isSimulationSidebarVisible && (
                          <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="palette-main" direction="horizontal">
                                 {(provided) => (
                                     <div ref={provided.innerRef} {...provided.droppableProps} className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}>
+                                        
+                                        {/* ¡Usa 'explorerPalette' (tiempo real) aquí! */}
                                         {explorerPalette.map((shade, index) => {
                                             const originalColor = (originalExplorerPalette && originalExplorerPalette[index]) ? originalExplorerPalette[index] : shade;
                                             const isLocked = lockedColors.includes(originalColor);
-                                            const displayShade = (isAdjusterSidebarVisible && isLocked) ? originalColor : shade;
+                                            
+                                            // ¡MODIFICADO! 'displayShade' es el color en tiempo real
+                                            // 'isLocked' usa el color original
+                                            const displayShade = shade; 
+                                            
                                             const isLight = tinycolor(displayShade).isLight();
                                             const iconColor = isLight ? 'text-gray-900' : 'text-white';
                                             const hoverBg = isLight ? 'hover:bg-black/10' : 'hover:bg-white/20'; 
@@ -751,29 +442,19 @@ const Explorer = (props) => {
                                                         <div ref={provided.innerRef} {...provided.draggableProps} className="relative h-full flex-1 flex items-center justify-center group/color-wrapper" style={{...provided.draggableProps.style}}>
                                                             <div className="relative group/item h-full w-full flex items-center justify-center transition-colors duration-100 ease-in-out" style={{ backgroundColor: displayShade, minWidth: '50px' }} title={displayShade.toUpperCase()}>
                                                                 
-                                                                {/* --- INICIO DE LA MODIFICACIÓN (VISTA PRINCIPAL/AJUSTE) --- */}
-                                                                
-                                                                {/* 1. Bloque de Texto (Movido Arriba) */}
-                                                                {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
+                                                                {/* --- Bloque de Texto (Movido Arriba) --- */}
                                                                 <div 
                                                                     className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10"
                                                                 >
+                                                                    {/* --- ¡MODIFICADO! --- */}
+                                                                    {/* Llama a 'onOpenColorPickerSidebar' */}
                                                                     <button 
                                                                         className={`font-mono text-xl font-bold p-1 rounded-lg transition-colors ${hoverBg}`} 
                                                                         style={{ color: textColor, textShadow: textShadow, pointerEvents: 'auto' }} 
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            const rect = e.currentTarget.getBoundingClientRect();
-                                                                            let pickerStyle = {
-                                                                                // --- MODIFICACIÓN: Abrir hacia abajo ---
-                                                                                top: `${rect.bottom + window.scrollY + 10}px`, 
-                                                                                left: `${rect.left + window.scrollX + rect.width / 2}px`,
-                                                                                transform: 'translateX(-50%)', 
-                                                                            };
-                                                                            if (window.innerWidth < 768) {
-                                                                                pickerStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-                                                                            }
-                                                                            setPickerColor({ index, color: displayShade, style: pickerStyle }); 
+                                                                            // ¡Llama a la prop de App.jsx!
+                                                                            onOpenColorPickerSidebar(index, originalColor); 
                                                                         }} 
                                                                         title="Editar Color"
                                                                     >
@@ -789,8 +470,7 @@ const Explorer = (props) => {
                                                                     </button>
                                                                 </div>
 
-                                                                {/* 2. Iconos (Movidos Abajo) */}
-                                                                {/* --- MODIFICACIÓN: Eliminado group-hover/item:opacity-0 --- */}
+                                                                {/* --- Iconos (Movidos Abajo) --- */}
                                                                 {displayShade === brandColor && (
                                                                     <div className={`absolute top-24 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor} opacity-100 transition-opacity duration-200`} title="Color de Marca Actual">
                                                                         <Star size={12} className="fill-current" strokeWidth={1.5} />
@@ -801,10 +481,8 @@ const Explorer = (props) => {
                                                                         <Lock size={12} strokeWidth={1.5} />
                                                                     </div>
                                                                 )}
-                                                                {/* --- FIN DE LA MODIFICACIÓN --- */}
-
-
-                                                                {/* Botones de hover (sin cambios, ya se ocultan/muestran) */}
+                                                                
+                                                                {/* Botones de hover (sin cambios) */}
                                                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
                                                                     <div title="Arrastrar para mover" className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`} {...provided.dragHandleProps} onClick={(e) => e.stopPropagation()}>
                                                                         <ArrowLeftRight size={18} strokeWidth={1.5} />
@@ -815,10 +493,8 @@ const Explorer = (props) => {
                                                                     <ActionButtonHover title={isLocked ? "Desbloquear" : "Bloquear"} onClick={() => toggleLockColor(originalColor)} iconColor={iconColor} hoverBg={hoverBg}>{isLocked ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}</ActionButtonHover>
                                                                     <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
                                                                 </div>
-                                                                
-                                                                {/* Bloque de texto inferior (ELIMINADO) */}
-
                                                             </div>
+                                                            
                                                             {/* Botón de Añadir (sin cambios) */}
                                                             <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
                                                                 <button 
@@ -834,8 +510,9 @@ const Explorer = (props) => {
                                                                     <Plus size={16}/>
                                                                 </button>
                                                             </div>
+                                                            
                                                             {/* Tonalidades (sin cambios) */}
-                                                            {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
+                                                            {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); confirmColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
                                                         </div>
                                                     )}
                                                 </Draggable>
@@ -854,6 +531,7 @@ const Explorer = (props) => {
             
             {/* --- RESTO DEL ARCHIVO (MODALES Y POP-UPS) --- */}
             
+            {/* ... (AddColorMenu sin cambios) ... */}
             {addMenuState.isVisible && (
                 <div 
                     className="fixed z-[60]" 
@@ -867,18 +545,21 @@ const Explorer = (props) => {
                 </div>
             )}
             
+            {/* --- ¡MODIFICADO! --- */}
+            {/* 'activeColorMenu' (para el modo expandido) ahora usa 'originalExplorerPalette' */}
             {activeColorMenu && (
                 <ColorActionMenu
                     style={activeColorMenu.style}
-                    color={explorerPalette[activeColorMenu.index]}
-                    isLocked={lockedColors.includes(originalExplorerPalette[activeColorMenu.index])}
+                    color={explorerPalette[activeColorMenu.index]} // Muestra el color en tiempo real
+                    isLocked={lockedColors.includes(originalExplorerPalette[activeColorMenu.index])} // Bloquea el original
                     onClose={() => setActiveColorMenu(null)}
                     onSetAsBrand={() => {
                         handleExplorerColorPick(explorerPalette[activeColorMenu.index]);
                         setActiveColorMenu(null);
                     }}
                     onOpenPicker={() => {
-                        setPickerColor({ index: activeColorMenu.index, color: explorerPalette[activeColorMenu.index] });
+                        // ¡Llama a la prop de App.jsx!
+                        onOpenColorPickerSidebar(activeColorMenu.index, originalExplorerPalette[activeColorMenu.index]);
                         setActiveColorMenu(null);
                     }}
                     onRemove={() => {
@@ -897,24 +578,9 @@ const Explorer = (props) => {
                 />
             )}
 
-            {pickerColor && (
-                <ColorPickerPopover 
-                    color={pickerColor.color}
-                    style={pickerColor.style} 
-                    onClose={() => {
-                        replaceColorInPalette(pickerColor.index, pickerColor.color);
-                        setPickerColor(null);
-                    }}
-                    onRealtimeChange={(newColor) => {
-                        replaceColorInPalette(pickerColor.index, newColor);
-                    }}
-                    onConfirm={(newColor) => { 
-                        replaceColorInPalette(pickerColor.index, newColor);
-                        setPickerColor(null);
-                    }}
-                />
-            )}
+            {/* --- ¡ELIMINADO! --- 'pickerColor' y 'ColorPickerPopover' */}
             
+            {/* ... (Modo 'isExpanded' sin cambios, sigue usando 'activeColorMenu') ... */}
             {isExpanded && (
                 <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={(e) => { e.stopPropagation(); setIsExpanded(false); setActiveShadeIndex(null);}}>
                     <div 
@@ -935,7 +601,7 @@ const Explorer = (props) => {
                                         {explorerPalette.map((color, index) => {
                                             const originalColor = originalExplorerPalette[index];
                                             const isLocked = lockedColors.includes(originalColor);
-                                            const displayShade = isLocked ? originalColor : color;
+                                            const displayShade = color; // Siempre el de tiempo real
                                             
                                             return (
                                                 <Draggable key={"expanded-" + originalColor + index} draggableId={"expanded-" + originalColor + index} index={index}>
@@ -950,7 +616,6 @@ const Explorer = (props) => {
                                                             
                                                             {activeColorMenu?.index !== index && (
                                                                 <>
-                                                                    {/* --- MODIFICACIÓN (VISTA EXPANDIDA) --- */}
                                                                     <div 
                                                                         className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 z-10"
                                                                         style={{ pointerEvents: 'none' }}
@@ -973,8 +638,6 @@ const Explorer = (props) => {
                                                                             <Lock size={12} />
                                                                         </div>
                                                                     )}
-                                                                    {/* Texto inferior original (eliminado) */}
-                                                                    {/* --- FIN MODIFICACIÓN --- */}
 
                                                                     <button onClick={(e) => {e.stopPropagation(); removeColorFromPalette(index);}} className="absolute top-2 right-2 p-1 bg-black/20 rounded-full text-white opacity-0 group-hover:opacity-100 hover:bg-black/50 transition-all" title="Quitar color"><X size={16}/></button>
                                                                     <div className="absolute top-1/2 right-0 h-10 w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
@@ -999,7 +662,7 @@ const Explorer = (props) => {
                                                             {activeShadeIndex === index && (
                                                                 <div className="absolute inset-0 flex flex-col z-20 animate-fade-in">
                                                                     {generateShades(baseColorForShades).map((shade, shadeIndex) => (
-                                                                        <div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); replaceColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >
+                                                                        <div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); confirmColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >
                                                                             {shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
                                                                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div>
                                                                         </div>
@@ -1021,6 +684,7 @@ const Explorer = (props) => {
                 </div>
             )}
             
+            {/* ... (DisplayModeModal sin cambios) ... */}
             {isDisplayModeModalVisible && (
                 <DisplayModeModal
                     currentMode={displayMode}

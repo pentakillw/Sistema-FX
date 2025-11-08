@@ -437,43 +437,40 @@ export const generateAdvancedRandomPalette = (
     // --- (INICIO) SELECCIÓN DE PLANTILLA MANUAL ---
     // Si el método *NO* es 'auto' (ej. 'brand-google'), 
     // lo usamos para forzar la plantilla seleccionada.
+    
+    // --- ¡¡¡INICIO DE LA MODIFICACIÓN!!! ---
+    // Esta lógica reemplaza el bloque "else if (baseColorHex && lockedColors.length === 0)"
+    // que causaba el bug de 'grayscale'.
+
+    // 1. Si el método NO es 'auto', usarlo.
     if (method !== 'auto' && templates.includes(method)) {
         selectedTemplate = method;
-    }
-    // --- (FIN) SELECCIÓN DE PLANTILLA MANUAL ---
-    else if (baseColorHex && lockedColors.length === 0) {
-        // --- INFERIR PLANTILLA ---
-        const { h, s, v: b } = baseHsb; // s y b (brillo) están en 0-100
-        
-        if (s < 5) selectedTemplate = 'grayscale';
-        else if (s > 90 && b > 80) selectedTemplate = 'pop-neon';
-        else if (s > 60 && b < 50) selectedTemplate = 'profundo';       // Profundo/Joya
-        else if (s > 70 && b > 70) selectedTemplate = 'gradiente-analogo-vibrante'; // vibrante
-        else if (s < 20 && b > 75) selectedTemplate = 'faded';
-        else if (s < 30 && b > 85) selectedTemplate = 'pastel';      // Pastel
-        else if (s < 40 && b > 60) selectedTemplate = 'vintage';
-        else if (s < 50 && b < 80) selectedTemplate = 'gradiente-analogo'; // apagado
-        else selectedTemplate = 'equilibrado'; // Default
-        
-    } else if (baseColorHex && lockedColors.length > 0) {
-        // --- MODO BLOQUEADO ---
+    } 
+    // 2. Si el método ES 'auto', PERO hay colores bloqueados.
+    else if (method === 'auto' && lockedColors.length > 0) {
         const balancingTemplates = [
             'equilibrado', 'complementario-dividido', 'acentos-complementarios', 'tetrada',
             'neutral-accent', 'triad-balanced', 'analogo-comp', 'acentos-dobles-neutros',
             'alto-contraste', 'dos-matices', 'complemento-neutros'
         ];
         selectedTemplate = balancingTemplates[Math.floor(rand(0, balancingTemplates.length))];
-
-    } else {
-        // --- MODO ALEATORIO PURO ---
-        selectedTemplate = templates[Math.floor(rand(0, templates.length))];
+    }
+    // 3. Si el método ES 'auto', NO hay bloqueos, PERO se pasa un color base (nuestro caso: "Ajustar Paleta").
+    else if (method === 'auto' && baseColorHex) {
+         // NO inferir. Usar un template default que funcione bien con un color base.
+         // 'equilibrado' es la mejor opción para evitar el bug de 'grayscale'.
+         selectedTemplate = 'equilibrado';
+    }
+    // 4. Si el método ES 'mono' (caso especial).
+    else if (method === 'mono' || method === 'monochromatic') {
+         selectedTemplate = 'gradiente-mono';
+    }
+    // 5. Default: 'auto', sin bloqueos, sin color base (clic en "Aleatorio").
+    else {
+         selectedTemplate = templates[Math.floor(rand(0, templates.length))];
     }
     
-    // Si el método de generación era 'mono', forzar el template 'gradiente-mono'
-    if (method === 'mono' || method === 'monochromatic') {
-        selectedTemplate = 'gradiente-mono'; // Reemplazamos 'monocromatico' por la mejor versión
-    }
-    // --- Fin de la lógica de elección de plantilla ---
+    // --- ¡¡¡FIN DE LA MODIFICACIÓN!!! ---
 
 
     let generatedHsbPalette = [];
