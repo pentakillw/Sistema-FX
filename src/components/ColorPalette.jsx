@@ -18,7 +18,12 @@ const ColorPalette = ({
   onGenerateFromShade 
 }) => {
   const [isPickerVisible, setIsPickerVisible] = useState(false)
-  const [localColor, setLocalColor] = useState(hex ? hex.toUpperCase() : "")
+  
+  // --- ¡INICIO DE LA CORRECCIÓN! ---
+  // El error "hex.toUpperCase is not a function" ocurre si 'hex' es null o undefined.
+  // Añadimos una comprobación 'typeof' para asegurar que 'hex' sea un string
+  // antes de llamar a .toUpperCase().
+  const [localColor, setLocalColor] = useState(typeof hex === 'string' ? hex.toUpperCase() : (hex || ""))
 
   const titleColorClass =
     themeOverride === "light" ? "text-gray-900" : "text-gray-50"
@@ -26,14 +31,16 @@ const ColorPalette = ({
     themeOverride === "light" ? "text-gray-500" : "text-gray-400"
 
   useEffect(() => {
-    if (hex) {
+    // También aplicamos la corrección aquí
+    if (typeof hex === 'string') {
       setLocalColor(hex.toUpperCase())
     }
   }, [hex])
+  // --- FIN DE LA CORRECCIÓN ---
 
   const handleHeaderClick = () => {
     if (!isDisabled && onColorChange) {
-      setLocalColor(hex ? hex.toUpperCase() : "")
+      // Usamos 'localColor' que ya está formateado
       setIsPickerVisible(prev => !prev)
     }
   }
@@ -45,7 +52,8 @@ const ColorPalette = ({
       onColorChange(newHex)
       setLocalColor(newHex.toUpperCase()) 
     } else {
-      setLocalColor(hex ? hex.toUpperCase() : "")
+      // Corrección aplicada aquí también
+      setLocalColor(typeof hex === 'string' ? hex.toUpperCase() : (hex || ""))
     }
   }
 

@@ -16,17 +16,14 @@ import {
     Wand2, Image as ImageIcon, 
     SlidersHorizontal, Eye, 
     MoreHorizontal, Palette, ShieldCheck, Accessibility, TestTube2,
-    // --- ¡AÑADIDO! ---
     Columns3, Rows3
 } from 'lucide-react';
 
-// --- ¡MODIFICADO! ---
-// Restaurada la importación de PaletteAdjusterSidebar
 import ColorBlindnessSidebar from './components/ui/ColorBlindnessSidebar.jsx';
 import SavePaletteSidebar from './components/ui/SavePaletteSidebar.jsx';
 import MyPalettesSidebar from './components/ui/MyPalettesSidebar.jsx';
 import ColorPickerSidebar from './components/ui/ColorPickerSidebar.jsx';
-import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx'; // <-- ¡NUEVO!
+import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
 
 import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -35,9 +32,9 @@ import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx';
 import TermsOfServicePage from './components/TermsOfServicePage.jsx'; 
 import { supabase } from './supabaseClient.js';
 
-// --- Componentes de Menú (sin cambios) ---
-const PopoverMenu = ({ children, onClose, align = 'right' }) => {
-    // ... (código sin cambios) ...
+// --- ¡COMPONENTE MODIFICADO! ---
+// Ahora acepta una prop `direction`
+const PopoverMenu = ({ children, onClose, align = 'right', direction = 'down' }) => {
     const menuRef = useRef(null);
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -52,15 +49,17 @@ const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     return (
         <div
             ref={menuRef}
-            className={`absolute top-full ${align === 'right' ? 'right-0' : 'left-0'} mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2 space-y-1 max-h-[60vh] overflow-y-auto`}
+            // --- ¡MODIFICADO! --- Cambia 'top-full' por 'bottom-full' si la dirección es 'up'
+            className={`absolute ${direction === 'down' ? 'top-full mt-2' : 'bottom-full mb-2'} ${align === 'right' ? 'right-0' : 'left-0'} w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2 space-y-1 max-h-[60vh] overflow-y-auto`}
             onClick={(e) => { e.stopPropagation(); }}
         >
             {children}
         </div>
     );
 };
+// --- FIN DE MODIFICACIÓN ---
+
 const MenuButton = ({ icon, label, onClick, className = "" }) => (
-    // ... (código sin cambios) ...
     <button
         onClick={onClick}
         className={`flex items-center w-full px-3 py-2 text-sm rounded-md text-gray-800 hover:bg-gray-100 transition-colors ${className}`}
@@ -69,8 +68,6 @@ const MenuButton = ({ icon, label, onClick, className = "" }) => (
         <span className="ml-3">{label}</span>
     </button>
 );
-// --- FIN DE COMPONENTES DE MENÚ ---
-
 
 // --- Funciones simuladas para Capacitor (sin cambios) ---
 const Capacitor = {
@@ -86,7 +83,6 @@ const Share = {
 
 // --- Lógica movida de Explorer (sin cambios) ---
 const backgroundModeLabels = {
-// ... (código sin cambios) ...
     'T950': 'Fondo T950',
     'T0': 'Fondo T0',
     'white': 'Fondo Blanco',
@@ -99,17 +95,12 @@ const backgroundModeLabels = {
 const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const { 
     themeData, font, setFont, brandColor, grayColor, isGrayAuto,
-    // --- ¡MODIFICADO! ---
-    // Se usan las nuevas funciones 'realtime' y 'confirm'
-    updateBrandColor, // (realtime)
-    confirmBrandColor, // (confirm)
-    replaceColorInPalette, // (realtime)
-    confirmColorInPalette, // (confirm)
-    saveCurrentStateToHistory, // (confirm)
-    
-    // --- ¡NUEVO! ---
-    cancelBrandColorUpdate, // (para el sidebar de "Ajustar Paleta")
-    
+    updateBrandColor, 
+    confirmBrandColor, 
+    replaceColorInPalette, 
+    confirmColorInPalette, 
+    saveCurrentStateToHistory, 
+    cancelBrandColorUpdate, 
     setGrayColor, setIsGrayAuto,
     handleImport, handleReset, showNotification, 
     handleRandomTheme, handleThemeToggle, 
@@ -119,38 +110,26 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     semanticPreviewMode, setSemanticPreviewMode,
     fxSeparator, setFxSeparator, useFxQuotes, setUseFxQuotes,
     simulationMode, cyclePreviewMode, 
-    
-    // --- ¡MODIFICADO! ---
-    explorerPalette, // (realtime)
-    originalExplorerPalette, // (confirmado)
-    
-    reorderExplorerPalette, // (confirm)
+    explorerPalette, 
+    originalExplorerPalette, 
+    reorderExplorerPalette, 
     explorerGrayShades, 
-    handleExplorerColorPick, // (confirm)
-    
-    // --- ¡RESTAURADO! ---
-    // Se necesita la lógica de ajustes
+    handleExplorerColorPick, 
     paletteAdjustments,
     setPaletteAdjustments,
     commitPaletteAdjustments,
     cancelPaletteAdjustments,
-    
-    insertColorInPalette, // (confirm)
-    removeColorFromPalette, // (confirm)
+    insertColorInPalette, 
+    removeColorFromPalette, 
     explorerMethod,
-    insertMultipleColors, // (confirm)
+    insertMultipleColors, 
     setExplorerMethod, 
-    
     setSimulationMode, 
-    generatePaletteWithAI, // (confirm)
-    applySimulationToPalette, // (confirm)
-
-    // --- ¡ELIMINADO! --- 'commit' y 'cancel' ya no existen
-    
+    generatePaletteWithAI, 
+    applySimulationToPalette, 
     lockedColors,
     toggleLockColor,
     savedPalettes,
-    // ... (resto de props de Supabase sin cambios) ...
     currentPaletteId,
     isLoadingPalettes,
     isSavingPalette,
@@ -191,21 +170,18 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
   
-  // --- ¡NUEVO! ---
-  const [paletteLayout, setPaletteLayout] = useState('vertical'); // 'vertical' (slices) or 'horizontal' (rows)
-
   // --- ¡MODIFICADO! ---
-  // Se restaura 'isAdjusterSidebarVisible'
-  const [isAdjusterSidebarVisible, setIsAdjusterSidebarVisible] = useState(false); // <-- ¡RESTAURADO!
+  // El layout por defecto es 'horizontal' (stack) en móvil, 'vertical' (slices) en desktop.
+  const [paletteLayout, setPaletteLayout] = useState(window.innerWidth < 768 ? 'horizontal' : 'vertical');
+
+  const [isAdjusterSidebarVisible, setIsAdjusterSidebarVisible] = useState(false);
   const [isSimulationSidebarVisible, setIsSimulationSidebarVisible] = useState(false);
   const [isSaveSidebarVisible, setIsSaveSidebarVisible] = useState(false);
   const [isMyPalettesSidebarVisible, setIsMyPalettesSidebarVisible] = useState(false);
   
-  // --- ¡NUEVO! --- Estado para el único sidebar de color
   const [isColorPickerSidebarVisible, setIsColorPickerSidebarVisible] = useState(false);
-  const [colorPickerSidebarData, setColorPickerSidebarData] = useState(null); // { index, originalColor }
-  const [isSplitViewActive, setIsSplitViewActive] = useState(false); // Para la vista dividida
-  
+  const [colorPickerSidebarData, setColorPickerSidebarData] = useState(null); 
+  const [isSplitViewActive, setIsSplitViewActive] = useState(false); 
   
   const [exportingPaletteData, setExportingPaletteData] = useState(null);
   
@@ -216,7 +192,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       onConfirm: () => {}
   });
 
-  // ... (Estado de menús de header sin cambios) ...
   const [isConfigMenuVisible, setIsConfigMenuVisible] = useState(false);
   const [isFontMenuVisible, setIsFontMenuVisible] = useState(false);
   const [isUserMenuVisible, setIsUserMenuVisible] = useState(false);
@@ -226,35 +201,29 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.code !== 'Space') return;
-      
       const activeElement = document.activeElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'BUTTON')) {
         return;
       }
-
       e.preventDefault();
       handleRandomTheme();
     };
-
     window.addEventListener('keydown', handleKeyPress);
-
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
   }, [handleRandomTheme]);
 
-  // --- (handleCyclePreviewMode sin cambios) ---
+  // ... (handleCyclePreviewMode sin cambios) ...
   const handleCyclePreviewMode = () => {
-    // ... (código sin cambios) ...
     const options = ['card', 'white', 'black', 'T0', 'T950'];
     const currentIndex = options.indexOf(colorModePreview);
     const nextIndex = (currentIndex + 1) % options.length;
     setColorModePreview(options[nextIndex]);
   };
 
-  // --- (handleNativeExport y handleWebExport sin cambios) ---
+  // ... (handleNativeExport y handleWebExport sin cambios) ...
   const handleNativeExport = async () => {
-    // ... (código sin cambios) ...
     const data = { 
       brandColor: brandColor, 
       grayColor: grayColor, 
@@ -264,11 +233,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       explorerPalette: originalExplorerPalette,
       lockedColors: lockedColors,
     };
-    
     try {
       const jsonString = JSON.stringify(data, null, 2);
       const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
-
       await Share.share({
         title: 'Mi Tema de Color',
         text: 'Aquí está el archivo JSON de mi tema de color.',
@@ -281,7 +248,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     }
   };
   const handleWebExport = () => {
-    // ... (código sin cambios) ...
     const data = { 
       brandColor: brandColor, 
       grayColor: grayColor, 
@@ -298,7 +264,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
     link.click();
   };
 
-  // --- (Handlers de menú de config sin cambios) ---
+  // ... (Handlers de menú de config sin cambios) ...
   const handleFontSelect = (fontName) => {
       setFont(fontName);
       setIsFontMenuVisible(false);
@@ -326,57 +292,40 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       setIsUserMenuVisible(false);
   };
   
-  // --- ¡MODIFICADO! ---
-  // Lógica de 'closeAllSidebars' actualizada
+  // ... (closeAllSidebars sin cambios) ...
   const closeAllSidebars = (isConfirming = false) => {
-    // Cierra todos los sidebars
-    setIsAdjusterSidebarVisible(false); // <-- ¡AÑADIDO!
+    setIsAdjusterSidebarVisible(false); 
     setIsSimulationSidebarVisible(false);
     setIsSaveSidebarVisible(false);
     setIsMyPalettesSidebarVisible(false);
     setIsColorPickerSidebarVisible(false); 
-    setIsSplitViewActive(false); // Asegura que la vista dividida se cierre
+    setIsSplitViewActive(false); 
     
-    // Si cerramos el picker CANCELANDO (no confirmando)
     if (isColorPickerSidebarVisible && colorPickerSidebarData && !isConfirming) {
       if (colorPickerSidebarData.index === null) {
-        // Si era el Brand Color, revierte al original
-        // --- ¡¡¡INICIO DE LA MODIFICACIÓN!!! (del 7/Nov) ---
-        // updateBrandColor(colorPickerSidebarData.originalColor); // <-- ELIMINADO (Lento)
-        hook.cancelBrandColorUpdate(); // <-- NUEVO (Rápido)
-        // --- ¡¡¡FIN DE LA MODIFICACIÓN!!! ---
+        hook.cancelBrandColorUpdate(); 
       } else {
-        // Si era un color de la paleta, revierte al original
         replaceColorInPalette(colorPickerSidebarData.index, colorPickerSidebarData.originalColor);
       }
     }
     
-    setColorPickerSidebarData(null); // Limpia los datos
+    setColorPickerSidebarData(null); 
     
-    // --- ¡MODIFICADO! ---
-    // Llama a la función de cancelar ajustes si el sidebar de ajuste estaba abierto
     if(isAdjusterSidebarVisible) {
         cancelPaletteAdjustments();
     }
     
-    setSimulationMode('none'); // Resetea el modo simulación
+    setSimulationMode('none'); 
   };
 
-  // --- ¡MODIFICADO! ---
-  // Esta función ahora abre el sidebar de AJUSTES GLOBALES
+  // ... (handleOpenBrandColorPicker sin cambios) ...
   const handleOpenBrandColorPicker = () => {
     closeAllSidebars();
-    // setColorPickerSidebarData({ // <-- ELIMINADO
-    //     index: null, 
-    //     originalColor: brandColor
-    // });
-    // setIsColorPickerSidebarVisible(true); // <-- ELIMINADO
-    setIsAdjusterSidebarVisible(true); // <-- ¡NUEVO!
-    setIsSplitViewActive(true); // Activa la vista dividida
+    setIsAdjusterSidebarVisible(true); 
+    setIsSplitViewActive(true); 
   };
   
-  // --- ¡NUEVO! ---
-  // Abre el sidebar para editar un color específico de la paleta
+  // ... (onOpenColorPickerSidebar sin cambios) ...
   const onOpenColorPickerSidebar = (index, originalColor) => {
     closeAllSidebars();
     setColorPickerSidebarData({
@@ -384,52 +333,43 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         originalColor: originalColor
     });
     setIsColorPickerSidebarVisible(true);
-    setIsSplitViewActive(false); // NO activa la vista dividida
+    setIsSplitViewActive(false); 
   };
 
-
+  // ... (Resto de handlers de sidebars sin cambios) ...
   const handleOpenSimulationSidebar = () => {
     closeAllSidebars();
     setIsSimulationSidebarVisible(true);
   };
-
-  // --- ¡ELIMINADO! --- 'handleOpenAdjusterSidebar' ya no existe
-
   const handleOpenSaveSidebar = () => {
     closeAllSidebars();
     setIsSaveSidebarVisible(true);
   };
-
   const handleOpenMyPalettesSidebar = () => {
     closeAllSidebars();
     setIsMyPalettesSidebarVisible(true);
   };
-  
-  // ... (handleCancelSimulation, handleApplySimulation sin cambios) ...
   const handleCancelSimulation = () => {
     setSimulationMode('none');
     setIsSimulationSidebarVisible(false);
   };
-
   const handleApplySimulation = () => {
     applySimulationToPalette();
     setSimulationMode('none');
     setIsSimulationSidebarVisible(false);
   };
   
-  // ... (toda la lógica de Supabase (onSavePalette, onLoadPalette, etc.) sin cambios) ...
+  // ... (Lógica de Supabase sin cambios) ...
   const onSavePalette = async (saveData) => {
     const success = await handleSavePalette(saveData);
     if (success) {
         setIsSaveSidebarVisible(false); 
     }
   };
-  
   const onLoadPalette = (palette) => {
     handleLoadPalette(palette);
     setIsMyPalettesSidebarVisible(false); 
   };
-  
   const onDeletePalette = (paletteId) => {
     const palette = savedPalettes.find(p => p.id === paletteId);
     setConfirmModalState({
@@ -442,21 +382,17 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         }
     });
   };
-
   const handleExportSpecificPalette = (palette) => {
     const specificThemeData = handleLoadSpecificPalette(palette);
     setExportingPaletteData(specificThemeData);
     setIsExportModalVisible(true);
   };
-  
   const handleDuplicateClick = (paletteId) => {
     handleDuplicatePalette(paletteId);
   };
-
   const handleUpdateNameClick = (paletteId, newName) => {
     handleUpdatePaletteName(paletteId, newName);
   };
-  
   const onDeleteProject = (projectId, projectName) => {
     setConfirmModalState({
         isOpen: true,
@@ -468,7 +404,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         }
     });
   };
-  
   const onDeleteCollection = (collectionId, collectionName) => {
     setConfirmModalState({
         isOpen: true,
@@ -519,20 +454,19 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       
       <input type="file" ref={importFileRef} onChange={handleImport} accept=".json" className="hidden"/>
       
-      {/* --- (HEADER) --- */}
+      {/* --- ¡HEADER MODIFICADO! --- */}
+      {/* Movido al fondo en móvil (fixed bottom-0) y vuelve a ser relativo en desktop (md:relative) */}
+      {/* Se añade padding inferior 'pb-[env(safe-area-inset-bottom)]' para respetar la barra de iOS */}
       <header 
-        className="flex justify-between items-center py-3 px-4 md:px-8 border-b"
+        className="flex justify-between items-center py-3 px-4 md:px-8 bg-white border-t md:border-t-0 md:border-b border-gray-200 fixed bottom-0 left-0 right-0 z-50 md:relative pb-[env(safe-area-inset-bottom)] md:pb-3"
         style={{ borderColor: 'var(--border-default)'}}
       >
-        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+        {/* --- MODIFICADO --- Oculto en móvil (hidden) y visible en desktop (md:flex) */}
+        <div className="hidden md:flex items-center gap-3 sm:gap-4 flex-shrink-0">
           <img src="https://i.imgur.com/kOfAlJT.png" alt="Colores DaYam Logo" className="h-12 w-12 rounded-lg"/>
-          
           <h1 className="font-pacifico text-rainbow-gradient pb-1">
             Colores DaYam
           </h1>
-          
-          {/* --- ¡MODIFICADO! --- */}
-          {/* Se añade la condición !isColorPickerSidebarVisible */}
           {!isSplitViewActive && !isSimulationSidebarVisible && !isColorPickerSidebarVisible && (
             <p className="text-sm text-gray-500 hidden lg:block ml-4">
                 ¡ <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-md">barra espaciadora</kbd> para generar colores!
@@ -540,19 +474,23 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           )}
         </div>
         
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* --- MODIFICADO --- 
+          - En móvil, ocupa todo el ancho (w-full) y justifica botones (justify-around)
+          - En desktop, vuelve a la normalidad (md:w-auto md:justify-end)
+        */}
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto justify-around md:justify-end">
           
-          {/* ... (Botones de IA, Método, Imagen sin cambios) ... */}
+          {/* Botones de IA, Método, Imagen (Ocultos en móvil por simplicidad) */}
           <button 
               onClick={() => setIsAIModalVisible(true)} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-white transition-all hover:opacity-90 active:scale-95" 
+              className="text-sm font-medium p-2 rounded-lg hidden md:flex items-center gap-2 text-white transition-all hover:opacity-90 active:scale-95" 
               style={{ background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)' }}
               title="Generar con IA"
           >
               <Sparkles size={16} strokeWidth={1.75} />
           </button>
           
-          <div className="relative">
+          <div className="relative hidden md:block"> {/* Oculto en móvil */}
               <button 
                   onClick={() => setIsMethodMenuVisible(true)} 
                   className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
@@ -561,7 +499,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                   <Wand2 size={16} strokeWidth={1.75}/>
               </button>
                 {isMethodMenuVisible && (
-                  <PopoverMenu onClose={() => setIsMethodMenuVisible(false)}>
+                  // --- ¡MODIFICADO! --- direction="up"
+                  <PopoverMenu onClose={() => setIsMethodMenuVisible(false)} direction="up">
                       {generationMethods.map(method => (
                           method.isHeader ? (
                               <div 
@@ -585,40 +524,48 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           </div>
           <button 
               onClick={() => setIsImageModalVisible(true)} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+              className="text-sm font-medium p-2 rounded-lg hidden md:flex items-center gap-2 text-gray-800 hover:bg-gray-100" // Oculto en móvil
               title="Extraer de Imagen"
           >
               <ImageIcon size={16} strokeWidth={1.75} />
           </button>
           
-          {/* --- ¡MODIFICADO! --- */}
-          {/* 'onClick' ahora usa 'handleOpenBrandColorPicker' */}
           <button 
               onClick={handleOpenBrandColorPicker} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+              className="text-sm font-medium p-2 rounded-lg hidden md:flex items-center gap-2 text-gray-800 hover:bg-gray-100" // Oculto en móvil
               title="Ajustar Paleta"
           >
               <SlidersHorizontal size={16} strokeWidth={1.75} /> 
           </button>
           
-          {/* --- ¡NUEVO! --- Botón de Layout */}
+          {/* --- BOTÓN DE LAYOUT (SOLO DESKTOP) --- */}
           <button 
               onClick={() => setPaletteLayout(p => p === 'vertical' ? 'horizontal' : 'vertical')} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+              className="text-sm font-medium p-2 rounded-lg hidden md:flex items-center gap-2 text-gray-800 hover:bg-gray-100" // 'hidden md:flex'
               title={paletteLayout === 'vertical' ? "Vista Horizontal" : "Vista Vertical"}
           >
               {paletteLayout === 'vertical' ? <Rows3 size={16} strokeWidth={1.75} /> : <Columns3 size={16} strokeWidth={1.75} />}
           </button>
 
-          {/* ... (Botón de Daltonismo y Menú 'Más' sin cambios) ... */}
+          {/* --- BOTÓN DE GENERAR (SOLO MÓVIL, REEMPLAZA FAB) --- */}
+          {/* --- ¡MODIFICADO! --- Estilo de botón cambiado a uno simple de ícono */}
+          <button 
+              onClick={handleRandomTheme} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center justify-center gap-1 text-gray-800 hover:bg-gray-100 transition-all active:scale-95 md:hidden" // 'md:hidden'
+              title="Generar Aleatorio"
+          >
+              <Sparkles size={16} strokeWidth={1.75} />
+              {/* Se elimina el texto "Generar" para un look de ícono limpio */}
+          </button>
+
           <button 
               onClick={handleOpenSimulationSidebar} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+              className="text-sm font-medium p-2 rounded-lg hidden md:flex items-center gap-2 text-gray-800 hover:bg-gray-100" // Oculto en móvil
               title="Daltonismo"
           >
               <Eye size={16} strokeWidth={1.75} /> 
           </button>
-          <div className="relative">
+          <div className="relative hidden md:block"> {/* Oculto en móvil */}
               <button 
                   onClick={() => setIsToolsMenuVisible(p => !p)}
                   className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
@@ -627,7 +574,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                   <MoreHorizontal size={16} strokeWidth={1.75}/>
               </button>
               {isToolsMenuVisible && (
-                  <PopoverMenu onClose={() => setIsToolsMenuVisible(false)}>
+                  // --- ¡MODIFICADO! --- direction="up"
+                  <PopoverMenu onClose={() => setIsToolsMenuVisible(false)} direction="up">
                       <MenuButton icon={<Accessibility size={16} strokeWidth={1.75}/>} label="Accesibilidad" onClick={() => { setIsAccessibilityModalVisible(true); setIsToolsMenuVisible(false); }} />
                       <MenuButton icon={<TestTube2 size={16} strokeWidth={1.75}/>} label="Componentes" onClick={() => { setIsComponentPreviewModalVisible(true); setIsToolsMenuVisible(false); }} />
                       <MenuButton icon={<Palette size={16} strokeWidth={1.75}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
@@ -635,9 +583,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                   </PopoverMenu>
               )}
           </div>
-          <div className="h-6 w-px bg-gray-200 mx-1"></div>
+          {/* Separador oculto en móvil */}
+          <div className="h-6 w-px bg-gray-200 mx-1 hidden md:block"></div> 
 
-          {/* ... (Botones de Historial, Tema, Exportar sin cambios) ... */}
+          {/* Botones principales de la barra inferior móvil */}
           <button 
               onClick={handleUndo} 
               disabled={!history || historyIndex <= 0}
@@ -656,32 +605,57 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
           </button>
           <button 
               onClick={() => setIsHistoryModalVisible(true)} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+              className="text-sm font-medium p-2 rounded-lg hidden md:flex items-center gap-2 text-gray-800 hover:bg-gray-100" // Oculto en móvil
               title="Historial"
           >
               <Clock size={16} strokeWidth={1.75} />
           </button>
           <button 
               onClick={handleThemeToggle} 
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+              className="text-sm font-medium p-2 rounded-lg hidden md:flex items-center gap-2 text-gray-800 hover:bg-gray-100" // Oculto en móvil
               title="Alternar tema"
           >
               {themeData.theme === 'light' ? <Moon size={16} strokeWidth={1.75} /> : <Sun size={16} strokeWidth={1.75} />}
           </button>
+          
+          {/* Botón de exportar (ahora es el '...') */}
+          <div className="relative md:hidden"> {/* Solo visible en móvil */}
+              <button 
+                  onClick={() => setIsToolsMenuVisible(p => !p)}
+                  className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+                  title="Más herramientas"
+              >
+                  <MoreHorizontal size={16} strokeWidth={1.75}/>
+              </button>
+              {isToolsMenuVisible && (
+                  // --- ¡MODIFICADO! --- direction="up"
+                  <PopoverMenu onClose={() => setIsToolsMenuVisible(false)} direction="up">
+                      <MenuButton icon={<Palette size={16} strokeWidth={1.75}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<ShieldCheck size={16} strokeWidth={1.75}/>} label="Matriz de Contraste" onClick={() => { setIsContrastCheckerVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<Eye size={16} strokeWidth={1.75}/>} label="Daltonismo" onClick={() => { handleOpenSimulationSidebar(); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<Accessibility size={16} strokeWidth={1.75}/>} label="Accesibilidad" onClick={() => { setIsAccessibilityModalVisible(true); setIsToolsMenuVisible(false); }} />
+                      <MenuButton icon={<TestTube2 size={16} strokeWidth={1.75}/>} label="Componentes" onClick={() => { setIsComponentPreviewModalVisible(true); setIsToolsMenuVisible(false); }} />
+                      <div className="h-px bg-gray-200 my-1"></div>
+                      <MenuButton icon={<FileCode size={16} strokeWidth={1.75}/>} label="Exportar" onClick={() => { setExportingPaletteData(themeData); setIsExportModalVisible(true); setIsToolsMenuVisible(false); }} />
+                  </PopoverMenu>
+              )}
+          </div>
+          
           <button 
               onClick={() => {
                 setExportingPaletteData(themeData);
                 setIsExportModalVisible(true);
               }}
-              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+              className="text-sm font-medium p-2 rounded-lg hidden md:flex items-center gap-2 text-gray-800 hover:bg-gray-100" // Oculto en móvil
               title="Exportar"
           >
               <FileCode size={16} strokeWidth={1.75} />
           </button>
 
-          <div className="h-6 w-px bg-gray-200 mx-1"></div>
 
-          {/* ... (Lógica de Usuario (Guardar, Mis Paletas, Menú de Usuario) sin cambios) ... */}
+          <div className="h-6 w-px bg-gray-200 mx-1 hidden md:block"></div>
+
+          {/* Lógica de Usuario (visible en ambas vistas) */}
           {user ? (
             <>
               <button 
@@ -709,7 +683,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                     <User size={16} strokeWidth={1.75}/>
                 </button>
                 {isUserMenuVisible && (
-                    <PopoverMenu onClose={() => setIsUserMenuVisible(false)}>
+                    // --- ¡MODIFICADO! --- direction="up"
+                    <PopoverMenu onClose={() => setIsUserMenuVisible(false)} direction="up">
                         <div className="px-3 py-2">
                             <p className="text-sm font-semibold text-gray-900 truncate">{user.user_metadata?.name || user.email}</p>
                             <p className="text-xs text-gray-500">Usuario Registrado</p>
@@ -721,7 +696,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               </div>
             </>
           ) : (
-            // ... (Botones de Invitado (Iniciar Sesión, Menú de Config) sin cambios) ...
             <>
               <button 
                 onClick={() => onNavigate('auth')}
@@ -733,7 +707,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 <span className="hidden sm:inline">Iniciar Sesión</span>
               </button>
 
-              <div className="relative">
+              {/* Botón de Hamburguesa (Config) solo en móvil */}
+              <div className="relative md:hidden"> {/* Oculto en desktop */}
                 <button 
                     onClick={() => setIsConfigMenuVisible(p => !p)}
                     className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
@@ -742,7 +717,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                     <Settings size={16} strokeWidth={1.75}/>
                 </button>
                 {isConfigMenuVisible && (
-                    <PopoverMenu onClose={() => setIsConfigMenuVisible(false)}>
+                    // --- ¡MODIFICADO! --- direction="up"
+                    <PopoverMenu onClose={() => setIsConfigMenuVisible(false)} direction="up">
                         <div className="relative">
                             <MenuButton 
                                 icon={<Type size={16} strokeWidth={1.75}/>} 
@@ -750,9 +726,11 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                                 onClick={(e) => { e.stopPropagation(); setIsFontMenuVisible(p => !p); }} 
                             />
                             {isFontMenuVisible && (
+                                // --- ¡MODIFICADO! --- direction="up"
                                 <PopoverMenu 
                                     onClose={() => setIsFontMenuVisible(false)} 
                                     align="left"
+                                    direction="up"
                                 >
                                     {Object.keys(availableFonts).map(fontName => (
                                         <button
@@ -780,36 +758,30 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         </div>
       </header>
       
-      {/* --- (CONTENIDO PRINCIPAL) --- */}
-      <div className="flex-grow">
+      {/* --- ¡CONTENIDO PRINCIPAL MODIFICADO! --- */}
+      {/* Añadido 'pb-20 md:pb-0' para dejar espacio para la barra inferior en móvil */}
+      <div className="flex-grow pb-20 md:pb-0">
         <div className="flex flex-col md:flex-row">
           
           <div className="flex-grow w-full min-w-0">
             <main>
-              {/* --- ¡MODIFICADO! ---
-                  Se pasan las nuevas props a Explorer
-              */}
+              {/* Se pasa 'paletteLayout' a Explorer */}
               <Explorer 
-                explorerPalette={explorerPalette} // (realtime)
-                originalExplorerPalette={originalExplorerPalette} // (confirmado)
-                
+                explorerPalette={explorerPalette} 
+                originalExplorerPalette={originalExplorerPalette} 
                 reorderExplorerPalette={reorderExplorerPalette}
                 explorerGrayShades={explorerGrayShades}
                 handleExplorerColorPick={handleExplorerColorPick}
                 setGrayColor={setGrayColor}
-                
                 brandColor={brandColor}
-                updateBrandColor={updateBrandColor} // (realtime)
-                
+                updateBrandColor={updateBrandColor} 
                 themeData={themeData}
                 insertColorInPalette={insertColorInPalette}
                 insertMultipleColors={insertMultipleColors} 
                 removeColorFromPalette={removeColorFromPalette}
                 explorerMethod={explorerMethod}
                 setExplorerMethod={setExplorerMethod}
-                
-                replaceColorInPalette={replaceColorInPalette} // (realtime)
-                
+                replaceColorInPalette={replaceColorInPalette} 
                 handleUndo={handleUndo}
                 handleRedo={handleRedo}
                 history={history}
@@ -818,27 +790,18 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 generatePaletteWithAI={generatePaletteWithAI}
                 showNotification={showNotification}
                 applySimulationToPalette={applySimulationToPalette}
-                
-                // --- ¡ELIMINADO! --- 'onOpenAdjuster' ya no existe
-                
                 onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
                 onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
                 lockedColors={lockedColors}
                 toggleLockColor={toggleLockColor}
-                
-                // --- ¡ELIMINADO! --- 'isAdjusterSidebarVisible' ya no existe
-                
                 isSimulationSidebarVisible={isSimulationSidebarVisible}
                 onOpenSimulationSidebar={handleOpenSimulationSidebar}
-                
                 isExpanded={isExpanded}
                 setIsExpanded={setIsExpanded}
                 colorModePreview={colorModePreview}
-                
-                // --- ¡NUEVO! ---
                 onOpenColorPickerSidebar={onOpenColorPickerSidebar}
                 isSplitViewActive={isSplitViewActive}
-                paletteLayout={paletteLayout} // <-- ¡Prop añadida!
+                paletteLayout={paletteLayout} // <-- ¡Prop se sigue pasando!
               />
               
               {/* ... (ColorPreviewer y SemanticPalettes sin cambios) ... */}
@@ -854,7 +817,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                     grayColor={grayColor}
                     isGrayAuto={isGrayAuto}
                     themeData={themeData}
-                    updateBrandColor={updateBrandColor} // Pasa el 'realtime'
+                    updateBrandColor={updateBrandColor} 
                     setGrayColor={setGrayColor}
                     setIsGrayAuto={setIsGrayAuto}
                     simulationMode={simulationMode}
@@ -870,7 +833,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                     grayColor={grayColor}
                     isGrayAuto={isGrayAuto}
                     themeData={themeData}
-                    updateBrandColor={updateBrandColor} // Pasa el 'realtime'
+                    updateBrandColor={updateBrandColor} 
                     setGrayColor={setGrayColor}
                     setIsGrayAuto={setIsGrayAuto}
                     simulationMode={simulationMode}
@@ -889,23 +852,18 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
             </main>
           </div>
           
-          {/* --- ¡INICIO DE LA LÓGICA DE RENDERIZADO DE SIDEBARS! --- */}
-          
-          {/* --- ¡RESTAURADO! ---
-              Ahora se renderiza el PaletteAdjusterSidebar cuando
-              isAdjusterSidebarVisible es true
-          */}
+          {/* --- (Lógica de Sidebars sin cambios) --- */}
           {isAdjusterSidebarVisible && (
             <PaletteAdjusterSidebar
                 paletteAdjustments={paletteAdjustments}
                 setPaletteAdjustments={setPaletteAdjustments}
                 commitPaletteAdjustments={() => {
                     commitPaletteAdjustments();
-                    closeAllSidebars(true); // Confirmar cierre
+                    closeAllSidebars(true); 
                 }}
                 cancelPaletteAdjustments={() => {
                     cancelPaletteAdjustments();
-                    closeAllSidebars(false); // Cancelar cierre
+                    closeAllSidebars(false); 
                 }}
                 setIsAdjusterSidebarVisible={setIsAdjusterSidebarVisible}
                 originalExplorerPalette={originalExplorerPalette}
@@ -913,48 +871,28 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 lockedColors={lockedColors}
             />
           )}
-
-          {/* --- ¡MODIFICADO! ---
-              El ColorPickerSidebar ahora se renderiza
-              solo cuando isColorPickerSidebarVisible es true
-          */}
           {isColorPickerSidebarVisible && colorPickerSidebarData && (
             <ColorPickerSidebar
-              // 'key' ayuda a React a resetear el estado interno del sidebar
-              // cada vez que seleccionamos un color diferente.
               key={colorPickerSidebarData.index === null ? 'brand' : colorPickerSidebarData.index}
               initialColor={colorPickerSidebarData.originalColor}
-              onClose={() => closeAllSidebars(false)} // false = Cancelar
+              onClose={() => closeAllSidebars(false)} 
               onRealtimeChange={(newColor) => {
-                // Actualiza en tiempo real sin guardar en historial
                 if (colorPickerSidebarData.index === null) {
-                  // Es el Color de Marca
-                  // --- ¡MODIFICACIÓN! (del 7/Nov) ---
-                  // ¡¡¡ESTO YA NO DEBERÍA OCURRIR, PERO LO DEJAMOS POR SEGURIDAD!!!
-                  // El ajuste global ahora usa PaletteAdjusterSidebar
-                  hook.updateBrandColor(newColor); // Llama a la función de tiempo real RÁPIDA
-                  // --- ¡FIN! ---
+                  hook.updateBrandColor(newColor); 
                 } else {
-                  // Es un color de la paleta
                   replaceColorInPalette(colorPickerSidebarData.index, newColor);
                 }
               }}
               onConfirm={(newColor) => {
-                // Confirma el cambio y guarda en el historial
                 if (colorPickerSidebarData.index === null) {
-                  // --- ¡MODIFICACIÓN! (del 7/Nov) ---
-                  // ¡¡¡ESTO YA NO DEBERÍA OCURRIR!!!
-                  hook.confirmBrandColor(newColor); // Llama a la función de confirmación LENTA
-                  // --- ¡FIN! ---
+                  hook.confirmBrandColor(newColor); 
                 } else {
                   confirmColorInPalette(colorPickerSidebarData.index, newColor);
                 }
-                closeAllSidebars(true); // true = Confirmar
+                closeAllSidebars(true); 
               }}
             />
           )}
-          
-          {/* ... (Renderizado de 'ColorBlindnessSidebar', 'SavePaletteSidebar', 'MyPalettesSidebar' sin cambios) ... */}
           {isSimulationSidebarVisible && (
             <ColorBlindnessSidebar
               simulationMode={simulationMode}
@@ -963,7 +901,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               onApply={handleApplySimulation}
             />
           )}
-          
           {isSaveSidebarVisible && (
             <SavePaletteSidebar
               onClose={closeAllSidebars}
@@ -979,7 +916,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               onCreateTag={handleCreateTag} 
             />
           )}
-
           {isMyPalettesSidebarVisible && (
             <MyPalettesSidebar
               onClose={closeAllSidebars}
@@ -1003,9 +939,6 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               onDeleteCollection={onDeleteCollection}
             />
           )}
-          
-          {/* --- FIN DE LA LÓGICA DE RENDERIZADO DE SIDEBARS --- */}
-
         </div>
       </div>
 
@@ -1083,20 +1016,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={confirmBrandColor} />}
         {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
 
-        {/* --- ¡MODIFICADO! --- */}
-        {/* Se añade la condición !isColorPickerSidebarVisible Y !isAdjusterSidebarVisible */}
-        {!isSplitViewActive && !isSimulationSidebarVisible && !isSaveSidebarVisible && !isMyPalettesSidebarVisible && !isColorPickerSidebarVisible && !isAdjusterSidebarVisible && (
-          <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 lg:hidden">
-            <button
-              onClick={() => handleRandomTheme()}
-              title="Generar Tema Aleatorio"
-              className="h-12 w-12 rounded-full flex items-center justify-center shadow-lg text-white transform transition-all duration-200 hover:shadow-xl hover:-translate-y-1"
-              style={{ background: 'linear-gradient(to right, var(--action-primary-default), #e11d48)' }}
-            >
-              <Sparkles size={22} strokeWidth={1.75} />
-            </button>
-          </div>
-        )}
+        {/* --- ¡BLOQUE DE FAB ELIMINADO! --- */}
+        {/* El botón de 'Sparkles' ahora está en la barra de menú inferior en móvil */}
+
     </div>
   );
 });

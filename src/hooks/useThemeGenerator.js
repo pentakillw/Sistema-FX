@@ -119,7 +119,30 @@ const useThemeGenerator = (user) => {
         const newHistory = history.slice(0, historyIndex + 1);
         
         // Evitar duplicados exactos en el historial
-        if (JSON.stringify(history[historyIndex]) === JSON.stringify(stateToSave)) {
+        // --- ¡INICIO DE LA CORRECCIÓN! ---
+        // El error "Converting circular structure to JSON" ocurre si 'history[historyIndex]'
+        // ha sido corrompido con una referencia circular (ej. un objeto de evento).
+        // En lugar de stringificar el objeto COMPLETO, solo stringificamos las
+        // propiedades que nos importan para la comparación. Esto es más seguro.
+        
+        const S_TAG_CURRENT = JSON.stringify({
+            b: history[historyIndex].brandColor,
+            g: history[historyIndex].grayColor,
+            e: history[historyIndex].explorerPalette,
+            l: history[historyIndex].lockedColors,
+            i: history[historyIndex].isGrayAuto
+        });
+        
+        const S_TAG_NEW = JSON.stringify({
+            b: stateToSave.brandColor,
+            g: stateToSave.grayColor,
+            e: stateToSave.explorerPalette,
+            l: stateToSave.lockedColors,
+            i: stateToSave.isGrayAuto
+        });
+
+        if (S_TAG_CURRENT === S_TAG_NEW) {
+        // --- FIN DE LA CORRECCIÓN! ---
             return;
         }
         
@@ -326,8 +349,8 @@ const useThemeGenerator = (user) => {
     };
     
     const insertColorInPalette = (index) => {
-        if (originalExplorerPalette.length >= 15) {
-            showNotification("Máximo de 15 colores alcanzado.", "error");
+        if (originalExplorerPalette.length >= 20) {
+            showNotification("Máximo de 20 colores alcanzado.", "error");
             return;
         }
         const colorA = tinycolor(originalExplorerPalette[index]);
@@ -353,11 +376,11 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
 
     const insertMultipleColors = (index, count) => {
         const currentCount = originalExplorerPalette.length;
-        const canAdd = 15 - currentCount;
+        const canAdd = 20 - currentCount;
         const addCount = Math.min(count, canAdd);
         
         if (addCount <= 0) {
-            showNotification("Límite de 15 colores alcanzado.", "error");
+            showNotification("Límite de 20 colores alcanzado.", "error");
             return;
         }
 
@@ -729,7 +752,12 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
     const handleThemeToggle = () => setTheme(t => t === 'light' ? 'dark' : 'light');
     
     const handleRandomTheme = (baseColorHex = null) => {
-        let effectiveBaseColor = baseColorHex; 
+        // --- ¡INICIO DE LA CORRECCIÓN! ---
+        // Si 'baseColorHex' no es un string (ej. es un objeto de evento de React
+        // por hacer clic en el botón), lo forzamos a null.
+        let effectiveBaseColor = (typeof baseColorHex === 'string') ? baseColorHex : null;
+        // --- FIN DE LA CORRECCIÓN! ---
+
         if (!effectiveBaseColor && lockedColors.length > 0) {
             effectiveBaseColor = lockedColors[0]; 
         }
