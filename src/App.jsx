@@ -35,8 +35,8 @@ import TermsOfServicePage from './components/TermsOfServicePage.jsx';
 import { supabase } from './supabaseClient.js';
 
 // --- ¡COMPONENTE MODIFICADO! ---
-// Ahora acepta una prop `direction`
-const PopoverMenu = ({ children, onClose, align = 'right', direction = 'down' }) => {
+// Se elimina la prop `direction` y se añaden clases responsivas
+const PopoverMenu = ({ children, onClose, align = 'right' }) => {
     const menuRef = useRef(null);
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -51,8 +51,11 @@ const PopoverMenu = ({ children, onClose, align = 'right', direction = 'down' })
     return (
         <div
             ref={menuRef}
-            // --- ¡MODIFICADO! --- Cambia 'top-full' por 'bottom-full' si la dirección es 'up'
-            className={`absolute ${direction === 'down' ? 'top-full mt-2' : 'bottom-full mb-2'} ${align === 'right' ? 'right-0' : 'left-0'} w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2 space-y-1 max-h-[60vh] overflow-y-auto`}
+            // --- ¡MODIFICADO! ---
+            // 'bottom-full' (hacia arriba) por defecto para la barra de navegación móvil.
+            // 'md:top-full' (hacia abajo) para la barra de navegación de escritorio.
+            // 'md:bottom-auto' resetea la posición 'bottom'.
+            className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} bottom-full mb-2 md:top-full md:mt-2 md:bottom-auto w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2 space-y-1 max-h-[60vh] overflow-y-auto`}
             onClick={(e) => { e.stopPropagation(); }}
         >
             {children}
@@ -503,8 +506,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                   <Wand2 size={16} strokeWidth={1.75}/>
               </button>
                 {isMethodMenuVisible && (
-                  // --- ¡MODIFICADO! --- direction="up"
-                  <PopoverMenu onClose={() => setIsMethodMenuVisible(false)} direction="up">
+                  // --- ¡MODIFICADO! --- Se elimina direction="up"
+                  <PopoverMenu onClose={() => setIsMethodMenuVisible(false)}>
                       {generationMethods.map(method => (
                           method.isHeader ? (
                               <div 
@@ -578,8 +581,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                   <MoreHorizontal size={16} strokeWidth={1.75}/>
               </button>
               {isToolsMenuVisible && (
-                  // --- ¡MODIFICADO! --- direction="up"
-                  <PopoverMenu onClose={() => setIsToolsMenuVisible(false)} direction="up">
+                  // --- ¡MODIFICADO! --- Se elimina direction="up"
+                  <PopoverMenu onClose={() => setIsToolsMenuVisible(false)}>
                       <MenuButton icon={<Accessibility size={16} strokeWidth={1.75}/>} label="Accesibilidad" onClick={() => { setIsAccessibilityModalVisible(true); setIsToolsMenuVisible(false); }} />
                       <MenuButton icon={<TestTube2 size={16} strokeWidth={1.75}/>} label="Componentes" onClick={() => { setIsComponentPreviewModalVisible(true); setIsToolsMenuVisible(false); }} />
                       <MenuButton icon={<Palette size={16} strokeWidth={1.75}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
@@ -632,8 +635,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                   <MoreHorizontal size={16} strokeWidth={1.75}/>
               </button>
               {isToolsMenuVisible && (
-                  // --- ¡MODIFICADO! --- direction="up"
-                  <PopoverMenu onClose={() => setIsToolsMenuVisible(false)} direction="up">
+                  // --- ¡MODIFICADO! --- Se elimina direction="up"
+                  <PopoverMenu onClose={() => setIsToolsMenuVisible(false)}>
                       <MenuButton icon={<Palette size={16} strokeWidth={1.75}/>} label="Variaciones" onClick={() => { setIsVariationsVisible(true); setIsToolsMenuVisible(false); }} />
                       <MenuButton icon={<ShieldCheck size={16} strokeWidth={1.75}/>} label="Matriz de Contraste" onClick={() => { setIsContrastCheckerVisible(true); setIsToolsMenuVisible(false); }} />
                       <MenuButton icon={<Eye size={16} strokeWidth={1.75}/>} label="Daltonismo" onClick={() => { handleOpenSimulationSidebar(); setIsToolsMenuVisible(false); }} />
@@ -687,8 +690,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                     <User size={16} strokeWidth={1.75}/>
                 </button>
                 {isUserMenuVisible && (
-                    // --- ¡MODIFICADO! --- direction="up"
-                    <PopoverMenu onClose={() => setIsUserMenuVisible(false)} direction="up">
+                    // --- ¡MODIFICADO! --- Se elimina direction="up"
+                    <PopoverMenu onClose={() => setIsUserMenuVisible(false)}>
                         <div className="px-3 py-2">
                             <p className="text-sm font-semibold text-gray-900 truncate">{user.user_metadata?.name || user.email}</p>
                             <p className="text-xs text-gray-500">Usuario Registrado</p>
@@ -721,8 +724,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                     <Settings size={16} strokeWidth={1.75}/>
                 </button>
                 {isConfigMenuVisible && (
-                    // --- ¡MODIFICADO! --- direction="up"
-                    <PopoverMenu onClose={() => setIsConfigMenuVisible(false)} direction="up">
+                    // --- ¡MODIFICADO! --- Se elimina direction="up"
+                    <PopoverMenu onClose={() => setIsConfigMenuVisible(false)}>
                         <div className="relative">
                             <MenuButton 
                                 icon={<Type size={16} strokeWidth={1.75}/>} 
@@ -730,11 +733,10 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                                 onClick={(e) => { e.stopPropagation(); setIsFontMenuVisible(p => !p); }} 
                             />
                             {isFontMenuVisible && (
-                                // --- ¡MODIFICADO! --- direction="up"
+                                // --- ¡MODIFICADO! --- Se elimina direction="up"
                                 <PopoverMenu 
                                     onClose={() => setIsFontMenuVisible(false)} 
                                     align="left"
-                                    direction="up"
                                 >
                                     {Object.keys(availableFonts).map(fontName => (
                                         <button
@@ -769,7 +771,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       */}
       <div 
         className={`flex-grow md:pb-0 transition-all duration-300 ${
-          isColorPickerSidebarVisible ? 'pb-[50vh]' : 'pb-20'
+          isColorPickerSidebarVisible ? 'pb-[45vh]' : 'pb-20'
         }`}
       >
         <div className="flex flex-col md:flex-row">

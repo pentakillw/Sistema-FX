@@ -332,7 +332,16 @@ const ColorPickerSidebar = ({
             {/* --- Contenido de Pestañas --- */}
             {inputMode === 'picker' && (
               <div className="space-y-3">
-                <HexColorPicker color={localColor} onChange={handlePickerChange} className="!w-full" />
+                {/* --- ¡MODIFICACIÓN! --- 
+                    Se envuelve el picker en un div con altura fija para hacerlo más "fino" 
+                */}
+                <div className="w-full relative" style={{ height: '150px' }}>
+                  <HexColorPicker 
+                    color={localColor} 
+                    onChange={handlePickerChange} 
+                    className="!absolute !h-full !w-full" // Usar absolute para llenar el div padre
+                  />
+                </div>
                 <div className="flex items-center gap-1.5">
                   <div 
                     className="w-5 h-5 rounded border flex-shrink-0 border-gray-200" 

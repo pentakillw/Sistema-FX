@@ -498,7 +498,8 @@ const Explorer = (props) => {
                                         ref={provided.innerRef} 
                                         {...provided.droppableProps} 
                                         // --- ¡MODIFICADO! ---
-                                        className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'} ${paletteLayout === 'horizontal' ? 'flex-col' : ''}`}
+                                        // Se añade 'overflow-y-auto' cuando está en 'flex-col' (móvil)
+                                        className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'} ${paletteLayout === 'horizontal' ? 'flex-col overflow-y-auto' : ''}`}
                                     >
                                         
                                         {/* ¡Usa 'explorerPalette' (tiempo real) aquí! */}
