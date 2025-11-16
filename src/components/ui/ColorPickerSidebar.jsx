@@ -1,11 +1,11 @@
 import React, { memo, useRef, useEffect, useState, useCallback } from 'react';
-import { X, Check, ChevronDown, Pipette } from 'lucide-react';
-import { HexColorPicker } from 'react-colorful';
+import { X, Check, Pipette } from 'lucide-react'; // <-- ¡MODIFICADO!
+import { HexColorPicker } from 'react-colorful'; // <-- ¡MODIFICADO! Vuelve a HexColorPicker simple
 import tinycolor from 'tinycolor2';
-// --- ¡CORRECCIÓN! --- Se importa desde 'colorUtils.js'
 import { findClosestColorName } from '../../utils/colorUtils.js';
 
 // --- Estilos para los sliders (copiados de Explorer.jsx) ---
+// ... (sin cambios) ...
 const sliderStyles = `
   .custom-slider {
     -webkit-appearance: none;
@@ -110,12 +110,22 @@ const ColorPickerSidebar = ({
   onRealtimeChange, // Función para actualizar el color en tiempo real
 }) => {
   const sidebarRef = useRef();
-  useOnClickOutside(sidebarRef, onClose);
-
+  
   const [localColor, setLocalColor] = useState(initialColor);
-  const [inputMode, setInputMode] = useState('hex');
-  const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
+  // --- ¡MODIFICADO! --- 'picker' es el modo por defecto
+  const [inputMode, setInputMode] = useState('picker'); 
   const [isPicking, setIsPicking] = useState(false);
+
+  // --- ¡MODIFICADO! ---
+  // Los tabs ahora coinciden con la imagen de referencia (simplificado)
+  const tabs = [
+    { id: 'picker', label: 'Picker' },
+    { id: 'hex', label: 'HEX' },
+    { id: 'hsb', label: 'HSB' }, // HSB es lo mismo que HSV
+    { id: 'hsl', label: 'HSL' },
+    { id: 'rgb', label: 'RGB' },
+    { id: 'name', label: 'Nombre' },
+  ];
 
   // Sincronizar el color local si el color inicial cambia (al seleccionar otro color)
   useEffect(() => {
@@ -153,12 +163,22 @@ const ColorPickerSidebar = ({
     }
   };
   
+  // --- ¡MODIFICADO! ---
+  // Función para obtener el valor del input de texto (para HEX)
   const getFormattedColor = (mode) => {
     const c = tinycolor(localColor);
     if (!c.isValid()) return localColor;
+    if (mode === 'hex') {
+      return c.toHexString().toUpperCase();
+    }
     if (mode === 'name') {
       return findClosestColorName(localColor);
     }
+    // Para otros modos (RGB, HSL, HSB)
+    if (mode === 'rgb') return c.toRgbString();
+    if (mode === 'hsl') return c.toHslString();
+    if (mode === 'hsv') return c.toHsvString(); // hsv es hsb
+    
     return c.toHexString().toUpperCase();
   };
 
@@ -197,7 +217,7 @@ const ColorPickerSidebar = ({
     blue: `linear-gradient(to right, ${tinycolor({...rgb, b: 0}).toHexString()}, ${tinycolor({...rgb, b: 255}).toHexString()})`,
   };
 
-  const inputModes = ['hex', 'rgb', 'hsl', 'hsv', 'name'];
+  // --- ¡ELIMINADO! --- const inputModes
 
   const openEyedropper = async () => {
     if (!('EyeDropper' in window)) {
@@ -233,6 +253,10 @@ const ColorPickerSidebar = ({
     // Confirmar el color local
     onConfirm(localColor);
   };
+  
+  // --- ¡MODIFICADO! ---
+  // Se añade el hook de clic fuera para cancelar en móvil
+  useOnClickOutside(sidebarRef, handleCancel);
 
   return (
     <>
@@ -247,24 +271,28 @@ const ColorPickerSidebar = ({
       {/* Panel del Sidebar */}
       <aside
         ref={sidebarRef}
-        className="fixed bottom-0 left-0 right-0 z-50 w-full max-h-[85vh] rounded-t-2xl shadow-2xl transition-transform transform
-                   md:transform-none md:relative md:w-64 lg:w-72 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border"
+        className="fixed bottom-0 left-0 right-0 z-50 w-full rounded-t-2xl shadow-2xl transition-transform transform
+                   md:transform-none md:relative md:w-64 lg:w-72 md:flex-shrink-0 md:sticky md:top-0 md:rounded-xl md:shadow-lg md:border md:max-h-[calc(100vh-8rem)] md:z-10 border-t md:border
+                   
+                   h-auto max-h-[50vh] md:h-auto" // <-- ¡MODIFICADO! Altura móvil
         style={{
           backgroundColor: '#FFFFFF',
           borderColor: '#E5E7EB',
           visibility: isPicking ? 'hidden' : 'visible'
         }}
       >
+        {/* --- ¡MODIFICADO! --- Layout reestructurado */}
         <div 
-          className="h-full px-4 py-4 overflow-y-auto flex flex-col"
+          className="h-full overflow-hidden flex flex-col" // <-- Contenedor flex
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
         >
           {/* Handle visual (solo móvil) */}
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4 md:hidden" />
+          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto my-4 md:hidden flex-shrink-0" />
           
-          <div className="flex justify-between items-center mb-4">
+          {/* Header (solo desktop) */}
+          <div className="hidden md:flex justify-between items-center mb-4 px-4 pt-4">
             <h2 className="text-xl font-bold text-gray-900">
               Editar Color
             </h2>
@@ -276,121 +304,126 @@ const ColorPickerSidebar = ({
             </button>
           </div>
 
-          {/* Contenido del Selector de Color */}
-          <div className="flex-grow space-y-3">
-            <HexColorPicker color={localColor} onChange={handlePickerChange} className="!w-full" />
-            
-            {/* Row 1: Info Bar */}
-            <div className="flex items-center gap-1.5">
-              <div 
-                className="w-5 h-5 rounded border flex-shrink-0 border-gray-200" 
-                style={{ backgroundColor: localColor }}
-              />
-              <button
-                onClick={openEyedropper}
-                className="p-1 rounded-md border bg-gray-100 border-gray-200 text-gray-800"
-                title="Seleccionar color (Eyedropper)"
-              >
-                <Pipette size={14} />
-              </button>
-              
-              {inputMode === 'hex' && (
-                <input 
-                  type="text"
-                  value={getFormattedColor('hex')}
-                  onChange={handleTextChange}
-                  onBlur={handleTextBlur}
-                  onKeyDown={handleTextKeyDown}
-                  className="flex-1 w-full font-mono text-sm px-2 py-0.5 rounded-md border bg-gray-100 border-gray-200 text-gray-900"
-                />
-              )}
-              {inputMode === 'name' && (
-                <input 
-                  type="text"
-                  value={getFormattedColor('name')}
-                  readOnly
-                  className="flex-1 w-full text-sm px-2 py-0.5 rounded-md border bg-gray-100 border-gray-200 text-gray-900 cursor-default"
-                />
-              )}
-              {inputMode !== 'hex' && inputMode !== 'name' && (
-                <span className="flex-1 w-full font-mono text-sm px-2 py-0.5 text-gray-900">
-                  {getFormattedColor('hex')}
-                </span>
-              )}
-              
-              <div className="relative">
+          {/* Tabs de Navegación */}
+          <div className="flex-shrink-0 border-b border-gray-200 overflow-x-auto">
+            <nav className="flex px-4" aria-label="Tabs">
+              {tabs.map((tab) => (
                 <button
-                  onClick={() => setIsModeMenuOpen(p => !p)}
-                  className="p-1 rounded-md border bg-gray-100 border-gray-200 text-gray-800"
-                  title="Cambiar modo de input"
+                  key={tab.id}
+                  onClick={() => setInputMode(tab.id)}
+                  className={`
+                    ${
+                      inputMode === tab.id
+                        ? 'border-purple-600 text-purple-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }
+                    whitespace-nowrap py-3 px-3 border-b-2 font-semibold text-sm transition-colors
+                  `}
                 >
-                  <ChevronDown size={14} />
+                  {tab.label}
                 </button>
-                {isModeMenuOpen && (
-                  <div className="absolute bottom-full right-0 mb-2 w-24 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-1">
-                    {inputModes.map(mode => (
-                      <button
-                        key={mode}
-                        onClick={() => {
-                          setInputMode(mode);
-                          setIsModeMenuOpen(false);
-                        }}
-                        className={`w-full text-left px-2 py-1 text-sm rounded ${inputMode === mode ? 'font-bold bg-gray-100' : ''} hover:bg-gray-100 text-gray-900`}
-                      >
-                        {mode.toUpperCase()}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+              ))}
+            </nav>
+          </div>
+
+          {/* Contenido del Selector de Color (con scroll) */}
+          <div className="flex-grow overflow-y-auto space-y-3 p-4">
             
-            {/* Row 2: Sliders (si no es hex o name) */}
-            {inputMode !== 'hex' && inputMode !== 'name' && (
-              <div className="pt-3 border-t border-gray-200">
-                {inputMode === 'rgb' && (
-                  <div className="space-y-1">
-                    <ColorSlider label="R" min={0} max={255} value={rgb.r} onChange={(v) => handleSliderChange('rgb', 'r', v)} gradientStyle={gradients.red} />
-                    <ColorSlider label="G" min={0} max={255} value={rgb.g} onChange={(v) => handleSliderChange('rgb', 'g', v)} gradientStyle={gradients.green} />
-                    <ColorSlider label="B" min={0} max={255} value={rgb.b} onChange={(v) => handleSliderChange('rgb', 'b', v)} gradientStyle={gradients.blue} />
-                  </div>
-                )}
-                {inputMode === 'hsl' && (
-                  <div className="space-y-1">
-                    <ColorSlider label="H" min={0} max={360} value={Math.round(hsl.h)} onChange={(v) => handleSliderChange('hsl', 'h', v)} gradientStyle={gradients.hue} />
-                    <ColorSlider label="S" min={0} max={100} value={Math.round(hsl.s * 100)} onChange={(v) => handleSliderChange('hsl', 's', v)} gradientStyle={gradients.saturationHsl} />
-                    <ColorSlider label="L" min={0} max={100} value={Math.round(hsl.l * 100)} onChange={(v) => handleSliderChange('hsl', 'l', v)} gradientStyle={gradients.luminance} />
-                  </div>
-                )}
-                {inputMode === 'hsv' && (
-                  <div className="space-y-1">
-                    <ColorSlider label="H" min={0} max={360} value={Math.round(hsv.h)} onChange={(v) => handleSliderChange('hsv', 'h', v)} gradientStyle={gradients.hue} />
-                    <ColorSlider label="S" min={0} max={100} value={Math.round(hsv.s * 100)} onChange={(v) => handleSliderChange('hsv', 's', v)} gradientStyle={gradients.saturationHsv} />
-                    <ColorSlider label="V" min={0} max={100} value={Math.round(hsv.v * 100)} onChange={(v) => handleSliderChange('hsv', 'v', v)} gradientStyle={gradients.brightness} />
-                  </div>
-                )}
+            {/* --- Contenido de Pestañas --- */}
+            {inputMode === 'picker' && (
+              <div className="space-y-3">
+                <HexColorPicker color={localColor} onChange={handlePickerChange} className="!w-full" />
+                <div className="flex items-center gap-1.5">
+                  <div 
+                    className="w-5 h-5 rounded border flex-shrink-0 border-gray-200" 
+                    style={{ backgroundColor: localColor }}
+                  />
+                  <button
+                    onClick={openEyedropper}
+                    className="p-1 rounded-md border bg-gray-100 border-gray-200 text-gray-800"
+                    title="Seleccionar color (Eyedropper)"
+                  >
+                    <Pipette size={14} />
+                  </button>
+                  <input 
+                    type="text"
+                    value={getFormattedColor('hex')}
+                    onChange={handleTextChange}
+                    onBlur={handleTextBlur}
+                    onKeyDown={handleTextKeyDown}
+                    className="flex-1 w-full font-mono text-sm px-2 py-0.5 rounded-md border bg-gray-100 border-gray-200 text-gray-900"
+                  />
+                </div>
+              </div>
+            )}
+            
+            {inputMode === 'hex' && (
+              <div>
+                <label className="text-xs font-semibold text-gray-500">HEX</label>
+                <input 
+                    type="text"
+                    value={getFormattedColor('hex')}
+                    onChange={handleTextChange}
+                    onBlur={handleTextBlur}
+                    onKeyDown={handleTextKeyDown}
+                    className="w-full font-mono text-lg p-2 rounded-md border bg-gray-100 border-gray-200 text-gray-900"
+                />
+              </div>
+            )}
+            
+            {inputMode === 'name' && (
+              <div>
+                <label className="text-xs font-semibold text-gray-500">Nombre más cercano</label>
+                <input 
+                    type="text"
+                    value={getFormattedColor('name')}
+                    readOnly
+                    className="w-full text-lg p-2 rounded-md border bg-gray-100 border-gray-200 text-gray-900 cursor-default"
+                />
+              </div>
+            )}
+
+            {inputMode === 'rgb' && (
+              <div className="space-y-2">
+                <ColorSlider label="R" min={0} max={255} value={rgb.r} onChange={(v) => handleSliderChange('rgb', 'r', v)} gradientStyle={gradients.red} />
+                <ColorSlider label="G" min={0} max={255} value={rgb.g} onChange={(v) => handleSliderChange('rgb', 'g', v)} gradientStyle={gradients.green} />
+                <ColorSlider label="B" min={0} max={255} value={rgb.b} onChange={(v) => handleSliderChange('rgb', 'b', v)} gradientStyle={gradients.blue} />
+              </div>
+            )}
+            {inputMode === 'hsl' && (
+              <div className="space-y-2">
+                <ColorSlider label="H" min={0} max={360} value={Math.round(hsl.h)} onChange={(v) => handleSliderChange('hsl', 'h', v)} gradientStyle={gradients.hue} />
+                <ColorSlider label="S" min={0} max={100} value={Math.round(hsl.s * 100)} onChange={(v) => handleSliderChange('hsl', 's', v)} gradientStyle={gradients.saturationHsl} />
+                <ColorSlider label="L" min={0} max={100} value={Math.round(hsl.l * 100)} onChange={(v) => handleSliderChange('hsl', 'l', v)} gradientStyle={gradients.luminance} />
+              </div>
+            )}
+            {inputMode === 'hsv' && ( // hsv es hsb
+              <div className="space-y-2">
+                <ColorSlider label="H" min={0} max={360} value={Math.round(hsv.h)} onChange={(v) => handleSliderChange('hsv', 'h', v)} gradientStyle={gradients.hue} />
+                <ColorSlider label="S" min={0} max={100} value={Math.round(hsv.s * 100)} onChange={(v) => handleSliderChange('hsv', 's', v)} gradientStyle={gradients.saturationHsv} />
+                <ColorSlider label="V" min={0} max={100} value={Math.round(hsv.v * 100)} onChange={(v) => handleSliderChange('hsv', 'v', v)} gradientStyle={gradients.brightness} />
               </div>
             )}
           </div>
-
-          {/* Botones de Acción */}
+          
+          {/* Botones de Acción (Fijos al fondo del sidebar) */}
           <div 
-            className="flex gap-3 pt-4 border-t mt-4" 
+            className="flex-shrink-0 flex gap-3 p-4 border-t" 
             style={{ borderColor: '#E5E7EB' }}
           >
             <button
               onClick={handleCancel}
-              className="flex-1 font-bold py-2 px-4 rounded-lg transition-colors border bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
+              className="flex-1 font-bold py-2.5 px-4 rounded-lg transition-colors border bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
             >
               Cancelar
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-1 font-bold py-2 px-4 rounded-lg transition-all text-white flex items-center justify-center gap-2 hover:opacity-90 active:scale-95"
+              className="flex-1 font-bold py-2.5 px-4 rounded-lg transition-all text-white flex items-center justify-center gap-2 hover:opacity-90 active:scale-95"
               style={{ background: 'linear-gradient(to right, #E0405A, #F59A44, #56B470, #4A90E2, #6F42C1)' }}
             >
-              <Check size={16} strokeWidth={1.75} />
-              Aceptar
+              <Check size={16} strokeWidth={2.5} />
+              Aplicar
             </button>
           </div>
         </div>

@@ -25,6 +25,8 @@ import MyPalettesSidebar from './components/ui/MyPalettesSidebar.jsx';
 import ColorPickerSidebar from './components/ui/ColorPickerSidebar.jsx';
 import PaletteAdjusterSidebar from './components/ui/PaletteAdjusterSidebar.jsx';
 
+import ColorActionMenu from './components/ui/ColorActionMenu.jsx'; // <-- ¡NUEVO! Importar el menú aquí
+
 import AuthPage from './components/AuthPage.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import GoogleAdBanner from './components/GoogleAdBanner.jsx';
@@ -170,6 +172,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
   
+  const [activeColorMenu, setActiveColorMenu] = useState(null); // <-- ¡NUEVO! Mover el estado aquí
+
   // --- ¡MODIFICADO! ---
   // El layout por defecto es 'horizontal' (stack) en móvil, 'vertical' (slices) en desktop.
   const [paletteLayout, setPaletteLayout] = useState(window.innerWidth < 768 ? 'horizontal' : 'vertical');
@@ -759,8 +763,15 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
       </header>
       
       {/* --- ¡CONTENIDO PRINCIPAL MODIFICADO! --- */}
-      {/* Añadido 'pb-20 md:pb-0' para dejar espacio para la barra inferior en móvil */}
-      <div className="flex-grow pb-20 md:pb-0">
+      {/* Añadido padding-bottom dinámico:
+        - pb-20 (normal) para la barra de navegación.
+        - pb-[60vh] (cuando el picker está abierto) para empujar el contenido hacia arriba.
+      */}
+      <div 
+        className={`flex-grow md:pb-0 transition-all duration-300 ${
+          isColorPickerSidebarVisible ? 'pb-[50vh]' : 'pb-20'
+        }`}
+      >
         <div className="flex flex-col md:flex-row">
           
           <div className="flex-grow w-full min-w-0">
@@ -802,6 +813,8 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 onOpenColorPickerSidebar={onOpenColorPickerSidebar}
                 isSplitViewActive={isSplitViewActive}
                 paletteLayout={paletteLayout} // <-- ¡Prop se sigue pasando!
+                setActiveColorMenu={setActiveColorMenu} // <-- ¡NUEVO! Pasar el setter al Explorer
+                isColorPickerSidebarVisible={isColorPickerSidebarVisible} // <-- ¡NUEVO! Pasar esta prop
               />
               
               {/* ... (ColorPreviewer y SemanticPalettes sin cambios) ... */}
@@ -1015,6 +1028,46 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
         {isImageModalVisible && ( <ImagePaletteModal onColorSelect={confirmBrandColor} onClose={() => setIsImageModalVisible(false)} /> )}
         {isVariationsVisible && <VariationsModal explorerPalette={explorerPalette} onClose={() => setIsVariationsVisible(false)} onColorSelect={confirmBrandColor} />}
         {isContrastCheckerVisible && <PaletteContrastChecker palette={explorerPalette} onClose={() => setIsContrastCheckerVisible(false)} onCopy={(hex, msg) => showNotification(msg)} />}
+
+        {/* --- ¡NUEVO! --- Renderizar el Menú de Acciones aquí, en la raíz */}
+        {activeColorMenu && (
+            <ColorActionMenu
+                style={activeColorMenu.style}
+                color={explorerPalette[activeColorMenu.index]} // Muestra el color en tiempo real
+                isLocked={lockedColors.includes(originalExplorerPalette[activeColorMenu.index])} // Bloquea el original
+                onClose={() => setActiveColorMenu(null)}
+                onSetAsBrand={() => {
+                    handleExplorerColorPick(explorerPalette[activeColorMenu.index]);
+                    setActiveColorMenu(null);
+                }}
+                onOpenPicker={() => {
+                    onOpenColorPickerSidebar(activeColorMenu.index, originalExplorerPalette[activeColorMenu.index]);
+                    setActiveColorMenu(null);
+                }}
+                onAddAfter={() => {
+                    insertColorInPalette(activeColorMenu.index);
+                    setActiveColorMenu(null);
+                }}
+                onRemove={() => {
+                    removeColorFromPalette(activeColorMenu.index);
+                    setActiveColorMenu(null);
+                }}
+                onCopy={() => {
+                    const color = explorerPalette[activeColorMenu.index];
+                    // --- ¡CORRECCIÓN! ---
+                    // Usar la función getHexValue que ya tenemos
+                    const hexValue = tinycolor(color).toHexString().substring(1).toUpperCase();
+                    // --- FIN CORRECCIÓN ---
+                    navigator.clipboard.writeText(hexValue);
+                    showNotification(`H E X ${hexValue} copiado!`);
+                    setActiveColorMenu(null);
+                }}
+                onToggleLock={() => {
+                    toggleLockColor(originalExplorerPalette[activeColorMenu.index]);
+                    // No cerramos el menú al bloquear, permitiendo múltiples acciones
+                }}
+            />
+        )}
 
         {/* --- ¡BLOQUE DE FAB ELIMINADO! --- */}
         {/* El botón de 'Sparkles' ahora está en la barra de menú inferior en móvil */}

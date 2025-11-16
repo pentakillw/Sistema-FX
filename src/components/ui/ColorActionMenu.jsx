@@ -1,16 +1,18 @@
 import React from 'react';
-import { X, Star, Pencil, Copy, Trash2, Lock, Unlock } from 'lucide-react';
+import { X, Star, Pencil, Copy, Trash2, Lock, Unlock, Plus } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 
 const ActionButton = ({ icon, label, onClick, className = "" }) => {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center w-full p-2 rounded-md text-sm transition-colors ${className}`}
-            style={{ color: 'var(--text-default)', backgroundColor: 'var(--bg-muted)' }}
+            // --- ¡MODIFICADO! ---
+            // Estilo de lista: ancho completo, texto a la izquierda, más padding.
+            className={`flex items-center w-full px-4 py-3 text-left text-base transition-colors rounded-lg hover:bg-[var(--bg-muted)] ${className}`}
+            style={{ color: 'var(--text-default)' }}
         >
             {icon}
-            <span className="ml-2 font-semibold">{label}</span>
+            <span className="ml-4 font-semibold">{label}</span>
         </button>
     );
 };
@@ -21,6 +23,7 @@ const ColorActionMenu = ({
     onSetAsBrand,
     onOpenPicker,
     onRemove,
+    onAddAfter, // <-- ¡NUEVO!
     onCopy,
     isLocked,
     onToggleLock,
@@ -38,7 +41,9 @@ const ColorActionMenu = ({
               y un pop-up absoluto en escritorio (clases 'md:').
             */}
             <div
-                className="fixed z-40 bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-[var(--bg-card)] rounded-t-2xl shadow-2xl flex flex-col items-center gap-2
+                // --- ¡MODIFICADO! ---
+                // Se ajusta el padding y se elimina el 'gap'
+                className="fixed z-40 bottom-0 left-0 right-0 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-[var(--bg-card)] rounded-t-2xl shadow-2xl flex flex-col items-center
                            md:absolute md:bottom-auto md:left-auto md:right-auto md:p-0 md:bg-transparent md:rounded-none md:shadow-none"
                 style={style} // El 'style' (top/left) solo tendrá efecto en 'md:' (escritorio)
                 onClick={(e) => e.stopPropagation()}
@@ -48,7 +53,9 @@ const ColorActionMenu = ({
                 
                 {/* Muestra el H E X (sin cambios) */}
                 <div 
-                    className="py-2 px-4 rounded-lg shadow-lg font-mono font-bold text-lg" 
+                    // --- ¡MODIFICADO! ---
+                    // Ancho completo y margen inferior
+                    className="py-2 px-4 rounded-lg shadow-lg font-mono font-bold text-lg w-full text-center mb-2" 
                     style={{ backgroundColor: color, color: textColor, border: '1px solid var(--border-default)' }}
                 >
                     {color.substring(1).toUpperCase()}
@@ -56,8 +63,11 @@ const ColorActionMenu = ({
 
                 {/* Contenedor de botones de acción (sin cambios) */}
                 <div 
-                    className="p-2 rounded-xl shadow-lg border w-48 space-y-2"
-                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-default)'}}
+                    // --- ¡MODIFICADO! ---
+                    // Se quita el ancho fijo 'w-48' y los bordes/sombras.
+                    // Se añade 'max-h-[50vh]' y 'overflow-y-auto' para evitar que se corte.
+                    className="w-full space-y-1 py-2 max-h-[50vh] overflow-y-auto"
+                    style={{ backgroundColor: 'var(--bg-card)'}}
                 >
                     <ActionButton
                         icon={<Star size={16} />}
@@ -79,6 +89,11 @@ const ColorActionMenu = ({
                         label={isLocked ? "Desbloquear" : "Bloquear"}
                         onClick={onToggleLock}
                         className={isLocked ? "text-purple-600 dark:text-purple-400 font-bold" : ""}
+                    />
+                    <ActionButton // <-- ¡NUEVO!
+                        icon={<Plus size={16} />}
+                        label="Añadir Color"
+                        onClick={onAddAfter}
                     />
                     <ActionButton
                         icon={<Trash2 size={16} />}

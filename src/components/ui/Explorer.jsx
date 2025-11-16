@@ -14,8 +14,9 @@ import {
 } from '../modals/index.jsx'; 
 import { generateShades, findClosestColorName } from '../../utils/colorUtils.js'; 
 import { colorNameList } from '../../utils/colorNameList.js';
-// --- ¡ELIMINADO! --- 'HexColorPicker' y 'ColorActionMenu' ya no se usan aquí
-import ColorActionMenu from './ColorActionMenu.jsx'; // (Se mantiene para 'isExpanded')
+// --- ¡ELIMINADO! --- 'HexColorPicker'
+// --- ¡ELIMINADO! --- 'ColorActionMenu'
+// import ColorActionMenu from './ColorActionMenu.jsx'; // (Se mantiene para 'isExpanded')
 
 
 // Componente para el menú de añadir color (sin cambios)
@@ -180,17 +181,24 @@ const Explorer = (props) => {
         // --- ¡NUEVO! ---
         onOpenColorPickerSidebar,
         isSplitViewActive,
-        paletteLayout // <-- ¡Prop recibida!
+        paletteLayout, // <-- ¡Prop recibida!
+        setActiveColorMenu, // <-- ¡NUEVO! Recibimos el setter de App.jsx
+        isColorPickerSidebarVisible // <-- ¡NUEVO! Recibimos la prop de App.jsx
     } = props;
     
     // --- (Estado local sin cambios) ---
+    // --- ¡MODIFICACIÓN! ---
+    // Restaurar los estados que borré por error
     const [activeShadeIndex, setActiveShadeIndex] = useState(null);
     const [baseColorForShades, setBaseColorForShades] = useState(null);
     
     // --- ¡ELIMINADO! --- 'pickerColor'
     
-    const [activeColorMenu, setActiveColorMenu] = useState(null); 
+    // --- ¡ELIMINADO! --- 'activeColorMenu'
+    // const [activeColorMenu, setActiveColorMenu] = useState(null); 
     const paletteContainerRef = useRef(null);
+    // --- ¡MODIFICACIÓN! ---
+    // Restaurar los estados que borré por error
     const [displayMode, setDisplayMode] = useState('name');
     const [isDisplayModeModalVisible, setIsDisplayModeModalVisible] = useState(false);
     const [addMenuState, setAddMenuState] = useState({ isVisible: false, index: 0, style: {} });
@@ -202,15 +210,21 @@ const Explorer = (props) => {
         // ... (código sin cambios) ...
         const color = tinycolor(colorStr);
         switch (mode) {
-            case 'rgb':
+            // --- ¡INICIO DE LA MODIFICACIÓN! ---
+            // Se añaden llaves { } para crear un bloque de ámbito para 'const'.
+            case 'rgb': {
                 const { r, g, b } = color.toRgb();
                 return `RGB: ${r}, ${g}, ${b}`;
-            case 'hsl':
+            }
+            case 'hsl': {
                 const { h, s, l } = color.toHsl();
                 return `HSL: ${Math.round(h)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%`;
-            case 'hsb':
+            }
+            case 'hsb': {
                 const { h: hsvH, s: hsvS, v: hsvV } = color.toHsv();
                 return `HSB: ${Math.round(hsvH)}, ${Math.round(hsvS * 100)}%, ${Math.round(hsvV * 100)}%`;
+            }
+            // --- ¡FIN DE LA MODIFICACIÓN! ---
             case 'name':
             default:
                 return findClosestColorName(colorStr);
@@ -289,27 +303,33 @@ const Explorer = (props) => {
         }
     };
 
+    // --- ¡NUEVO! ---
+    // Detecta si el picker está abierto en la vista de layout móvil
+    // Declarado ANTES del return
+    const mobilePickerOpen = isColorPickerSidebarVisible && paletteLayout === 'horizontal';
+
     return (
         <>
             {/* --- ¡ELIMINADO! --- <style>{sliderStyles}</style> */}
             
             <section 
                 ref={paletteContainerRef}
-                // --- ¡¡¡INICIO DE LA CORRECCIÓN!!! ---
-                // Añadimos 'flex flex-row' SÓLO si es split view Y modo horizontal
+                // --- ¡MODIFICADO! ---
+                // Se elimina el color de fondo de la sección principal
                 className={`transition-all duration-300 ${
                     (isSplitView && paletteLayout === 'horizontal') ? 'flex flex-row' : ''
                 }`} 
-                // --- ¡¡¡FIN DE LA CORRECCIÓN!!! ---
-                style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
+                style={{ borderColor: 'var(--border-default)' }}
             >
                 {/* --- SECCIÓN DE VISTA DIVIDIDA (ORIGINAL) --- */}
                 {/* Esta lógica se mantiene, pero ahora usa 'originalExplorerPalette' */}
                 {isSplitView && (
                     <div 
                         // --- ¡MODIFICADO! ---
+                        // Se añade el color de fondo aquí
                         className={`overflow-hidden ${paletteLayout === 'vertical' ? 'h-[calc((100vh-65px)/2)]' : 'w-1/2 h-[calc(100vh-65px)]'}`}
                         title="Paleta Original (Antes de ajustar)"
+                        style={{ backgroundColor: colorModeBg }}
                     >
                          <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable 
@@ -388,11 +408,18 @@ const Explorer = (props) => {
                 
                 {/* --- SECCIÓN DE PALETA PRINCIPAL (TIEMPO REAL) --- */}
                 <div 
-                    className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)]'} ${isSplitView ? 'rounded-b-md' : 'rounded-md'} ${
+                    // --- ¡MODIFICADO! ---
+                    // Se aplica la altura dinámica y el color de fondo aquí
+                    className={`overflow-hidden ${
+                        mobilePickerOpen ? 'h-[calc(50vh-65px)]' // Picker móvil abierto
+                        : (isSplitView ? 'h-[calc((100vh-65px)/2)]' // Vista dividida
+                        : 'h-[calc(100vh-65px)]') // Normal
+                    } ${isSplitView ? 'rounded-b-md' : 'rounded-md'} ${
                         isSplitView && paletteLayout === 'horizontal' ? 'w-1/2 h-[calc(100vh-65px)]' : ''
                     } ${
-                        !isSplitView && paletteLayout === 'horizontal' ? 'h-[calc(100vh-65px)]' : ''
+                        !isSplitView && paletteLayout === 'horizontal' ? '' : '' // Limpieza de clases redundantes
                     }`}
+                    style={{ backgroundColor: colorModeBg }}
                     title={isSplitViewActive ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
                 >
                     
@@ -505,6 +532,7 @@ const Explorer = (props) => {
                                                                     minHeight: paletteLayout === 'horizontal' ? '50px' : '100%',
                                                                 }}
                                                                 title={displayShade.toUpperCase()}
+                                                                onClick={(e) => handleColorBarClick(e, index)} // <-- ¡MODIFICACIÓN! Añadido OnClick
                                                             >
                                                                 
                                                                 {/* --- ¡INICIO DE MODIFICACIÓN DE LAYOUT! --- */}
@@ -555,9 +583,11 @@ const Explorer = (props) => {
                                                                     )}
                                                                 </div>
                                                                 
-                                                                {/* Botones de hover (sin cambios) */}
+                                                                {/* Botones de hover */}
                                                                 <div 
                                                                     className={`absolute z-20 flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 ${
+                                                                        'hidden md:flex' // <-- ¡MODIFICACIÓN! Ocultar en móvil
+                                                                    } ${
                                                                         paletteLayout === 'vertical'
                                                                         ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex-col'
                                                                         : 'top-1/2 right-4 -translate-y-1/2 flex-row'
@@ -658,38 +688,10 @@ const Explorer = (props) => {
                 </div>
             )}
             
-            {/* --- ¡MODIFICADO! --- */}
-            {/* 'activeColorMenu' (para el modo expandido) ahora usa 'originalExplorerPalette' */}
-            {activeColorMenu && (
-                <ColorActionMenu
-                    style={activeColorMenu.style}
-                    color={explorerPalette[activeColorMenu.index]} // Muestra el color en tiempo real
-                    isLocked={lockedColors.includes(originalExplorerPalette[activeColorMenu.index])} // Bloquea el original
-                    onClose={() => setActiveColorMenu(null)}
-                    onSetAsBrand={() => {
-                        handleExplorerColorPick(explorerPalette[activeColorMenu.index]);
-                        setActiveColorMenu(null);
-                    }}
-                    onOpenPicker={() => {
-                        // ¡Llama a la prop de App.jsx!
-                        onOpenColorPickerSidebar(activeColorMenu.index, originalExplorerPalette[activeColorMenu.index]);
-                        setActiveColorMenu(null);
-                    }}
-                    onRemove={() => {
-                        removeColorFromPalette(activeColorMenu.index);
-                        setActiveColorMenu(null);
-                    }}
-                    onCopy={() => {
-                        const color = explorerPalette[activeColorMenu.index];
-                        navigator.clipboard.writeText(color);
-                        showNotification(`Color ${color.toUpperCase()} copiado!`);
-                        setActiveColorMenu(null);
-                    }}
-                    onToggleLock={() => {
-                        toggleLockColor(originalExplorerPalette[activeColorMenu.index]);
-                    }}
-                />
-            )}
+            {/* --- ¡ELIMINADO! --- 
+                Se elimina el renderizado de ColorActionMenu de aquí.
+                Ahora se maneja en App.jsx
+            */}
 
             {/* --- ¡ELIMINADO! --- 'pickerColor' y 'ColorPickerPopover' */}
             
@@ -727,6 +729,10 @@ const Explorer = (props) => {
                                                                 onClick={(e) => handleColorBarClick(e, index)}
                                                             ></div>
                                                             
+                                                            {/* ¡NOTA! Este 'activeColorMenu' es SÓLO para el modo expandido (pantalla completa).
+                                                              El 'activeColorMenu' principal se renderiza en App.jsx.
+                                                              Esta lógica se mantiene.
+                                                            */}
                                                             {activeColorMenu?.index !== index && (
                                                                 <>
                                                                     <div 
