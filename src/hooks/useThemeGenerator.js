@@ -326,8 +326,8 @@ const useThemeGenerator = (user) => {
     };
     
     const insertColorInPalette = (index) => {
-        if (originalExplorerPalette.length >= 20) {
-            showNotification("Máximo de 20 colores alcanzado.", "error");
+        if (originalExplorerPalette.length >= 15) {
+            showNotification("Máximo de 15 colores alcanzado.", "error");
             return;
         }
         const colorA = tinycolor(originalExplorerPalette[index]);
@@ -353,11 +353,11 @@ newColor, ...originalExplorerPalette.slice(index + 1)];
 
     const insertMultipleColors = (index, count) => {
         const currentCount = originalExplorerPalette.length;
-        const canAdd = 20 - currentCount;
+        const canAdd = 15 - currentCount;
         const addCount = Math.min(count, canAdd);
         
         if (addCount <= 0) {
-            showNotification("Límite de 20 colores alcanzado.", "error");
+            showNotification("Límite de 15 colores alcanzado.", "error");
             return;
         }
 

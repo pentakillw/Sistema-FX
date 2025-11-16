@@ -15,7 +15,9 @@ import {
     Undo2, Redo2, Clock, Sun, Moon, FileCode, Sparkles,
     Wand2, Image as ImageIcon, 
     SlidersHorizontal, Eye, 
-    MoreHorizontal, Palette, ShieldCheck, Accessibility, TestTube2
+    MoreHorizontal, Palette, ShieldCheck, Accessibility, TestTube2,
+    // --- ¡AÑADIDO! ---
+    Columns3, Rows3
 } from 'lucide-react';
 
 // --- ¡MODIFICADO! ---
@@ -189,6 +191,9 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
   const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
   
+  // --- ¡NUEVO! ---
+  const [paletteLayout, setPaletteLayout] = useState('vertical'); // 'vertical' (slices) or 'horizontal' (rows)
+
   // --- ¡MODIFICADO! ---
   // Se restaura 'isAdjusterSidebarVisible'
   const [isAdjusterSidebarVisible, setIsAdjusterSidebarVisible] = useState(false); // <-- ¡RESTAURADO!
@@ -596,6 +601,15 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
               <SlidersHorizontal size={16} strokeWidth={1.75} /> 
           </button>
           
+          {/* --- ¡NUEVO! --- Botón de Layout */}
+          <button 
+              onClick={() => setPaletteLayout(p => p === 'vertical' ? 'horizontal' : 'vertical')} 
+              className="text-sm font-medium p-2 rounded-lg flex items-center gap-2 text-gray-800 hover:bg-gray-100" 
+              title={paletteLayout === 'vertical' ? "Vista Horizontal" : "Vista Vertical"}
+          >
+              {paletteLayout === 'vertical' ? <Rows3 size={16} strokeWidth={1.75} /> : <Columns3 size={16} strokeWidth={1.75} />}
+          </button>
+
           {/* ... (Botón de Daltonismo y Menú 'Más' sin cambios) ... */}
           <button 
               onClick={handleOpenSimulationSidebar} 
@@ -808,7 +822,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 // --- ¡ELIMINADO! --- 'onOpenAdjuster' ya no existe
                 
                 onOpenAccessibilityModal={() => setIsAccessibilityModalVisible(true)}
-                onOpenComponentPreviewModal={() => setIsComponentPreviewModal(true)}
+                onOpenComponentPreviewModal={() => setIsComponentPreviewModalVisible(true)}
                 lockedColors={lockedColors}
                 toggleLockColor={toggleLockColor}
                 
@@ -824,6 +838,7 @@ const MainApp = memo(({ hook, isNative, user, onLogout, onNavigate }) => {
                 // --- ¡NUEVO! ---
                 onOpenColorPickerSidebar={onOpenColorPickerSidebar}
                 isSplitViewActive={isSplitViewActive}
+                paletteLayout={paletteLayout} // <-- ¡Prop añadida!
               />
               
               {/* ... (ColorPreviewer y SemanticPalettes sin cambios) ... */}

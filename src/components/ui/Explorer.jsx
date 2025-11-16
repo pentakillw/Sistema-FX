@@ -31,7 +31,7 @@ const AddColorMenu = ({ onAdd, onClose, maxAdd }) => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [onClose]);
-    const counts = [1, 2, 3, 4, 5, +10, +15];
+    const counts = [1, 2, 3, 4, 5, +10];
     return (
         <div 
             ref={menuRef}
@@ -179,7 +179,8 @@ const Explorer = (props) => {
         
         // --- ¡NUEVO! ---
         onOpenColorPickerSidebar,
-        isSplitViewActive
+        isSplitViewActive,
+        paletteLayout // <-- ¡Prop recibida!
     } = props;
     
     // --- (Estado local sin cambios) ---
@@ -294,23 +295,34 @@ const Explorer = (props) => {
             
             <section 
                 ref={paletteContainerRef}
-                className={`transition-all duration-300`} 
+                // --- ¡¡¡INICIO DE LA CORRECCIÓN!!! ---
+                // Añadimos 'flex flex-row' SÓLO si es split view Y modo horizontal
+                className={`transition-all duration-300 ${
+                    (isSplitView && paletteLayout === 'horizontal') ? 'flex flex-row' : ''
+                }`} 
+                // --- ¡¡¡FIN DE LA CORRECCIÓN!!! ---
                 style={{ backgroundColor: colorModeBg, borderColor: 'var(--border-default)' }}
             >
                 {/* --- SECCIÓN DE VISTA DIVIDIDA (ORIGINAL) --- */}
                 {/* Esta lógica se mantiene, pero ahora usa 'originalExplorerPalette' */}
                 {isSplitView && (
                     <div 
-                        className="h-[calc((100vh-65px)/2)] overflow-hidden" 
+                        // --- ¡MODIFICADO! ---
+                        className={`overflow-hidden ${paletteLayout === 'vertical' ? 'h-[calc((100vh-65px)/2)]' : 'w-1/2 h-[calc(100vh-65px)]'}`}
                         title="Paleta Original (Antes de ajustar)"
                     >
                          <DragDropContext onDragEnd={onDragEnd}>
-                            <Droppable droppableId="palette-original" direction="horizontal">
+                            <Droppable 
+                                droppableId="palette-original" 
+                                // --- ¡MODIFICADO! ---
+                                direction={paletteLayout === 'vertical' ? 'horizontal' : 'vertical'}
+                            >
                                 {(provided) => (
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.droppableProps}
-                                        className="flex items-center h-full relative"
+                                        // --- ¡MODIFICADO! ---
+                                        className={`flex items-center h-full relative ${paletteLayout === 'horizontal' ? 'flex-col' : ''}`}
                                     >
                                         {/* ¡Usa 'originalExplorerPalette' aquí! */}
                                         {originalExplorerPalette.map((shade, index) => (
@@ -320,16 +332,22 @@ const Explorer = (props) => {
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
-                                                        className="relative h-full flex-1 flex items-center justify-center group/item"
+                                                        // --- ¡MODIFICADO! ---
+                                                        className={`relative flex-1 flex items-center justify-center group/item ${paletteLayout === 'vertical' ? 'h-full' : 'w-full'}`}
                                                         style={{ 
                                                             ...provided.draggableProps.style,
                                                             backgroundColor: shade, 
-                                                            minWidth: '50px' 
+                                                            minWidth: paletteLayout === 'vertical' ? '50px' : '100%',
+                                                            minHeight: paletteLayout === 'horizontal' ? '50px' : '100%',
                                                         }}
                                                     >
-                                                        {/* ... (Bloque de Texto y Iconos sin cambios) ... */}
+                                                        {/* ... (Bloque de Texto y Iconos modificado para layout) ... */}
                                                         <div 
-                                                            className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 z-10"
+                                                            className={`absolute z-10 flex items-center transition-all duration-200 ${
+                                                                paletteLayout === 'vertical' 
+                                                                ? 'top-6 left-1/2 -translate-x-1/2 w-full px-2 flex-col gap-1' 
+                                                                : 'top-1/2 left-4 -translate-y-1/2 flex-row gap-4'
+                                                            }`}
                                                             style={{ pointerEvents: 'none' }} 
                                                         >
                                                             <button 
@@ -339,14 +357,20 @@ const Explorer = (props) => {
                                                                 {getHexValue(shade)}
                                                             </button>
                                                             <button 
-                                                                className={`text-sm capitalize transition-colors px-1 truncate w-full max-w-full`} 
+                                                                className={`text-sm capitalize transition-colors px-1 truncate w-full max-w-full ${
+                                                                    paletteLayout === 'horizontal' ? 'max-w-xs' : ''
+                                                                }`}
                                                                 style={{ color: tinycolor(shade).isLight() ? '#000' : '#FFF', textShadow: tinycolor(shade).isLight() ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)', pointerEvents: 'none' }}
                                                             >
                                                                 {getDisplayValue(shade, displayMode)}
                                                             </button>
                                                         </div>
                                                         {lockedColors.includes(shade) && (
-                                                            <div className="absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
+                                                            <div className={`p-1.5 bg-black/30 rounded-full text-white z-10 ${
+                                                                paletteLayout === 'vertical' 
+                                                                ? 'absolute top-32 left-1/2 -translate-x-1/2' 
+                                                                : 'absolute top-1/2 right-4 -translate-y-1/2' // Mover a la derecha en horizontal
+                                                            }`} title="Color Bloqueado">
                                                                 <Lock size={12} strokeWidth={1.5} />
                                                             </div>
                                                         )}
@@ -364,28 +388,44 @@ const Explorer = (props) => {
                 
                 {/* --- SECCIÓN DE PALETA PRINCIPAL (TIEMPO REAL) --- */}
                 <div 
-                    className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)]'} ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
+                    className={`overflow-hidden ${isSplitView ? 'h-[calc((100vh-65px)/2)]' : 'h-[calc(100vh-65px)]'} ${isSplitView ? 'rounded-b-md' : 'rounded-md'} ${
+                        isSplitView && paletteLayout === 'horizontal' ? 'w-1/2 h-[calc(100vh-65px)]' : ''
+                    } ${
+                        !isSplitView && paletteLayout === 'horizontal' ? 'h-[calc(100vh-65px)]' : ''
+                    }`}
                     title={isSplitViewActive ? "Paleta Ajustada (Tiempo Real)" : (isSimulationSidebarVisible ? "Paleta Simulada" : "Paleta Principal")}
                 >
                     
-                    {/* --- VISTA DE SIMULACIÓN (sin cambios) --- */}
+                    {/* --- VISTA DE SIMULACIÓN (modificada para layout) --- */}
                     {isSimulationSidebarVisible && (
                         <div 
-                            className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}
+                            className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'} ${paletteLayout === 'horizontal' ? 'flex-col' : ''}`}
                             style={simulationFilterStyle}
                         >
                             {/* ¡Usa 'originalExplorerPalette' para simular! */}
                             {originalExplorerPalette.map((shade, index) => {
-                                // ... (código de renderizado sin cambios) ...
+                                // ... (código de renderizado modificado para layout) ...
                                 const isLight = tinycolor(shade).isLight();
                                 const textColor = isLight ? '#000' : '#FFF';
                                 const textShadow = isLight ? '0 1px 2px rgba(255,255,255,0.2)' : '0 1px 2px rgba(0,0,0,0.2)';
                                 const hexValue = getHexValue(shade);
 
                                 return (
-                                    <div key={`sim-${index}`} className="relative h-full flex-1 flex items-center justify-center" style={{ backgroundColor: shade, minWidth: '50px' }}>
+                                    <div 
+                                        key={`sim-${index}`} 
+                                        className={`relative flex-1 flex items-center justify-center ${paletteLayout === 'vertical' ? 'h-full' : 'w-full'}`} 
+                                        style={{ 
+                                            backgroundColor: shade, 
+                                            minWidth: paletteLayout === 'vertical' ? '50px' : '100%',
+                                            minHeight: paletteLayout === 'horizontal' ? '50px' : '100%',
+                                        }}
+                                    >
                                         <div 
-                                            className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 z-10"
+                                            className={`absolute z-10 flex items-center transition-all duration-200 ${
+                                                paletteLayout === 'vertical' 
+                                                ? 'top-6 left-1/2 -translate-x-1/2 w-full px-2 flex-col gap-1' 
+                                                : 'top-1/2 left-4 -translate-y-1/2 flex-row gap-4'
+                                            }`}
                                             style={{ pointerEvents: 'none' }} 
                                         >
                                             <button 
@@ -395,14 +435,20 @@ const Explorer = (props) => {
                                                 {hexValue}
                                             </button>
                                             <button 
-                                                className={`text-sm capitalize transition-colors px-1 truncate w-full max-w-full`} 
+                                                className={`text-sm capitalize transition-colors px-1 truncate w-full max-w-full ${
+                                                    paletteLayout === 'horizontal' ? 'max-w-xs' : ''
+                                                }`} 
                                                 style={{ color: textColor, textShadow: textShadow, pointerEvents: 'none' }}
                                             >
                                                 {getDisplayValue(shade, displayMode)}
                                             </button>
                                         </div>
                                         {lockedColors.includes(shade) && (
-                                            <div className="absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full text-white z-10" title="Color Bloqueado">
+                                            <div className={`p-1.5 bg-black/30 rounded-full text-white z-10 ${
+                                                paletteLayout === 'vertical' 
+                                                ? 'absolute top-32 left-1/2 -translate-x-1/2' 
+                                                : 'absolute top-1/2 right-4 -translate-y-1/2'
+                                            }`} title="Color Bloqueado">
                                                 <Lock size={12} strokeWidth={1.5} />
                                             </div>
                                         )}
@@ -415,9 +461,18 @@ const Explorer = (props) => {
                     {/* --- VISTA NORMAL O DE AJUSTE (TIEMPO REAL) --- */}
                     {!isSimulationSidebarVisible && (
                          <DragDropContext onDragEnd={onDragEnd}>
-                            <Droppable droppableId="palette-main" direction="horizontal">
+                            <Droppable 
+                                droppableId="palette-main" 
+                                // --- ¡MODIFICADO! ---
+                                direction={paletteLayout === 'vertical' ? 'horizontal' : 'vertical'}
+                            >
                                 {(provided) => (
-                                    <div ref={provided.innerRef} {...provided.droppableProps} className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'}`}>
+                                    <div 
+                                        ref={provided.innerRef} 
+                                        {...provided.droppableProps} 
+                                        // --- ¡MODIFICADO! ---
+                                        className={`flex items-center h-full relative group ${isSplitView ? 'rounded-b-md' : 'rounded-md'} ${paletteLayout === 'horizontal' ? 'flex-col' : ''}`}
+                                    >
                                         
                                         {/* ¡Usa 'explorerPalette' (tiempo real) aquí! */}
                                         {explorerPalette.map((shade, index) => {
@@ -439,12 +494,28 @@ const Explorer = (props) => {
                                             return (
                                                 <Draggable key={"main-" + originalColor + index} draggableId={"main-" + originalColor + index} index={index}>
                                                     {(provided) => (
-                                                        <div ref={provided.innerRef} {...provided.draggableProps} className="relative h-full flex-1 flex items-center justify-center group/color-wrapper" style={{...provided.draggableProps.style}}>
-                                                            <div className="relative group/item h-full w-full flex items-center justify-center transition-colors duration-100 ease-in-out" style={{ backgroundColor: displayShade, minWidth: '50px' }} title={displayShade.toUpperCase()}>
+                                                        // --- ¡MODIFICADO! ---
+                                                        <div ref={provided.innerRef} {...provided.draggableProps} className={`relative flex-1 flex items-center justify-center group/color-wrapper ${paletteLayout === 'vertical' ? 'h-full' : 'w-full'}`} style={{...provided.draggableProps.style}}>
+                                                            <div 
+                                                                // --- ¡MODIFICADO! ---
+                                                                className={`relative group/item w-full h-full flex items-center justify-center transition-colors duration-100 ease-in-out ${paletteLayout === 'vertical' ? 'min-w-[50px]' : 'min-h-[50px]'}`} 
+                                                                style={{ 
+                                                                    backgroundColor: displayShade, 
+                                                                    minWidth: paletteLayout === 'vertical' ? '50px' : '100%',
+                                                                    minHeight: paletteLayout === 'horizontal' ? '50px' : '100%',
+                                                                }}
+                                                                title={displayShade.toUpperCase()}
+                                                            >
                                                                 
-                                                                {/* --- Bloque de Texto (Movido Arriba) --- */}
+                                                                {/* --- ¡INICIO DE MODIFICACIÓN DE LAYOUT! --- */}
+                                                                
+                                                                {/* Contenedor de Información Estática (Texto, Lock, Star) */}
                                                                 <div 
-                                                                    className="absolute top-6 left-1/2 -translate-x-1/2 w-full px-2 flex flex-col items-center gap-1 opacity-100 transition-opacity duration-200 z-10"
+                                                                    className={`absolute z-10 flex items-center transition-all duration-200 ${
+                                                                        paletteLayout === 'vertical' 
+                                                                        ? 'top-6 left-1/2 -translate-x-1/2 w-full px-2 flex-col gap-1' 
+                                                                        : 'top-1/2 left-4 -translate-y-1/2 flex-row gap-4'
+                                                                    }`}
                                                                 >
                                                                     {/* --- ¡MODIFICADO! --- */}
                                                                     {/* Llama a 'onOpenColorPickerSidebar' */}
@@ -461,29 +532,37 @@ const Explorer = (props) => {
                                                                         {hexValue}
                                                                     </button>
                                                                     <button 
-                                                                        className={`text-sm capitalize transition-colors hover:underline px-1 truncate w-full max-w-full`} 
+                                                                        className={`text-sm capitalize transition-colors hover:underline px-1 truncate w-full max-w-full ${
+                                                                            paletteLayout === 'horizontal' ? 'max-w-xs' : '' // Limitar ancho en horizontal
+                                                                        }`} 
                                                                         style={{ color: textColor, textShadow: textShadow, pointerEvents: 'auto' }} 
                                                                         onClick={(e) => { e.stopPropagation(); setIsDisplayModeModalVisible(true); }} 
                                                                         title="Cambiar formato de color"
                                                                     >
                                                                         {displayValue}
                                                                     </button>
-                                                                </div>
 
-                                                                {/* --- Iconos (Movidos Abajo) --- */}
-                                                                {displayShade === brandColor && (
-                                                                    <div className={`absolute top-24 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor} opacity-100 transition-opacity duration-200`} title="Color de Marca Actual">
-                                                                        <Star size={12} className="fill-current" strokeWidth={1.5} />
-                                                                    </div>
-                                                                )}
-                                                                {isLocked && (
-                                                                    <div className={`absolute top-32 left-1/2 -translate-x-1/2 p-1.5 bg-black/30 rounded-full z-10 ${iconColor} opacity-100 transition-opacity duration-200`} title="Color Bloqueado">
-                                                                        <Lock size={12} strokeWidth={1.5} />
-                                                                    </div>
-                                                                )}
+                                                                    {/* Iconos estáticos */}
+                                                                    {displayShade === brandColor && (
+                                                                        <div className={`p-1.5 bg-black/30 rounded-full z-10 ${iconColor} opacity-100 transition-opacity duration-200`} title="Color de Marca Actual">
+                                                                            <Star size={12} className="fill-current" strokeWidth={1.5} />
+                                                                        </div>
+                                                                    )}
+                                                                    {isLocked && (
+                                                                        <div className={`p-1.5 bg-black/30 rounded-full z-10 ${iconColor} opacity-100 transition-opacity duration-200`} title="Color Bloqueado">
+                                                                            <Lock size={12} strokeWidth={1.5} />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                                 
                                                                 {/* Botones de hover (sin cambios) */}
-                                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 z-20">
+                                                                <div 
+                                                                    className={`absolute z-20 flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 ${
+                                                                        paletteLayout === 'vertical'
+                                                                        ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex-col'
+                                                                        : 'top-1/2 right-4 -translate-y-1/2 flex-row'
+                                                                    }`}
+                                                                >
                                                                     <div title="Arrastrar para mover" className={`p-2 rounded-lg cursor-grab ${iconColor} ${hoverBg}`} {...provided.dragHandleProps} onClick={(e) => e.stopPropagation()}>
                                                                         <ArrowLeftRight size={18} strokeWidth={1.5} />
                                                                     </div>
@@ -493,10 +572,20 @@ const Explorer = (props) => {
                                                                     <ActionButtonHover title={isLocked ? "Desbloquear" : "Bloquear"} onClick={() => toggleLockColor(originalColor)} iconColor={iconColor} hoverBg={hoverBg}>{isLocked ? <Lock size={18} strokeWidth={1.5} /> : <Unlock size={18} strokeWidth={1.5} />}</ActionButtonHover>
                                                                     <ActionButtonHover title="Eliminar Color" onClick={() => removeColorFromPalette(index)} iconColor={iconColor} hoverBg={hoverBg}><Trash2 size={18} strokeWidth={1.5} /></ActionButtonHover>
                                                                 </div>
+
+                                                                {/* --- ¡FIN DE MODIFICACIÓN DE LAYOUT! --- */}
                                                             </div>
                                                             
-                                                            {/* Botón de Añadir (sin cambios) */}
-                                                            <div className="absolute top-1/2 right-0 h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10" style={{ transform: 'translate(50%, -50%)' }}>
+                                                            {/* Botón de Añadir (con posición modificada) */}
+                                                            <div 
+                                                                // --- ¡MODIFICADO! ---
+                                                                className={`absolute h-full w-5 flex items-center justify-center opacity-0 group-hover/color-wrapper:opacity-100 transition-opacity z-10 ${
+                                                                    paletteLayout === 'vertical'
+                                                                    ? 'top-1/2 right-0 -translate-y-1/2 translate-x-1/2' // Posición vertical
+                                                                    : 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2' // Posición horizontal
+                                                                }`}
+                                                                style={paletteLayout === 'horizontal' ? { height: '20px', width: '100%' } : {}}
+                                                            >
                                                                 <button 
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     onMouseDown={(e) => handleAddButtonDown(e, index)}
@@ -506,13 +595,37 @@ const Explorer = (props) => {
                                                                     onMouseLeave={() => clearTimeout(longPressTimer.current)}
                                                                     className="bg-white/90 backdrop-blur-sm rounded-full p-2 border border-black/20 text-black shadow-lg hover:scale-110 transition-transform" 
                                                                     title="Añadir color (mantén presionado para más)"
+                                                                    // --- ¡MODIFICADO! ---
+                                                                    style={paletteLayout === 'horizontal' ? { transform: 'rotate(90deg)' } : {}} // Girar el icono
                                                                 >
                                                                     <Plus size={16}/>
                                                                 </button>
                                                             </div>
                                                             
-                                                            {/* Tonalidades (sin cambios) */}
-                                                            {activeShadeIndex === index && (<div className="absolute inset-0 flex flex-col z-30 animate-fade-in" onClick={(e) => e.stopPropagation()}>{generateShades(baseColorForShades).map((shade, shadeIndex) => (<div key={shadeIndex} className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" style={{ backgroundColor: shade }} onClick={(e) => { e.stopPropagation(); confirmColorInPalette(index, shade); setActiveShadeIndex(null); }} title={`Usar ${shade.toUpperCase()}`} >{shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div></div>))}<button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button></div>)}
+                                                            {/* Tonalidades (con dirección modificada) */}
+                                                            {activeShadeIndex === index && (
+                                                                <div 
+                                                                    // --- ¡MODIFICADO! ---
+                                                                    className={`absolute inset-0 flex z-30 animate-fade-in ${
+                                                                        paletteLayout === 'vertical' ? 'flex-col' : 'flex-row'
+                                                                    }`} 
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                >
+                                                                    {generateShades(baseColorForShades).map((shade, shadeIndex) => (
+                                                                        <div 
+                                                                            key={shadeIndex} 
+                                                                            className="flex-1 hover:brightness-125 cursor-pointer transition-all flex items-center justify-center relative group/shade" 
+                                                                            style={{ backgroundColor: shade }} 
+                                                                            onClick={(e) => { e.stopPropagation(); confirmColorInPalette(index, shade); setActiveShadeIndex(null); }} 
+                                                                            title={`Usar ${shade.toUpperCase()}`} 
+                                                                        >
+                                                                            {shade.toLowerCase() === baseColorForShades.toLowerCase() && <div className="w-2 h-2 rounded-full bg-white/70 ring-2 ring-black/20 pointer-events-none"></div>}
+                                                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-sm bg-black/50 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/shade:opacity-100" style={{color: tinycolor(shade).isLight() ? '#000' : '#FFF'}}>{shade.toUpperCase()}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                    <button onClick={(e) => { e.stopPropagation(); toggleShades(null); }} className="absolute top-2 left-2 p-1 bg-black/20 rounded-full text-white hover:bg-black/50" title="Ocultar tonalidades"><X size={16} /></button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </Draggable>
@@ -540,7 +653,7 @@ const Explorer = (props) => {
                     <AddColorMenu
                         onClose={() => setAddMenuState({ isVisible: false, index: 0, style: {} })}
                         onAdd={(count) => insertMultipleColors(addMenuState.index, count)}
-                        maxAdd={20 - explorerPalette.length}
+                        maxAdd={15 - explorerPalette.length}
                     />
                 </div>
             )}
